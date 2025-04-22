@@ -445,7 +445,7 @@
     function calcBase(data) {
       let s = BASE_SCORE, details = [];
       details.push(`Score de base : ${s} pts`);
-      s+=2; details.push(`Bonus auto : +2 (Total : ${s})`);
+      s+=2; details.push(`Bonus auto : +0 (Total : ${s})`);
       if(data.capitaineUsed){s-=5; details.push(`Capitaine : -5 (Total : ${s})`);}
       if(data.voyanteCards>0){s-=data.voyanteCards; details.push(`Voyante x${data.voyanteCards} : -${data.voyanteCards} (Total : ${s})`);}
       if(data.reflexionEarly){s+=10; details.push(`Réflexion : +10 (Total : ${s})`);}

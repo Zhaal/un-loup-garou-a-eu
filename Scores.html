@@ -243,7 +243,7 @@
           body: JSON.stringify(data)
         });
         if (!res.ok) throw new Error(await res.text());
-        alert('✅ Données sauvegardées avec succès sur GitHub');
+       // alert('✅ Données sauvegardées avec succès sur GitHub');
         console.log('🦊 Sauvegarde GitHub OK');
       } catch (err) {
         console.error('Erreur sauvegarde GitHub :', err);

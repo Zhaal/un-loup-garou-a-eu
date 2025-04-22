@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -87,17 +88,22 @@
     form { display:flex; flex-direction:column; gap:15px; }
     fieldset { border:1px solid #dee2e6; border-radius:var(--radius); padding:15px; }
     legend { padding:0 5px; font-weight:bold; color:var(--primary); }
-    label { font-size:0.9rem; }
+    label { font-size:0.9rem; display:block; }
     input[type="text"], input[type="number"], select {
       width:100%; padding:8px; border:1px solid #ced4da; border-radius:var(--radius);
     }
     input:focus, select:focus { outline:none; border-color:var(--primary); }
-    .time-buttons { display:flex; flex-wrap:wrap; gap:8px; }
-    .time-buttons button {
+
+    /* Shared style for all button groups (time, voyante, ritual) */
+    .select-buttons, .time-buttons {
+      display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;
+    }
+    .select-buttons button, .time-buttons button {
       padding:8px 12px; border:1px solid #ced4da; border-radius:var(--radius);
       background:var(--card-bg); cursor:pointer; transition:var(--transition);
+      font-size:0.9rem;
     }
-    .time-buttons button.active {
+    .select-buttons button.active, .time-buttons button.active {
       background: var(--primary); color: var(--header-text); border-color:var(--primary);
     }
     .form-actions { display:flex; justify-content:flex-end; gap:10px; }
@@ -135,7 +141,8 @@
     </main>
   </div>
 
-  <!-- Modals -->  <div class="modal" id="addGroupModal">
+  <!-- Modals -->  
+  <div class="modal" id="addGroupModal">
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title">Ajouter un groupe</h2>
@@ -161,18 +168,31 @@
       </div>
       <form id="scoreForm">
         <input id="groupName" type="hidden"/>
+
+        <!-- Pouvoirs -->
         <fieldset>
           <legend>Pouvoirs</legend>
+
           <label>Capitaine utilisé ?
-            <select id="capitaineUsed">
-              <option value="false">Non</option>
-              <option value="true">Oui (-5 pts)</option>
-            </select>
+            <input id="capitaineUsed" type="checkbox"/> Oui
           </label>
+
           <label>Cartes Voyante utilisées
-            <input id="voyanteCards" type="number" min="0" value="0"/>
+            <input id="voyanteCards" type="hidden" value="0"/>
+            <div class="select-buttons voyante-buttons">
+              <button type="button" data-value="0" class="active">0</button>
+              <button type="button" data-value="1">1</button>
+              <button type="button" data-value="2">2</button>
+              <button type="button" data-value="3">3</button>
+              <button type="button" data-value="4">4</button>
+              <button type="button" data-value="5">5</button>
+              <button type="button" data-value="6">6</button>
+              <button type="button" data-value="7">7</button>
+              <button type="button" data-value="8">8</button>
+            </div>
             <small>(-1 pt/carte)</small>
           </label>
+
           <label>Réflexion rapide ?
             <select id="reflexionEarly">
               <option value="false">Non</option>
@@ -180,6 +200,8 @@
             </select>
           </label>
         </fieldset>
+
+        <!-- Performance Temps -->
         <fieldset>
           <legend>Performance <small>(-1 pt/30 s)</small></legend>
           <input id="treasureTime" type="hidden" value="0"/>
@@ -198,18 +220,24 @@
             <button type="button" data-time="360">6 min</button>
           </div>
         </fieldset>
+
+        <!-- Rituel -->
         <fieldset>
           <legend>Rituel</legend>
+          <input id="ritualErrors" type="hidden" value="0"/>
           <label>Erreurs au rituel
-            <input id="ritualErrors" type="number" min="0" value="0"/>
+            <div class="select-buttons ritual-errors-buttons">
+              <button type="button" data-value="0" class="active">Sans erreur, Succès</button>
+              <button type="button" data-value="1">Une erreur (déclencher le Voleur)</button>
+              <button type="button" data-value="2">Deux erreurs, Échec</button>
+            </div>
           </label>
+
           <label>Voleur corrigé ?
-            <select id="voleurCorrected">
-              <option value="false">Non</option>
-              <option value="true">Oui (-10 pts)</option>
-            </select>
+            <input id="voleurCorrected" type="checkbox"/> Oui
           </label>
         </fieldset>
+
         <div class="form-actions">
           <button type="button" class="btn close-btn">Annuler</button>
           <button type="submit" class="btn">Enregistrer</button>
@@ -242,7 +270,6 @@
           body: JSON.stringify(data)
         });
         if (!res.ok) throw new Error(await res.text());
-       // alert('✅ Données sauvegardées avec succès sur GitHub');
         console.log('🦊 Sauvegarde GitHub OK');
       } catch (err) {
         console.error('Erreur sauvegarde GitHub :', err);
@@ -250,31 +277,31 @@
       }
     }
 
-  // Charge les données depuis GitHub avec bust de cache
-async function loadFromGitHub() {
-  try {
-    const apiUrl =
-      'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
-    const response = await fetch(`${apiUrl}?ref=main`, {
-      headers: { 'Accept': 'application/vnd.github.v3.raw' },
-      cache: 'no-store'
-    });
-    if (!response.ok) throw new Error('Échec du chargement via API GitHub');
-    const data = await response.json();
+    // Charge les données depuis GitHub avec bust de cache
+    async function loadFromGitHub() {
+      try {
+        const apiUrl =
+          'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
+        const response = await fetch(`${apiUrl}?ref=main`, {
+          headers: { 'Accept': 'application/vnd.github.v3.raw' },
+          cache: 'no-store'
+        });
+        if (!response.ok) throw new Error('Échec du chargement via API GitHub');
+        const data = await response.json();
 
-    // Vide les anciens groupes
-    Object.keys(groups).forEach(k => delete groups[k]);
-    // Remplit avec les toutes dernières données
-    Object.assign(groups, data);
+        // Vide les anciens groupes
+        Object.keys(groups).forEach(k => delete groups[k]);
+        // Remplit avec les toutes dernières données
+        Object.assign(groups, data);
 
-    renderGroupList();
-    renderScoreTable();
-    alert('✅ Données chargées avec succès depuis l’API GitHub !');
-  } catch (err) {
-    console.error('⚠️ Erreur API GitHub :', err);
-    alert('❌ Erreur lors du chargement via l’API GitHub: ' + err.message);
-  }
-}
+        renderGroupList();
+        renderScoreTable();
+       // alert('✅ Données chargées avec succès depuis l’API GitHub !');
+      } catch (err) {
+        console.error('⚠️ Erreur API GitHub :', err);
+        alert('❌ Erreur lors du chargement via l’API GitHub: ' + err.message);
+      }
+    }
 
     const groups = {};
 
@@ -417,7 +444,7 @@ async function loadFromGitHub() {
     const confirmDeleteModal = document.getElementById('confirmDeleteModal');
     const addGroupBtn = document.getElementById('addGroupBtn');
     const closeBtns = document.querySelectorAll('.close-btn');
-    
+
     addGroupBtn.addEventListener('click',()=>openModal(addGroupModal));
     closeBtns.forEach(b=>b.addEventListener('click',e=>closeModal(e.target.closest('.modal'))));
 
@@ -435,42 +462,65 @@ async function loadFromGitHub() {
       e.preventDefault();
       const name = document.getElementById('groupName').value;
       const data = {
-        capitaineUsed:   document.getElementById('capitaineUsed').value==='true',
+        capitaineUsed:   document.getElementById('capitaineUsed').checked,
         voyanteCards:    +document.getElementById('voyanteCards').value,
         reflexionEarly:  document.getElementById('reflexionEarly').value==='true',
         treasureTime:    +document.getElementById('treasureTime').value,
         ritualErrors:    +document.getElementById('ritualErrors').value,
-        voleurCorrected: document.getElementById('voleurCorrected').value==='true'
+        voleurCorrected: document.getElementById('voleurCorrected').checked
       };
       updateGroupScore(name,data);
       e.target.reset();
-      document.querySelectorAll('.time-buttons button').forEach(b=>b.classList.remove('active'));
+      // reset buttons visual
+      document.querySelectorAll('.time-buttons button, .voyante-buttons button, .ritual-errors-buttons button')
+        .forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.voyante-buttons button[data-value="0"]').forEach(b=>b.classList.add('active'));
+      document.querySelectorAll('.ritual-errors-buttons button[data-value="0"]').forEach(b=>b.classList.add('active'));
       document.getElementById('treasureTime').value = 0;
+      document.getElementById('voyanteCards').value = 0;
+      document.getElementById('ritualErrors').value = 0;
       closeModal(scoreModal);
     });
 
-document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-  if (window.groupToDelete) {
-    deleteGroup(window.groupToDelete);
-    window.groupToDelete = null;
-  }
+    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+      if (window.groupToDelete) {
+        deleteGroup(window.groupToDelete);
+        window.groupToDelete = null;
+      }
 
-  // Fermeture manuelle de la modale
-  const modal = document.getElementById('confirmDeleteModal');
-  modal.classList.remove('active');
-  modal.style.opacity = 0;
-  modal.style.pointerEvents = 'none';
-});
-
+      // Fermeture manuelle de la modale
+      const modal = document.getElementById('confirmDeleteModal');
+      modal.classList.remove('active');
+      modal.style.opacity = 0;
+      modal.style.pointerEvents = 'none';
+    });
 
     // Gestion des boutons de temps
     document.querySelectorAll('.time-buttons button').forEach(button => {
       button.addEventListener('click', () => {
         const time = parseInt(button.dataset.time);
         document.getElementById('treasureTime').value = time;
-        document.querySelectorAll('.time-buttons button').forEach(b => 
-          b.classList.remove('active')
-        );
+        document.querySelectorAll('.time-buttons button').forEach(b=>b.classList.remove('active'));
+        button.classList.add('active');
+      });
+    });
+
+    // Boutons Cartes Voyante
+    document.querySelectorAll('.voyante-buttons button').forEach(button=>{
+      button.addEventListener('click',()=>{
+        const val=parseInt(button.dataset.value);
+        document.getElementById('voyanteCards').value=val;
+        document.querySelectorAll('.voyante-buttons button').forEach(b=>b.classList.remove('active'));
+        button.classList.add('active');
+      });
+    });
+
+    // Boutons Erreurs Rituel
+    document.querySelectorAll('.ritual-errors-buttons button').forEach(button=>{
+      button.addEventListener('click',()=>{
+        const val=parseInt(button.dataset.value);
+        document.getElementById('ritualErrors').value=val;
+        document.querySelectorAll('.ritual-errors-buttons button').forEach(b=>b.classList.remove('active'));
         button.classList.add('active');
       });
     });

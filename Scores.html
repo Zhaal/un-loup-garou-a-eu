@@ -182,7 +182,7 @@
         <input id="groupName" type="hidden"/>
         <fieldset>
           <legend>Pouvoirs</legend>
-          <label>Capitaine utilisé ?</label>
+          <label><strong></strong>Capitaine utilisé ?</strong></label>
           <div class="radio-group">
             <div class="radio-option">
               <input type="radio" id="capitaineNo" name="capitaineUsed" value="false" checked>
@@ -194,7 +194,7 @@
             </div>
           </div>
           
-          <label>Cartes Voyante utilisées (-1 pt/carte)</label>
+          <label><strong>Cartes Voyante utilisées (-1 pt/carte)</strong>strong></label>
           <div class="voyante-buttons">
             <button type="button" data-voyante="0">0</button>
             <button type="button" data-voyante="1">1</button>
@@ -208,7 +208,7 @@
           </div>
           <input id="voyanteCards" type="hidden" value="0"/>
           
-          <label>Réflexion rapide ? (moins de 2 minutes) </label>
+          <label><strong>Réflexion rapide ? (moins de 2 min)</strong>strong></label>
           <div class="radio-group">
             <div class="radio-option">
               <input type="radio" id="reflexionNo" name="reflexionEarly" value="false" checked>
@@ -240,19 +240,20 @@
         </fieldset>
         <fieldset>
           <legend>Rituel</legend>
-          <label>Résultat du rituel</label>
+          <label><strong>Erreurs au rituel</strong>strong></label>
           <div class="ritual-buttons">
             <button type="button" data-ritual="0" data-voleur="false">Sans erreur, Succès</button>
-            <button type="button" data-ritual="1" data-voleur="false">Une erreur</button>
+            <button type="button" data-ritual="1" data-voleur="false">Une erreur (déclencher le Voleur)</button>
             <button type="button" data-ritual="2" data-voleur="false">Deux erreurs, Échec</button>
           </div>
           <input id="ritualErrors" type="hidden" value="0"/>
-                             <label>Voleur utilisé ?</label>
+          
+          <label><strong>Voleur utilisé ?</strong>strong></label>
           <div class="radio-group">
             <div class="radio-option">
               <input type="radio" id="voleurNo" name="voleurCorrected" value="false" checked>
               <label for="voleurNo">Non</label>
-            </div> 
+            </div>
             <div class="radio-option">
               <input type="radio" id="voleurYes" name="voleurCorrected" value="true">
               <label for="voleurYes">Oui (-10 pts)</label>
@@ -444,7 +445,7 @@
     function calcBase(data) {
       let s = BASE_SCORE, details = [];
       details.push(`Score de base : ${s} pts`);
-      s+=2; details.push(`Bonus auto : +0 (Total : ${s})`);
+      s+=2; details.push(`Bonus auto : +2 (Total : ${s})`);
       if(data.capitaineUsed){s-=5; details.push(`Capitaine : -5 (Total : ${s})`);}
       if(data.voyanteCards>0){s-=data.voyanteCards; details.push(`Voyante x${data.voyanteCards} : -${data.voyanteCards} (Total : ${s})`);}
       if(data.reflexionEarly){s+=10; details.push(`Réflexion : +10 (Total : ${s})`);}

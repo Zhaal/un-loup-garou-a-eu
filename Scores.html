@@ -239,6 +239,21 @@
     }
 
     const groups = {};
+
+fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-loup-garou.json')
+  .then(response => {
+    if (!response.ok) throw new Error('Erreur de chargement des scores');
+    return response.json();
+  })
+  .then(data => {
+    Object.assign(groups, data);
+    renderGroupList();
+    renderScoreTable();
+  })
+  .catch(err => {
+    console.warn('Aucun score chargé :', err);
+  });
+
     const BASE_SCORE = 50, MAX_BASE = 50;
 
     // Ajout, suppression, mise à jour

@@ -447,11 +447,19 @@
       closeModal(scoreModal);
     });
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click',()=>{
-      deleteGroup(window.groupToDelete);
-      window.groupToDelete = null;
-      closeModal(confirmDeleteModal);
-    });
+document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+  if (window.groupToDelete) {
+    deleteGroup(window.groupToDelete);
+    window.groupToDelete = null;
+  }
+
+  // Fermeture manuelle de la modale
+  const modal = document.getElementById('confirmDeleteModal');
+  modal.classList.remove('active');
+  modal.style.opacity = 0;
+  modal.style.pointerEvents = 'none';
+});
+
 
     // Gestion des boutons de temps
     document.querySelectorAll('.time-buttons button').forEach(button => {

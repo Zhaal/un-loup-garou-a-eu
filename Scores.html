@@ -185,7 +185,15 @@
             <button type="button" data-time="30">30 s</button>
             <button type="button" data-time="60">1 min</button>
             <button type="button" data-time="90">1 min 30</button>
-            <!-- etc... -->
+            <button type="button" data-time="120">2 min</button>
+            <button type="button" data-time="150">2 min 30</button>
+            <button type="button" data-time="180">3 min</button>
+            <button type="button" data-time="210">3 min 30</button>
+            <button type="button" data-time="240">4 min</button>
+            <button type="button" data-time="270">4 min 30</button>
+            <button type="button" data-time="300">5 min</button>
+            <button type="button" data-time="330">5 min 30</button>
+            <button type="button" data-time="360">6 min</button>
           </div>
         </fieldset>
         <fieldset>
@@ -238,23 +246,22 @@
       }
     }
 
-const groups = {};
+    const groups = {};
 
-fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-loup-garou.json?cache_bust=' + Date.now())
-  .then(response => {
-    if (!response.ok) throw new Error('Erreur de chargement des scores');
-    return response.json();
-  })
-  .then(data => {
-    Object.assign(groups, data);
-    console.log('✅ Données chargées :', groups); // pour debug
-    renderGroupList();
-    renderScoreTable();
-  })
-  .catch(err => {
-    console.warn('⚠️ Aucun score chargé :', err);
-  });
-
+    fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-loup-garou.json')
+      .then(response => {
+        if (!response.ok) throw new Error('Erreur de chargement des scores');
+        return response.json();
+      })
+      .then(data => {
+        Object.assign(groups, data);
+        console.log('✅ Données chargées :', groups); // pour debug
+        renderGroupList();
+        renderScoreTable();
+      })
+      .catch(err => {
+        console.warn('⚠️ Aucun score chargé :', err);
+      });
 
     const BASE_SCORE = 50, MAX_BASE = 50;
 
@@ -387,8 +394,12 @@ fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-lo
     }
 
     // Modals (idem)
+    const addGroupModal = document.getElementById('addGroupModal');
+    const scoreModal = document.getElementById('scoreModal');
+    const confirmDeleteModal = document.getElementById('confirmDeleteModal');
     const addGroupBtn = document.getElementById('addGroupBtn');
-    const closeBtns   = document.querySelectorAll('.close-btn');
+    const closeBtns = document.querySelectorAll('.close-btn');
+    
     addGroupBtn.addEventListener('click',()=>openModal(addGroupModal));
     closeBtns.forEach(b=>b.addEventListener('click',e=>closeModal(e.target.closest('.modal'))));
 
@@ -426,7 +437,17 @@ fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-lo
       closeModal(confirmDeleteModal);
     });
 
-
+    // Gestion des boutons de temps
+    document.querySelectorAll('.time-buttons button').forEach(button => {
+      button.addEventListener('click', () => {
+        const time = parseInt(button.dataset.time);
+        document.getElementById('treasureTime').value = time;
+        document.querySelectorAll('.time-buttons button').forEach(b => 
+          b.classList.remove('active')
+        );
+        button.classList.add('active');
+      });
+    });
   </script>
 </body>
 </html>

@@ -135,8 +135,7 @@
     </main>
   </div>
 
-  <!-- Modals -->
-  <div class="modal" id="addGroupModal">
+  <!-- Modals -->  <div class="modal" id="addGroupModal">
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title">Ajouter un groupe</h2>
@@ -251,33 +250,36 @@
       }
     }
 
-    // Charge les données depuis GitHub
-    async function loadFromGitHub() {
-      try {
-        const response = await fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-loup-garou.json');
-        if (!response.ok) throw new Error('Erreur de chargement des scores');
-        const data = await response.json();
-        
-        // Effacer les groupes existants
-        Object.keys(groups).forEach(k => delete groups[k]);
-        
-        // Ajouter les nouveaux groupes
-        Object.assign(groups, data);
-        
-        console.log('📥 Données chargées depuis GitHub :', groups);
-        renderGroupList();
-        renderScoreTable();
-        alert('✅ Données chargées avec succès depuis GitHub');
-      } catch (err) {
-        console.warn('⚠️ Échec du chargement depuis GitHub :', err);
-        alert('❌ Erreur lors du chargement depuis GitHub: ' + err.message);
-      }
-    }
+  // Charge les données depuis GitHub avec bust de cache
+async function loadFromGitHub() {
+  try {
+    const apiUrl =
+      'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
+    const response = await fetch(`${apiUrl}?ref=main`, {
+      headers: { 'Accept': 'application/vnd.github.v3.raw' },
+      cache: 'no-store'
+    });
+    if (!response.ok) throw new Error('Échec du chargement via API GitHub');
+    const data = await response.json();
+
+    // Vide les anciens groupes
+    Object.keys(groups).forEach(k => delete groups[k]);
+    // Remplit avec les toutes dernières données
+    Object.assign(groups, data);
+
+    renderGroupList();
+    renderScoreTable();
+    alert('✅ Données chargées avec succès depuis l’API GitHub !');
+  } catch (err) {
+    console.error('⚠️ Erreur API GitHub :', err);
+    alert('❌ Erreur lors du chargement via l’API GitHub: ' + err.message);
+  }
+}
 
     const groups = {};
 
-    // Chargement initial
-    loadFromGitHub();
+    // Chargement initial après DOM prêt
+    document.addEventListener('DOMContentLoaded', loadFromGitHub);
 
     const BASE_SCORE = 50, MAX_BASE = 50;
 

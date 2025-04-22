@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -88,22 +87,17 @@
     form { display:flex; flex-direction:column; gap:15px; }
     fieldset { border:1px solid #dee2e6; border-radius:var(--radius); padding:15px; }
     legend { padding:0 5px; font-weight:bold; color:var(--primary); }
-    label { font-size:0.9rem; display:block; }
+    label { font-size:0.9rem; }
     input[type="text"], input[type="number"], select {
       width:100%; padding:8px; border:1px solid #ced4da; border-radius:var(--radius);
     }
     input:focus, select:focus { outline:none; border-color:var(--primary); }
-
-    /* Shared style for all button groups (time, voyante, ritual) */
-    .select-buttons, .time-buttons {
-      display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;
-    }
-    .select-buttons button, .time-buttons button {
+    .time-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+    .time-buttons button {
       padding:8px 12px; border:1px solid #ced4da; border-radius:var(--radius);
       background:var(--card-bg); cursor:pointer; transition:var(--transition);
-      font-size:0.9rem;
     }
-    .select-buttons button.active, .time-buttons button.active {
+    .time-buttons button.active {
       background: var(--primary); color: var(--header-text); border-color:var(--primary);
     }
     .form-actions { display:flex; justify-content:flex-end; gap:10px; }
@@ -117,6 +111,25 @@
     td:nth-child(1) { width:35%; } td:nth-child(2) { width:20%; } td:nth-child(3) { width:45%; }
     .group-actions { display:flex; gap:5px; margin-top:8px; }
     .group-actions .btn { margin-bottom:0; padding:5px 8px; font-size:0.8rem; }
+    .radio-group { display: flex; gap: 15px; margin-top: 5px; }
+    .radio-option { display: flex; align-items: center; gap: 5px; }
+    .voyante-buttons { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+    .voyante-buttons button {
+      padding: 5px 10px; border: 1px solid #ced4da; border-radius: var(--radius);
+      background: var(--card-bg); cursor: pointer; transition: var(--transition);
+    }
+    .voyante-buttons button.active {
+      background: var(--primary); color: var(--header-text); border-color: var(--primary);
+    }
+    .ritual-buttons { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
+    .ritual-buttons button {
+      padding: 8px 12px; border: 1px solid #ced4da; border-radius: var(--radius);
+      background: var(--card-bg); cursor: pointer; transition: var(--transition);
+      text-align: left;
+    }
+    .ritual-buttons button.active {
+      background: var(--primary); color: var(--header-text); border-color: var(--primary);
+    }
   </style>
 </head>
 <body>
@@ -141,8 +154,7 @@
     </main>
   </div>
 
-  <!-- Modals -->  
-  <div class="modal" id="addGroupModal">
+  <!-- Modals -->  <div class="modal" id="addGroupModal">
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title">Ajouter un groupe</h2>
@@ -168,40 +180,46 @@
       </div>
       <form id="scoreForm">
         <input id="groupName" type="hidden"/>
-
-        <!-- Pouvoirs -->
         <fieldset>
           <legend>Pouvoirs</legend>
-
-          <label>Capitaine utilisé ?
-            <input id="capitaineUsed" type="checkbox"/> Oui
-          </label>
-
-          <label>Cartes Voyante utilisées
-            <input id="voyanteCards" type="hidden" value="0"/>
-            <div class="select-buttons voyante-buttons">
-              <button type="button" data-value="0" class="active">0</button>
-              <button type="button" data-value="1">1</button>
-              <button type="button" data-value="2">2</button>
-              <button type="button" data-value="3">3</button>
-              <button type="button" data-value="4">4</button>
-              <button type="button" data-value="5">5</button>
-              <button type="button" data-value="6">6</button>
-              <button type="button" data-value="7">7</button>
-              <button type="button" data-value="8">8</button>
+          <label>Capitaine utilisé ?</label>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" id="capitaineNo" name="capitaineUsed" value="false" checked>
+              <label for="capitaineNo">Non</label>
             </div>
-            <small>(-1 pt/carte)</small>
-          </label>
-
-          <label>Réflexion rapide ?
-            <select id="reflexionEarly">
-              <option value="false">Non</option>
-              <option value="true">Oui (+10 pts)</option>
-            </select>
-          </label>
+            <div class="radio-option">
+              <input type="radio" id="capitaineYes" name="capitaineUsed" value="true">
+              <label for="capitaineYes">Oui (-5 pts)</label>
+            </div>
+          </div>
+          
+          <label>Cartes Voyante utilisées (-1 pt/carte)</label>
+          <div class="voyante-buttons">
+            <button type="button" data-voyante="0">0</button>
+            <button type="button" data-voyante="1">1</button>
+            <button type="button" data-voyante="2">2</button>
+            <button type="button" data-voyante="3">3</button>
+            <button type="button" data-voyante="4">4</button>
+            <button type="button" data-voyante="5">5</button>
+            <button type="button" data-voyante="6">6</button>
+            <button type="button" data-voyante="7">7</button>
+            <button type="button" data-voyante="8">8</button>
+          </div>
+          <input id="voyanteCards" type="hidden" value="0"/>
+          
+          <label>Réflexion rapide ?</label>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" id="reflexionNo" name="reflexionEarly" value="false" checked>
+              <label for="reflexionNo">Non</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="reflexionYes" name="reflexionEarly" value="true">
+              <label for="reflexionYes">Oui (+10 pts)</label>
+            </div>
+          </div>
         </fieldset>
-
-        <!-- Performance Temps -->
         <fieldset>
           <legend>Performance <small>(-1 pt/30 s)</small></legend>
           <input id="treasureTime" type="hidden" value="0"/>
@@ -220,24 +238,28 @@
             <button type="button" data-time="360">6 min</button>
           </div>
         </fieldset>
-
-        <!-- Rituel -->
         <fieldset>
           <legend>Rituel</legend>
+          <label>Erreurs au rituel</label>
+          <div class="ritual-buttons">
+            <button type="button" data-ritual="0" data-voleur="false">Sans erreur, Succès</button>
+            <button type="button" data-ritual="1" data-voleur="false">Une erreur (déclencher le Voleur)</button>
+            <button type="button" data-ritual="2" data-voleur="false">Deux erreurs, Échec</button>
+          </div>
           <input id="ritualErrors" type="hidden" value="0"/>
-          <label>Erreurs au rituel
-            <div class="select-buttons ritual-errors-buttons">
-              <button type="button" data-value="0" class="active">Sans erreur, Succès</button>
-              <button type="button" data-value="1">Une erreur (déclencher le Voleur)</button>
-              <button type="button" data-value="2">Deux erreurs, Échec</button>
+          
+          <label>Voleur corrigé ?</label>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" id="voleurNo" name="voleurCorrected" value="false" checked>
+              <label for="voleurNo">Non</label>
             </div>
-          </label>
-
-          <label>Voleur corrigé ?
-            <input id="voleurCorrected" type="checkbox"/> Oui
-          </label>
+            <div class="radio-option">
+              <input type="radio" id="voleurYes" name="voleurCorrected" value="true">
+              <label for="voleurYes">Oui (-10 pts)</label>
+            </div>
+          </div>
         </fieldset>
-
         <div class="form-actions">
           <button type="button" class="btn close-btn">Annuler</button>
           <button type="submit" class="btn">Enregistrer</button>
@@ -270,6 +292,7 @@
           body: JSON.stringify(data)
         });
         if (!res.ok) throw new Error(await res.text());
+       // alert('✅ Données sauvegardées avec succès sur GitHub');
         console.log('🦊 Sauvegarde GitHub OK');
       } catch (err) {
         console.error('Erreur sauvegarde GitHub :', err);
@@ -296,7 +319,7 @@
 
         renderGroupList();
         renderScoreTable();
-       // alert('✅ Données chargées avec succès depuis l’API GitHub !');
+        alert('✅ Données chargées avec succès depuis l’API GitHub !');
       } catch (err) {
         console.error('⚠️ Erreur API GitHub :', err);
         alert('❌ Erreur lors du chargement via l’API GitHub: ' + err.message);
@@ -444,7 +467,7 @@
     const confirmDeleteModal = document.getElementById('confirmDeleteModal');
     const addGroupBtn = document.getElementById('addGroupBtn');
     const closeBtns = document.querySelectorAll('.close-btn');
-
+    
     addGroupBtn.addEventListener('click',()=>openModal(addGroupModal));
     closeBtns.forEach(b=>b.addEventListener('click',e=>closeModal(e.target.closest('.modal'))));
 
@@ -462,23 +485,17 @@
       e.preventDefault();
       const name = document.getElementById('groupName').value;
       const data = {
-        capitaineUsed:   document.getElementById('capitaineUsed').checked,
+        capitaineUsed:   document.querySelector('input[name="capitaineUsed"]:checked').value === 'true',
         voyanteCards:    +document.getElementById('voyanteCards').value,
-        reflexionEarly:  document.getElementById('reflexionEarly').value==='true',
+        reflexionEarly:  document.querySelector('input[name="reflexionEarly"]:checked').value === 'true',
         treasureTime:    +document.getElementById('treasureTime').value,
         ritualErrors:    +document.getElementById('ritualErrors').value,
-        voleurCorrected: document.getElementById('voleurCorrected').checked
+        voleurCorrected: document.querySelector('input[name="voleurCorrected"]:checked').value === 'true'
       };
       updateGroupScore(name,data);
       e.target.reset();
-      // reset buttons visual
-      document.querySelectorAll('.time-buttons button, .voyante-buttons button, .ritual-errors-buttons button')
-        .forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.voyante-buttons button[data-value="0"]').forEach(b=>b.classList.add('active'));
-      document.querySelectorAll('.ritual-errors-buttons button[data-value="0"]').forEach(b=>b.classList.add('active'));
+      document.querySelectorAll('.time-buttons button').forEach(b=>b.classList.remove('active'));
       document.getElementById('treasureTime').value = 0;
-      document.getElementById('voyanteCards').value = 0;
-      document.getElementById('ritualErrors').value = 0;
       closeModal(scoreModal);
     });
 
@@ -500,27 +517,33 @@
       button.addEventListener('click', () => {
         const time = parseInt(button.dataset.time);
         document.getElementById('treasureTime').value = time;
-        document.querySelectorAll('.time-buttons button').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.time-buttons button').forEach(b => 
+          b.classList.remove('active')
+        );
         button.classList.add('active');
       });
     });
 
-    // Boutons Cartes Voyante
-    document.querySelectorAll('.voyante-buttons button').forEach(button=>{
-      button.addEventListener('click',()=>{
-        const val=parseInt(button.dataset.value);
-        document.getElementById('voyanteCards').value=val;
-        document.querySelectorAll('.voyante-buttons button').forEach(b=>b.classList.remove('active'));
+    // Gestion des boutons Voyante
+    document.querySelectorAll('.voyante-buttons button').forEach(button => {
+      button.addEventListener('click', () => {
+        const cards = parseInt(button.dataset.voyante);
+        document.getElementById('voyanteCards').value = cards;
+        document.querySelectorAll('.voyante-buttons button').forEach(b => 
+          b.classList.remove('active')
+        );
         button.classList.add('active');
       });
     });
 
-    // Boutons Erreurs Rituel
-    document.querySelectorAll('.ritual-errors-buttons button').forEach(button=>{
-      button.addEventListener('click',()=>{
-        const val=parseInt(button.dataset.value);
-        document.getElementById('ritualErrors').value=val;
-        document.querySelectorAll('.ritual-errors-buttons button').forEach(b=>b.classList.remove('active'));
+    // Gestion des boutons Rituel
+    document.querySelectorAll('.ritual-buttons button').forEach(button => {
+      button.addEventListener('click', () => {
+        const errors = parseInt(button.dataset.ritual);
+        document.getElementById('ritualErrors').value = errors;
+        document.querySelectorAll('.ritual-buttons button').forEach(b => 
+          b.classList.remove('active')
+        );
         button.classList.add('active');
       });
     });

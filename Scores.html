@@ -115,7 +115,10 @@
 </head>
 <body>
   <header>
-    <h1>Calculateur de Score – Loup‑Garou</h1>
+    <h1>Calculateur de Score – Loup‑Garou   
+      <button id="loadFromGitHubBtn" class="btn">📥 Charger depuis GitHub</button>
+      <button id="saveToGitHubBtn" class="btn">📤 Sauvegarder vers GitHub</button>
+    </h1>
   </header>
   <div class="container">
     <aside>
@@ -240,28 +243,41 @@
           body: JSON.stringify(data)
         });
         if (!res.ok) throw new Error(await res.text());
+        alert('✅ Données sauvegardées avec succès sur GitHub');
         console.log('🦊 Sauvegarde GitHub OK');
       } catch (err) {
         console.error('Erreur sauvegarde GitHub :', err);
+        alert('❌ Erreur lors de la sauvegarde sur GitHub: ' + err.message);
+      }
+    }
+
+    // Charge les données depuis GitHub
+    async function loadFromGitHub() {
+      try {
+        const response = await fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-loup-garou.json');
+        if (!response.ok) throw new Error('Erreur de chargement des scores');
+        const data = await response.json();
+        
+        // Effacer les groupes existants
+        Object.keys(groups).forEach(k => delete groups[k]);
+        
+        // Ajouter les nouveaux groupes
+        Object.assign(groups, data);
+        
+        console.log('📥 Données chargées depuis GitHub :', groups);
+        renderGroupList();
+        renderScoreTable();
+        alert('✅ Données chargées avec succès depuis GitHub');
+      } catch (err) {
+        console.warn('⚠️ Échec du chargement depuis GitHub :', err);
+        alert('❌ Erreur lors du chargement depuis GitHub: ' + err.message);
       }
     }
 
     const groups = {};
 
-    fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-loup-garou.json')
-      .then(response => {
-        if (!response.ok) throw new Error('Erreur de chargement des scores');
-        return response.json();
-      })
-      .then(data => {
-        Object.assign(groups, data);
-        console.log('✅ Données chargées :', groups); // pour debug
-        renderGroupList();
-        renderScoreTable();
-      })
-      .catch(err => {
-        console.warn('⚠️ Aucun score chargé :', err);
-      });
+    // Chargement initial
+    loadFromGitHub();
 
     const BASE_SCORE = 50, MAX_BASE = 50;
 
@@ -447,6 +463,14 @@
         );
         button.classList.add('active');
       });
+    });
+
+    // Bouton "Charger depuis GitHub"
+    document.getElementById('loadFromGitHubBtn').addEventListener('click', loadFromGitHub);
+
+    // Bouton "Sauvegarder vers GitHub"
+    document.getElementById('saveToGitHubBtn').addEventListener('click', () => {
+      saveToGitHub(groups);
     });
   </script>
 </body>

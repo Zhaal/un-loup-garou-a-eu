@@ -3,119 +3,274 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Calculateur de Score – Loup‑Garou</title>
+  <title>Calculateur de Score - Loup-Garou</title>
   <style>
     :root {
-      --bg: #f8f9fa; --header-bg: #343a40; --header-text: #fff;
-      --sidebar-bg: #fff; --sidebar-text: #495057; --sidebar-border: #dee2e6;
-      --main-bg: #fff; --primary: #17a2b8; --primary-hover: #138496;
-      --text: #212529; --card-bg: #fff; --card-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      --radius: 6px; --transition: 0.3s;
-      --in-progress: #ffc107; --completed: #17a2b8; --error: #dc3545;
+      --bg: #f8f9fa;
+      --header-bg: #343a40;
+      --header-text: #ffffff;
+      --sidebar-bg: #ffffff;
+      --sidebar-text: #495057;
+      --sidebar-border: #dee2e6;
+      --main-bg: #ffffff;
+      --primary: #17a2b8;
+      --primary-hover: #138496;
+      --text: #212529;
+      --card-bg: #ffffff;
+      --card-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      --radius: 6px;
+      --transition: 0.3s;
+      --in-progress: #ffc107;
+      --completed: #17a2b8;
+      --error: #dc3545;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { display: flex; flex-direction: column; min-height: 100vh;
-      background: var(--bg); color: var(--text);
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    header { background: var(--header-bg); color: var(--header-text);
-      padding: 15px 20px; text-align: center; box-shadow: var(--card-shadow);
+    header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 15px 20px;
+      text-align: center;
+      box-shadow: var(--card-shadow);
+      position: relative;
     }
-    header h1 { font-size: 1.5rem; }
-    .container { flex: 1; display: flex; overflow: hidden; }
-    aside { width: 350px; min-width: 350px;
-      background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border);
-      padding: 20px; overflow-y: auto;
+    header h1 { font-size: 1.5rem; margin-bottom: 5px; }
+    .header-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 5px;
     }
-    .btn { display: inline-block; padding: 10px 15px; border: none;
-      border-radius: var(--radius); background: var(--primary);
-      color: var(--header-text); text-align: center; cursor: pointer;
-      transition: var(--transition); text-decoration: none; font-size: 0.9rem;
+    .header-actions .btn {
+      padding: 5px 10px;
+      font-size: 0.8rem;
+    }
+
+    .container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    aside {
+        width: 350px;           /* au lieu de 250px */
+  min-width: 350px;       /* pour forcer la largeur minimum */
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--sidebar-border);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 15px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--primary);
+      color: var(--header-text);
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      font-size: 0.9rem;
       margin-bottom: 15px;
     }
     .btn:hover { background: var(--primary-hover); }
-    .btn-danger { background: var(--error); }
-    .btn-danger:hover { background: #c82333; }
+    .btn-danger {
+      background: var(--error);
+    }
+    .btn-danger:hover {
+      background: #c82333;
+    }
     .group-list { list-style: none; }
+
     .group-item {
-      background: var(--card-bg); padding: 10px 15px; border-radius: var(--radius);
-      margin-bottom: 10px; box-shadow: var(--card-shadow);
-      transition: var(--transition); color: var(--sidebar-text);
-      border-left: 4px solid var(--in-progress); position: relative;
+      background: var(--card-bg);
+      padding: 10px 15px;
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+      transition: var(--transition);
+      color: var(--sidebar-text);
+      border-left: 4px solid var(--in-progress);
+      position: relative;
+      overflow: hidden;
     }
     .group-item.in-progress { border-left-color: var(--in-progress); }
     .group-item.completed   { border-left-color: var(--completed); }
     .group-item.error       { border-left-color: var(--error); }
+
+    /* Hachures diagonales pour les groupes scorés */
     .group-item.scored::before {
-      content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background-image: repeating-linear-gradient(
-        45deg, rgba(0,0,0,0.2) 0, rgba(0,0,0,0.2) 2px,
-        transparent 1px, transparent 5px
+        45deg,
+        rgba(0,0,0,0.20) 0,
+        rgba(0,0,0,0.20) 2px,
+        transparent 1px,
+        transparent 5px
       );
-      border-radius: var(--radius); pointer-events: none;
+      border-radius: var(--radius);
+      pointer-events: none;
     }
-    .group-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    main { flex: 1; padding: 20px; overflow-y: auto; background: var(--main-bg); }
-    table { width:100%; border-collapse: collapse; box-shadow: var(--card-shadow);
-      border-radius: var(--radius); overflow: hidden; table-layout: fixed;
+
+    .group-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    th, td { padding:12px 15px; border-bottom:1px solid #dee2e6; text-align:left; }
-    th { background: var(--primary); color: var(--header-text);
-      text-transform: uppercase; font-size:0.9rem;
+
+    main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: var(--main-bg);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: var(--card-shadow);
+      border-radius: var(--radius);
+      overflow: hidden;
+      table-layout: fixed;
+    }
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #dee2e6;
+      text-align: left;
+    }
+    th {
+      background: var(--primary);
+      color: var(--header-text);
+      text-transform: uppercase;
+      font-size: 0.9rem;
     }
     tbody tr:hover { background: #f1f3f5; }
-    .btn-detail { background: none; border: none; color: var(--primary);
-      cursor: pointer; padding: 0; font-size: 0.9rem;
+    .btn-detail {
+      background: none;
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      padding: 0;
+      font-size: 0.9rem;
     }
-    .details-content { display: none; margin-top:10px; font-size:0.9rem;
-      color:#495057; background:#f8f9fa; padding:10px; border-radius:var(--radius);
+    .details-content {
+      display: none;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #495057;
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: var(--radius);
     }
-    .details-content.active { display:block; }
-    .modal { position: fixed; top:0; left:0; width:100%; height:100%;
-      background: rgba(0,0,0,0.5); display:flex; justify-content:center;
-      align-items:center; opacity:0; pointer-events:none; transition:var(--transition);
-      z-index:1000;
+    .details-content.active { display: block; }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex; justify-content: center; align-items: center;
+      opacity: 0; pointer-events: none;
+      transition: var(--transition);
+      z-index: 1000;
     }
-    .modal.active { opacity:1; pointer-events:all; }
-    .modal-content { background:var(--card-bg); padding:20px;
-      border-radius:var(--radius); width:90%; max-width:500px;
-      box-shadow:var(--card-shadow); max-height:90vh; overflow-y:auto;
+    .modal.active { opacity: 1; pointer-events: all; }
+    .modal-content {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: var(--radius);
+      width: 90%; max-width: 500px;
+      box-shadow: var(--card-shadow);
+      max-height: 90vh;
+      overflow-y: auto;
     }
-    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
-    .modal-title { font-size:1.2rem; color:var(--primary); }
-    .close-btn { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text); }
-    form { display:flex; flex-direction:column; gap:15px; }
-    fieldset { border:1px solid #dee2e6; border-radius:var(--radius); padding:15px; }
-    legend { padding:0 5px; font-weight:bold; color:var(--primary); }
-    label { font-size:0.9rem; }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 15px;
+    }
+    .modal-title { font-size: 1.2rem; color: var(--primary); }
+    .close-btn {
+      background: none; border: none; font-size: 1.5rem; cursor: pointer;
+      color: var(--text);
+    }
+
+    /* Form styles */
+    form { display: flex; flex-direction: column; gap: 15px; }
+    fieldset { border: 1px solid #dee2e6; border-radius: var(--radius); padding: 15px; }
+    legend { padding: 0 5px; font-weight: bold; color: var(--primary); }
+    label { font-size: 0.9rem; }
     input[type="text"], input[type="number"], select {
-      width:100%; padding:8px; border:1px solid #ced4da; border-radius:var(--radius);
+      width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: var(--radius);
     }
-    input:focus, select:focus { outline:none; border-color:var(--primary); }
-    .time-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); }
+    .time-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
     .time-buttons button {
-      padding:8px 12px; border:1px solid #ced4da; border-radius:var(--radius);
-      background:var(--card-bg); cursor:pointer; transition:var(--transition);
+      padding: 8px 12px; border: 1px solid #ced4da; border-radius: var(--radius);
+      background: var(--card-bg); cursor: pointer; transition: var(--transition);
     }
     .time-buttons button.active {
-      background: var(--primary); color: var(--header-text); border-color:var(--primary);
+      background: var(--primary); color: var(--header-text); border-color: var(--primary);
     }
-    .form-actions { display:flex; justify-content:flex-end; gap:10px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; }
+    
+    /* Status badges */
     .status-badge {
-      display:inline-block; padding:3px 8px; border-radius:12px;
-      font-size:0.75rem; font-weight:bold; text-transform:uppercase;
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
     }
-    .status-in-progress { background-color:var(--in-progress); color:#212529; }
-    .status-completed   { background-color:var(--completed); color:#fff; }
-    .status-error       { background-color:var(--error); color:#fff; }
-    td:nth-child(1) { width:35%; } td:nth-child(2) { width:20%; } td:nth-child(3) { width:45%; }
-    .group-actions { display:flex; gap:5px; margin-top:8px; }
-    .group-actions .btn { margin-bottom:0; padding:5px 8px; font-size:0.8rem; }
+    .status-in-progress {
+      background-color: var(--in-progress);
+      color: #212529;
+    }
+    .status-completed {
+      background-color: var(--completed);
+      color: white;
+    }
+    .status-error {
+      background-color: var(--error);
+      color: white;
+    }
+    
+    /* Fixed column widths */
+    td:nth-child(1) { width: 35%; }
+    td:nth-child(2) { width: 20%; }
+    td:nth-child(3) { width: 45%; }
+
+    /* Group actions */
+    .group-actions {
+      display: flex;
+      gap: 5px;
+      margin-top: 8px;
+    }
+    .group-actions .btn {
+      margin-bottom: 0;
+      padding: 5px 8px;
+      font-size: 0.8rem;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>Calculateur de Score – Loup‑Garou</h1>
+    <h1>Calculateur de Score - Loup-Garou</h1>
+    <div class="header-actions">
+      <button id="saveBtn" class="btn">Sauvegarder</button>
+      <button id="loadBtn" class="btn">Charger</button>
+    </div>
   </header>
   <div class="container">
     <aside>
@@ -124,9 +279,7 @@
     </aside>
     <main>
       <table id="scoreTable">
-        <thead>
-          <tr><th>Groupe</th><th>Note</th><th>Détails</th></tr>
-        </thead>
+        <thead><tr><th>Groupe</th><th>Note</th><th>Détails</th></tr></thead>
         <tbody></tbody>
       </table>
     </main>
@@ -140,9 +293,7 @@
         <button class="close-btn">×</button>
       </div>
       <form id="addGroupForm">
-        <label>Nom du groupe
-          <input id="newGroupName" type="text" placeholder="Ex : Les Loups Sympas" required/>
-        </label>
+        <label>Nom du groupe<input id="newGroupName" type="text" placeholder="Ex: Les Loups Sympas" required/></label>
         <div class="form-actions">
           <button type="button" class="btn close-btn">Annuler</button>
           <button type="submit" class="btn">Créer</button>
@@ -161,44 +312,30 @@
         <input id="groupName" type="hidden"/>
         <fieldset>
           <legend>Pouvoirs</legend>
-          <label>Capitaine utilisé ?
-            <select id="capitaineUsed">
-              <option value="false">Non</option>
-              <option value="true">Oui (-5 pts)</option>
-            </select>
-          </label>
-          <label>Cartes Voyante utilisées
-            <input id="voyanteCards" type="number" min="0" value="0"/>
-            <small>(-1 pt/carte)</small>
-          </label>
-          <label>Réflexion rapide ?
-            <select id="reflexionEarly">
-              <option value="false">Non</option>
-              <option value="true">Oui (+10 pts)</option>
-            </select>
-          </label>
+          <label>Capitaine utilisé ?<select id="capitaineUsed"><option value="false">Non</option><option value="true">Oui (-5 pts)</option></select></label>
+          <label>Cartes Voyante utilisées<input id="voyanteCards" type="number" min="0" value="0"/><small>(-1 pt/carte)</small></label>
+          <label>Réflexion rapide ?<select id="reflexionEarly"><option value="false">Non</option><option value="true">Oui (+10 pts)</option></select></label>
         </fieldset>
         <fieldset>
-          <legend>Performance <small>(-1 pt/30 s)</small></legend>
+          <legend>Performance<small>(-1 pt par tranche de 30 s)</small></legend>
           <input id="treasureTime" type="hidden" value="0"/>
           <div class="time-buttons">
             <button type="button" data-time="30">30 s</button>
             <button type="button" data-time="60">1 min</button>
             <button type="button" data-time="90">1 min 30</button>
-            <!-- etc... -->
+            <button type="button" data-time="120">2 min</button>
+            <button type="button" data-time="150">2 min 30</button>
+            <button type="button" data-time="180">3 min</button>
+            <button type="button" data-time="210">3 min 30</button>
+            <button type="button" data-time="240">4 min</button>
+            <button type="button" data-time="270">4 min 30</button>
+            <button type="button" data-time="300">5 min</button>
           </div>
         </fieldset>
         <fieldset>
           <legend>Rituel</legend>
-          <label>Erreurs au rituel
-            <input id="ritualErrors" type="number" min="0" value="0"/>
-          </label>
-          <label>Voleur corrigé ?
-            <select id="voleurCorrected">
-              <option value="false">Non</option>
-              <option value="true">Oui (-10 pts)</option>
-            </select>
-          </label>
+          <label>Erreurs au rituel<input id="ritualErrors" type="number" min="0" value="0"/></label>
+          <label>Voleur corrigé ?<select id="voleurCorrected"><option value="false">Non</option><option value="true">Oui (-10 pts)</option></select></label>
         </fieldset>
         <div class="form-actions">
           <button type="button" class="btn close-btn">Annuler</button>
@@ -208,13 +345,14 @@
     </div>
   </div>
 
+  <!-- Modal de confirmation de suppression -->
   <div class="modal" id="confirmDeleteModal">
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title">Confirmer la suppression</h2>
         <button class="close-btn">×</button>
       </div>
-      <p>Êtes-vous sûr de vouloir supprimer ce groupe ? Cette action est irréversible.</p>
+      <p>Êtes-vous sûr de vouloir supprimer ce groupe ? Cette action est irréversible.</p>
       <div class="form-actions">
         <button type="button" class="btn close-btn">Annuler</button>
         <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Supprimer</button>
@@ -222,195 +360,333 @@
     </div>
   </div>
 
+  <!-- Modal de chargement de fichier -->
+  <div class="modal" id="loadFileModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Charger un fichier</h2>
+        <button class="close-btn">×</button>
+      </div>
+      <input type="file" id="fileInput" accept=".json" style="margin-bottom: 15px;"/>
+      <div class="form-actions">
+        <button type="button" class="btn close-btn">Annuler</button>
+        <button type="button" id="confirmLoadBtn" class="btn">Charger</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // Envoie les données sur GitHub
-    async function saveToGitHub(data) {
-      try {
-        const res = await fetch('/.netlify/functions/saveScores', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(await res.text());
-        console.log('🦊 Sauvegarde GitHub OK');
-      } catch (err) {
-        console.error('Erreur sauvegarde GitHub :', err);
-      }
-    }
-
     const groups = {};
-    const BASE_SCORE = 50, MAX_BASE = 50;
+    const BASE_SCORE = 50;
+    const MAX_BASE = 50;
 
-    // Ajout, suppression, mise à jour
+    const addGroupBtn = document.getElementById('addGroupBtn');
+    const groupList   = document.getElementById('groupList');
+    const scoreTable  = document.getElementById('scoreTable').querySelector('tbody');
+    const addGroupModal = document.getElementById('addGroupModal');
+    const scoreModal     = document.getElementById('scoreModal');
+    const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+    const loadFileModal = document.getElementById('loadFileModal');
+    const addGroupForm   = document.getElementById('addGroupForm');
+    const scoreForm      = document.getElementById('scoreForm');
+    const closeButtons   = document.querySelectorAll('.close-btn');
+    const saveBtn = document.getElementById('saveBtn');
+    const loadBtn = document.getElementById('loadBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const confirmLoadBtn = document.getElementById('confirmLoadBtn');
+    const fileInput = document.getElementById('fileInput');
+
+    let groupToDelete = null;
+
+    function openModal(modal) { modal.classList.add('active'); }
+    function closeModal(modal){ modal.classList.remove('active'); }
+    addGroupBtn.addEventListener('click', () => openModal(addGroupModal));
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', e => closeModal(e.target.closest('.modal')));
+    });
+
     function addGroup(name) {
       if (!name || groups[name]) return false;
-      groups[name] = { status:'En cours', score:null, data:null, details:null };
-      renderGroupList(); saveToGitHub(groups);
-      return true;
+      groups[name] = { status: 'En cours', score: null, data: null, details: null };
+      renderGroupList(); return true;
     }
+
     function deleteGroup(name) {
       if (groups[name]) {
         delete groups[name];
-        renderGroupList(); renderScoreTable(); saveToGitHub(groups);
+        renderGroupList();
+        renderScoreTable();
       }
     }
-    function updateGroupStatus(name,status) {
+
+    function updateGroupStatus(name, status) {
       groups[name].status = status;
-      renderGroupList(); saveToGitHub(groups);
-    }
-    function updateGroupScore(name,data) {
-      const { base, details } = calcBase(data);
-      groups[name].score   = Math.min(100, base*2);
-      groups[name].data    = data;
-      groups[name].details = details;
-      renderGroupList(); renderScoreTable(); saveToGitHub(groups);
+      renderGroupList();
     }
 
-    // Rendu liste + tableau (idemp)
+    function updateGroupScore(name, data) {
+      const { base, details } = calcBase(data);
+      groups[name].score   = Math.min(100, base * 2);
+      groups[name].data    = data;
+      groups[name].details = details;
+      renderGroupList();
+      renderScoreTable();
+    }
+
     function renderGroupList() {
-      const ul = document.getElementById('groupList');
-      ul.innerHTML = '';
+      groupList.innerHTML = '';
       Object.keys(groups).forEach(name => {
-        const g = groups[name];
+        const group = groups[name];
         const li = document.createElement('li');
-        const classes = ['group-item',
-          g.status==='En cours'?'in-progress':
-          g.status==='Terminé'?'completed':'error'
+
+        // classes de base + statut
+        const classes = [
+          'group-item',
+          group.status === 'En cours'
+            ? 'in-progress'
+            : group.status === 'Terminé'
+              ? 'completed'
+              : 'error'
         ];
-        if (g.score!==null) classes.push('scored');
+        // si scoré, on ajoute le pattern hachuré
+        if (group.score !== null) {
+          classes.push('scored');
+        }
         li.className = classes.join(' ');
+
         li.innerHTML = `
-          <div style="display:flex;justify-content:space-between;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
             <span>${name}</span>
             <span class="status-badge ${
-              g.status==='En cours'?'status-in-progress':
-              g.status==='Terminé'?'status-completed':'status-error'
-            }">${g.status}</span>
+              group.status === 'En cours'  ? 'status-in-progress'
+              : group.status === 'Terminé' ? 'status-completed'
+              : 'status-error'
+            }">${group.status}</span>
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
             <select data-group="${name}" style="flex-grow:1;margin-right:8px;">
-              <option value="En cours"${g.status==='En cours'?' selected':''}>En cours</option>
-              <option value="Terminé"${g.status==='Terminé'?' selected':''}>Terminé</option>
+              <option value="En cours"${group.status==='En cours'?' selected':''}>En cours</option>
+              <option value="Terminé"${group.status==='Terminé'?' selected':''}>Terminé</option>
             </select>
-            ${g.status==='Terminé'?`<button class="btn" data-group="${name}">Résultat</button>`:''}
+            ${group.status==='Terminé'?`<button class="btn" data-group="${name}" style="flex-shrink:0;">Résultat</button>`:''}
           </div>
           <div class="group-actions">
             <button class="btn btn-danger" data-group="${name}" data-action="delete">Supprimer</button>
           </div>
         `;
-        ul.appendChild(li);
+
+        groupList.appendChild(li);
       });
-      // listeners
-      document.querySelectorAll('.group-item select').forEach(sel=>
-        sel.addEventListener('change',e=>
-          updateGroupStatus(e.target.dataset.group,e.target.value)
+
+      // gestionnaires
+      document.querySelectorAll('.group-item select').forEach(sel =>
+        sel.addEventListener('change', e =>
+          updateGroupStatus(e.target.dataset.group, e.target.value)
         )
       );
-      document.querySelectorAll('.group-item button:not(.btn-danger)').forEach(btn=>
-        btn.addEventListener('click',e=>{
+      document.querySelectorAll('.group-item .btn[data-group]:not([data-action])').forEach(btn =>
+        btn.addEventListener('click', e => {
           document.getElementById('groupName').value = e.target.dataset.group;
           openModal(scoreModal);
         })
       );
-      document.querySelectorAll('.btn-danger').forEach(btn=>
-        btn.addEventListener('click',e=>{
-          window.groupToDelete = e.target.dataset.group;
+      document.querySelectorAll('.group-item .btn[data-action="delete"]').forEach(btn =>
+        btn.addEventListener('click', e => {
+          groupToDelete = e.target.dataset.group;
           openModal(confirmDeleteModal);
         })
       );
     }
 
     function renderScoreTable() {
-      const tbody = document.querySelector('#scoreTable tbody');
-      tbody.innerHTML = '';
+      scoreTable.innerHTML = '';
       Object.entries(groups)
-        .filter(([,g])=>g.score!==null)
-        .sort((a,b)=>b[1].score-a[1].score)
-        .forEach(([name,g])=>{
+        .filter(([_,g]) => g.score !== null)
+        .sort((a,b)=> b[1].score - a[1].score)
+        .forEach(([name,group]) => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${name}</td>
-            <td>${g.score}/100</td>
+            <td>${group.score}/100</td>
             <td>
-              ${g.details?`
-                <button class="btn-detail">Détails</button>
-                <div class="details-content">
-                  <ul>${g.details.map(d=>`<li>${d}</li>`).join('')}</ul>
-                </div>`:''}
+              ${group.details
+                ? `<button class="btn-detail">Détails</button>
+                   <div class="details-content">
+                     <ul>${group.details.map(d=>`<li>${d}</li>`).join('')}</ul>
+                   </div>`
+                : ''}
             </td>
           `;
-          tbody.appendChild(tr);
+          scoreTable.appendChild(tr);
         });
-      document.querySelectorAll('.btn-detail').forEach(btn=>
-        btn.addEventListener('click',()=>{
-          const div = btn.nextElementSibling;
-          div.classList.toggle('active');
-          btn.textContent = div.classList.contains('active')?'Masquer':'Détails';
+      document.querySelectorAll('.btn-detail').forEach(btn =>
+        btn.addEventListener('click', () => {
+          const c = btn.nextElementSibling;
+          c.classList.toggle('active');
+          btn.textContent = c.classList.contains('active')?'Masquer':'Détails';
         })
       );
     }
 
     function calcBase(data) {
-      let s = BASE_SCORE, details = [];
-      details.push(`Score de base : ${s} pts`);
-      s+=2; details.push(`Bonus auto : +2 (Total : ${s})`);
-      if(data.capitaineUsed){s-=5; details.push(`Capitaine : -5 (Total : ${s})`);}
-      if(data.voyanteCards>0){s-=data.voyanteCards; details.push(`Voyante x${data.voyanteCards} : -${data.voyanteCards} (Total : ${s})`);}
-      if(data.reflexionEarly){s+=10; details.push(`Réflexion : +10 (Total : ${s})`);}
-      const pen = Math.floor(data.treasureTime/30);
-      if(pen>0){s-=pen; details.push(`Temps ${data.treasureTime}s : -${pen} (Total : ${s})`);}
-      if(data.ritualErrors>0){
-        const p = data.ritualErrors===1?(data.voleurCorrected?10:20):20;
-        s-=p; details.push(`Erreur rituel : -${p} (Total : ${s})`);
+      let s = BASE_SCORE;
+      const details = [];
+      details.push(`Score de base: ${s} pts`);
+      s += 2; details.push(`Bonus automatique: +2 pts (Total: ${s})`);
+      if (data.capitaineUsed) {
+        s -= 5;
+        details.push(`Capitaine utilisé: -5 pts (Total: ${s})`);
       }
-      const finalS = Math.max(0,Math.min(MAX_BASE,s));
-      if(finalS!==s) details.push(`Ajusté : ${finalS}`);
-      details.push(`Final doublé : ${finalS*2}/100`);
+      if (data.voyanteCards > 0) {
+        s -= data.voyanteCards;
+        details.push(`Cartes Voyante (${data.voyanteCards}): -${data.voyanteCards} pts (Total: ${s})`);
+      }
+      if (data.reflexionEarly) {
+        s += 10;
+        details.push(`Réflexion rapide: +10 pts (Total: ${s})`);
+      }
+      const pen = Math.floor(data.treasureTime/30);
+      if (pen > 0) {
+        s -= pen;
+        details.push(`Temps écoulé (${data.treasureTime}s): -${pen} pts (Total: ${s})`);
+      }
+      if (data.ritualErrors === 1) {
+        const p = data.voleurCorrected ? 10 : 20;
+        s -= p;
+        details.push(`Erreur au rituel${data.voleurCorrected?' (corrigé)':''}: -${p} pts (Total: ${s})`);
+      } else if (data.ritualErrors > 1) {
+        s -= 20;
+        details.push(`Erreurs multiples au rituel: -20 pts (Total: ${s})`);
+      }
+      const finalS = Math.max(0, Math.min(MAX_BASE, s));
+      if (finalS !== s) {
+        details.push(`Score ajusté entre 0 et ${MAX_BASE}: ${finalS} pts`);
+      }
+      details.push(`Score final doublé: ${finalS*2}/100`);
       return { base: finalS, details };
     }
 
-    // Modals (idem)
-    const addGroupBtn = document.getElementById('addGroupBtn');
-    const closeBtns   = document.querySelectorAll('.close-btn');
-    addGroupBtn.addEventListener('click',()=>openModal(addGroupModal));
-    closeBtns.forEach(b=>b.addEventListener('click',e=>closeModal(e.target.closest('.modal'))));
+    document.querySelectorAll('.time-buttons button').forEach(btn =>
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.time-buttons button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('treasureTime').value = btn.dataset.time;
+      })
+    );
 
-    function openModal(m){m.classList.add('active');}
-    function closeModal(m){m.classList.remove('active');}
-
-    document.getElementById('addGroupForm').addEventListener('submit',e=>{
+    addGroupForm.addEventListener('submit', e => {
       e.preventDefault();
       const name = document.getElementById('newGroupName').value.trim();
-      if(addGroup(name)){e.target.reset(); closeModal(addGroupModal);}
-      else alert(name?'Ce nom existe déjà':'Entre un nom, hein !');
+      if (addGroup(name)) {
+        addGroupForm.reset();
+        closeModal(addGroupModal);
+      } else {
+        alert(name ? 'Ce nom existe déjà' : 'Veuillez entrer un nom');
+      }
     });
 
-    document.getElementById('scoreForm').addEventListener('submit',e=>{
+    scoreForm.addEventListener('submit', e => {
       e.preventDefault();
       const name = document.getElementById('groupName').value;
       const data = {
-        capitaineUsed:   document.getElementById('capitaineUsed').value==='true',
+        capitaineUsed:   document.getElementById('capitaineUsed').value === 'true',
         voyanteCards:    +document.getElementById('voyanteCards').value,
-        reflexionEarly:  document.getElementById('reflexionEarly').value==='true',
+        reflexionEarly:  document.getElementById('reflexionEarly').value === 'true',
         treasureTime:    +document.getElementById('treasureTime').value,
         ritualErrors:    +document.getElementById('ritualErrors').value,
-        voleurCorrected: document.getElementById('voleurCorrected').value==='true'
+        voleurCorrected: document.getElementById('voleurCorrected').value === 'true'
       };
-      updateGroupScore(name,data);
-      e.target.reset();
+      updateGroupScore(name, data);
+      scoreForm.reset();
       document.querySelectorAll('.time-buttons button').forEach(b=>b.classList.remove('active'));
       document.getElementById('treasureTime').value = 0;
       closeModal(scoreModal);
     });
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click',()=>{
-      deleteGroup(window.groupToDelete);
-      window.groupToDelete = null;
+    // Gestion de la suppression
+    confirmDeleteBtn.addEventListener('click', () => {
+      if (groupToDelete) {
+        deleteGroup(groupToDelete);
+        groupToDelete = null;
+      }
       closeModal(confirmDeleteModal);
     });
 
+    // Sauvegarde des données
+    saveBtn.addEventListener('click', () => {
+      const dataStr = JSON.stringify(groups, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = 'scores-loup-garou.json';
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    });
+
+    // Chargement des données
+    loadBtn.addEventListener('click', () => {
+      openModal(loadFileModal);
+    });
+
+    confirmLoadBtn.addEventListener('click', () => {
+      if (fileInput.files.length === 0) {
+        alert('Veuillez sélectionner un fichier');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          // Vérifier que le format est correct
+          if (typeof data !== 'object' || data === null) {
+            throw new Error('Format de fichier invalide');
+          }
+
+          // Vider les groupes actuels
+          Object.keys(groups).forEach(key => delete groups[key]);
+
+          // Ajouter les nouveaux groupes
+          Object.assign(groups, data);
+
+          renderGroupList();
+          renderScoreTable();
+          closeModal(loadFileModal);
+          fileInput.value = '';
+        } catch (err) {
+          alert('Erreur lors du chargement du fichier: ' + err.message);
+        }
+      };
+
+      reader.readAsText(file);
+    });
+
     // Init
-    renderGroupList(); renderScoreTable();
-  </script>
+    renderGroupList();
+    renderScoreTable();
+  
+    // 🔁 Chargement automatique depuis GitHub au démarrage
+    async function loadFromGitHub() {
+      try {
+        const res = await fetch('https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json');
+        if (!res.ok) throw new Error('Fichier non trouvé sur GitHub');
+        const data = await res.json();
+        const decoded = atob(data.content);
+        const parsed = JSON.parse(decoded);
+        Object.assign(groups, parsed);
+        renderGroupList();
+        renderScoreTable();
+        console.log("📥 Données chargées depuis GitHub");
+      } catch (err) {
+        console.warn("⚠️ Échec du chargement :", err.message);
+      }
+    }
+    window.addEventListener('DOMContentLoaded', loadFromGitHub);
+
+</script>
 </body>
 </html>

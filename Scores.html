@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculateur de Score – Loup‑Garou</title>
+  <style>
+    :root {
+      --bg: #f8f9fa; --header-bg: #343a40; --header-text: #fff;
+      --sidebar-bg: #fff; --sidebar-text: #495057; --sidebar-border: #dee2e6;
+      --main-bg: #fff; --primary: #17a2b8; --primary-hover: #138496;
+      --text: #212529; --card-bg: #fff; --card-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      --radius: 6px; --transition: 0.3s;
+      --in-progress: #ffc107; --completed: #17a2b8; --error: #dc3545;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { display: flex; flex-direction: column; min-height: 100vh;
+      background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    header { background: var(--header-bg); color: var(--header-text);
+      padding: 15px 20px; text-align: center; box-shadow: var(--card-shadow);
+    }
+    header h1 { font-size: 1.5rem; }
+    .container { flex: 1; display: flex; overflow: hidden; }
+    aside { width: 350px; min-width: 350px;
+      background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border);
+      padding: 20px; overflow-y: auto;
+    }
+    .btn { display: inline-block; padding: 10px 15px; border: none;
+      border-radius: var(--radius); background: var(--primary);
+      color: var(--header-text); text-align: center; cursor: pointer;
+      transition: var(--transition); text-decoration: none; font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-danger { background: var(--error); }
+    .btn-danger:hover { background: #c82333; }
+    .group-list { list-style: none; }
+    .group-item {
+      background: var(--card-bg); padding: 10px 15px; border-radius: var(--radius);
+      margin-bottom: 10px; box-shadow: var(--card-shadow);
+      transition: var(--transition); color: var(--sidebar-text);
+      border-left: 4px solid var(--in-progress); position: relative;
+    }
+    .group-item.in-progress { border-left-color: var(--in-progress); }
+    .group-item.completed   { border-left-color: var(--completed); }
+    .group-item.error       { border-left-color: var(--error); }
+    .group-item.scored::before {
+      content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+      background-image: repeating-linear-gradient(
+        45deg, rgba(0,0,0,0.2) 0, rgba(0,0,0,0.2) 2px,
+        transparent 1px, transparent 5px
+      );
+      border-radius: var(--radius); pointer-events: none;
+    }
+    .group-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    main { flex: 1; padding: 20px; overflow-y: auto; background: var(--main-bg); }
+    table { width:100%; border-collapse: collapse; box-shadow: var(--card-shadow);
+      border-radius: var(--radius); overflow: hidden; table-layout: fixed;
+    }
+    th, td { padding:12px 15px; border-bottom:1px solid #dee2e6; text-align:left; }
+    th { background: var(--primary); color: var(--header-text);
+      text-transform: uppercase; font-size:0.9rem;
+    }
+    tbody tr:hover { background: #f1f3f5; }
+    .btn-detail { background: none; border: none; color: var(--primary);
+      cursor: pointer; padding: 0; font-size: 0.9rem;
+    }
+    .details-content { display: none; margin-top:10px; font-size:0.9rem;
+      color:#495057; background:#f8f9fa; padding:10px; border-radius:var(--radius);
+    }
+    .details-content.active { display:block; }
+    .modal { position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.5); display:flex; justify-content:center;
+      align-items:center; opacity:0; pointer-events:none; transition:var(--transition);
+      z-index:1000;
+    }
+    .modal.active { opacity:1; pointer-events:all; }
+    .modal-content { background:var(--card-bg); padding:20px;
+      border-radius:var(--radius); width:90%; max-width:500px;
+      box-shadow:var(--card-shadow); max-height:90vh; overflow-y:auto;
+    }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
+    .modal-title { font-size:1.2rem; color:var(--primary); }
+    .close-btn { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text); }
+    form { display:flex; flex-direction:column; gap:15px; }
+    fieldset { border:1px solid #dee2e6; border-radius:var(--radius); padding:15px; }
+    legend { padding:0 5px; font-weight:bold; color:var(--primary); }
+    label { font-size:0.9rem; }
+    input[type="text"], input[type="number"], select {
+      width:100%; padding:8px; border:1px solid #ced4da; border-radius:var(--radius);
+    }
+    input:focus, select:focus { outline:none; border-color:var(--primary); }
+    .time-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+    .time-buttons button {
+      padding:8px 12px; border:1px solid #ced4da; border-radius:var(--radius);
+      background:var(--card-bg); cursor:pointer; transition:var(--transition);
+    }
+    .time-buttons button.active {
+      background: var(--primary); color: var(--header-text); border-color:var(--primary);
+    }
+    .form-actions { display:flex; justify-content:flex-end; gap:10px; }
+    .status-badge {
+      display:inline-block; padding:3px 8px; border-radius:12px;
+      font-size:0.75rem; font-weight:bold; text-transform:uppercase;
+    }
+    .status-in-progress { background-color:var(--in-progress); color:#212529; }
+    .status-completed   { background-color:var(--completed); color:#fff; }
+    .status-error       { background-color:var(--error); color:#fff; }
+    td:nth-child(1) { width:35%; } td:nth-child(2) { width:20%; } td:nth-child(3) { width:45%; }
+    .group-actions { display:flex; gap:5px; margin-top:8px; }
+    .group-actions .btn { margin-bottom:0; padding:5px 8px; font-size:0.8rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Calculateur de Score – Loup‑Garou</h1>
+  </header>
+  <div class="container">
+    <aside>
+      <button id="addGroupBtn" class="btn">Ajouter un groupe</button>
+      <ul id="groupList" class="group-list"></ul>
+    </aside>
+    <main>
+      <table id="scoreTable">
+        <thead>
+          <tr><th>Groupe</th><th>Note</th><th>Détails</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal" id="addGroupModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Ajouter un groupe</h2>
+        <button class="close-btn">×</button>
+      </div>
+      <form id="addGroupForm">
+        <label>Nom du groupe
+          <input id="newGroupName" type="text" placeholder="Ex : Les Loups Sympas" required/>
+        </label>
+        <div class="form-actions">
+          <button type="button" class="btn close-btn">Annuler</button>
+          <button type="submit" class="btn">Créer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="scoreModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Entrer le résultat</h2>
+        <button class="close-btn">×</button>
+      </div>
+      <form id="scoreForm">
+        <input id="groupName" type="hidden"/>
+        <fieldset>
+          <legend>Pouvoirs</legend>
+          <label>Capitaine utilisé ?
+            <select id="capitaineUsed">
+              <option value="false">Non</option>
+              <option value="true">Oui (-5 pts)</option>
+            </select>
+          </label>
+          <label>Cartes Voyante utilisées
+            <input id="voyanteCards" type="number" min="0" value="0"/>
+            <small>(-1 pt/carte)</small>
+          </label>
+          <label>Réflexion rapide ?
+            <select id="reflexionEarly">
+              <option value="false">Non</option>
+              <option value="true">Oui (+10 pts)</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Performance <small>(-1 pt/30 s)</small></legend>
+          <input id="treasureTime" type="hidden" value="0"/>
+          <div class="time-buttons">
+            <button type="button" data-time="30">30 s</button>
+            <button type="button" data-time="60">1 min</button>
+            <button type="button" data-time="90">1 min 30</button>
+            <!-- etc... -->
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Rituel</legend>
+          <label>Erreurs au rituel
+            <input id="ritualErrors" type="number" min="0" value="0"/>
+          </label>
+          <label>Voleur corrigé ?
+            <select id="voleurCorrected">
+              <option value="false">Non</option>
+              <option value="true">Oui (-10 pts)</option>
+            </select>
+          </label>
+        </fieldset>
+        <div class="form-actions">
+          <button type="button" class="btn close-btn">Annuler</button>
+          <button type="submit" class="btn">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="confirmDeleteModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirmer la suppression</h2>
+        <button class="close-btn">×</button>
+      </div>
+      <p>Êtes-vous sûr de vouloir supprimer ce groupe ? Cette action est irréversible.</p>
+      <div class="form-actions">
+        <button type="button" class="btn close-btn">Annuler</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Envoie les données sur GitHub
+    async function saveToGitHub(data) {
+      try {
+        const res = await fetch('/.netlify/functions/saveScores', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        console.log('🦊 Sauvegarde GitHub OK');
+      } catch (err) {
+        console.error('Erreur sauvegarde GitHub :', err);
+      }
+    }
+
+    const groups = {};
+    const BASE_SCORE = 50, MAX_BASE = 50;
+
+    // Ajout, suppression, mise à jour
+    function addGroup(name) {
+      if (!name || groups[name]) return false;
+      groups[name] = { status:'En cours', score:null, data:null, details:null };
+      renderGroupList(); saveToGitHub(groups);
+      return true;
+    }
+    function deleteGroup(name) {
+      if (groups[name]) {
+        delete groups[name];
+        renderGroupList(); renderScoreTable(); saveToGitHub(groups);
+      }
+    }
+    function updateGroupStatus(name,status) {
+      groups[name].status = status;
+      renderGroupList(); saveToGitHub(groups);
+    }
+    function updateGroupScore(name,data) {
+      const { base, details } = calcBase(data);
+      groups[name].score   = Math.min(100, base*2);
+      groups[name].data    = data;
+      groups[name].details = details;
+      renderGroupList(); renderScoreTable(); saveToGitHub(groups);
+    }
+
+    // Rendu liste + tableau (idemp)
+    function renderGroupList() {
+      const ul = document.getElementById('groupList');
+      ul.innerHTML = '';
+      Object.keys(groups).forEach(name => {
+        const g = groups[name];
+        const li = document.createElement('li');
+        const classes = ['group-item',
+          g.status==='En cours'?'in-progress':
+          g.status==='Terminé'?'completed':'error'
+        ];
+        if (g.score!==null) classes.push('scored');
+        li.className = classes.join(' ');
+        li.innerHTML = `
+          <div style="display:flex;justify-content:space-between;">
+            <span>${name}</span>
+            <span class="status-badge ${
+              g.status==='En cours'?'status-in-progress':
+              g.status==='Terminé'?'status-completed':'status-error'
+            }">${g.status}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;">
+            <select data-group="${name}" style="flex-grow:1;margin-right:8px;">
+              <option value="En cours"${g.status==='En cours'?' selected':''}>En cours</option>
+              <option value="Terminé"${g.status==='Terminé'?' selected':''}>Terminé</option>
+            </select>
+            ${g.status==='Terminé'?`<button class="btn" data-group="${name}">Résultat</button>`:''}
+          </div>
+          <div class="group-actions">
+            <button class="btn btn-danger" data-group="${name}" data-action="delete">Supprimer</button>
+          </div>
+        `;
+        ul.appendChild(li);
+      });
+      // listeners
+      document.querySelectorAll('.group-item select').forEach(sel=>
+        sel.addEventListener('change',e=>
+          updateGroupStatus(e.target.dataset.group,e.target.value)
+        )
+      );
+      document.querySelectorAll('.group-item button:not(.btn-danger)').forEach(btn=>
+        btn.addEventListener('click',e=>{
+          document.getElementById('groupName').value = e.target.dataset.group;
+          openModal(scoreModal);
+        })
+      );
+      document.querySelectorAll('.btn-danger').forEach(btn=>
+        btn.addEventListener('click',e=>{
+          window.groupToDelete = e.target.dataset.group;
+          openModal(confirmDeleteModal);
+        })
+      );
+    }
+
+    function renderScoreTable() {
+      const tbody = document.querySelector('#scoreTable tbody');
+      tbody.innerHTML = '';
+      Object.entries(groups)
+        .filter(([,g])=>g.score!==null)
+        .sort((a,b)=>b[1].score-a[1].score)
+        .forEach(([name,g])=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${name}</td>
+            <td>${g.score}/100</td>
+            <td>
+              ${g.details?`
+                <button class="btn-detail">Détails</button>
+                <div class="details-content">
+                  <ul>${g.details.map(d=>`<li>${d}</li>`).join('')}</ul>
+                </div>`:''}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      document.querySelectorAll('.btn-detail').forEach(btn=>
+        btn.addEventListener('click',()=>{
+          const div = btn.nextElementSibling;
+          div.classList.toggle('active');
+          btn.textContent = div.classList.contains('active')?'Masquer':'Détails';
+        })
+      );
+    }
+
+    function calcBase(data) {
+      let s = BASE_SCORE, details = [];
+      details.push(`Score de base : ${s} pts`);
+      s+=2; details.push(`Bonus auto : +2 (Total : ${s})`);
+      if(data.capitaineUsed){s-=5; details.push(`Capitaine : -5 (Total : ${s})`);}
+      if(data.voyanteCards>0){s-=data.voyanteCards; details.push(`Voyante x${data.voyanteCards} : -${data.voyanteCards} (Total : ${s})`);}
+      if(data.reflexionEarly){s+=10; details.push(`Réflexion : +10 (Total : ${s})`);}
+      const pen = Math.floor(data.treasureTime/30);
+      if(pen>0){s-=pen; details.push(`Temps ${data.treasureTime}s : -${pen} (Total : ${s})`);}
+      if(data.ritualErrors>0){
+        const p = data.ritualErrors===1?(data.voleurCorrected?10:20):20;
+        s-=p; details.push(`Erreur rituel : -${p} (Total : ${s})`);
+      }
+      const finalS = Math.max(0,Math.min(MAX_BASE,s));
+      if(finalS!==s) details.push(`Ajusté : ${finalS}`);
+      details.push(`Final doublé : ${finalS*2}/100`);
+      return { base: finalS, details };
+    }
+
+    // Modals (idem)
+    const addGroupBtn = document.getElementById('addGroupBtn');
+    const closeBtns   = document.querySelectorAll('.close-btn');
+    addGroupBtn.addEventListener('click',()=>openModal(addGroupModal));
+    closeBtns.forEach(b=>b.addEventListener('click',e=>closeModal(e.target.closest('.modal'))));
+
+    function openModal(m){m.classList.add('active');}
+    function closeModal(m){m.classList.remove('active');}
+
+    document.getElementById('addGroupForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      const name = document.getElementById('newGroupName').value.trim();
+      if(addGroup(name)){e.target.reset(); closeModal(addGroupModal);}
+      else alert(name?'Ce nom existe déjà':'Entre un nom, hein !');
+    });
+
+    document.getElementById('scoreForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      const name = document.getElementById('groupName').value;
+      const data = {
+        capitaineUsed:   document.getElementById('capitaineUsed').value==='true',
+        voyanteCards:    +document.getElementById('voyanteCards').value,
+        reflexionEarly:  document.getElementById('reflexionEarly').value==='true',
+        treasureTime:    +document.getElementById('treasureTime').value,
+        ritualErrors:    +document.getElementById('ritualErrors').value,
+        voleurCorrected: document.getElementById('voleurCorrected').value==='true'
+      };
+      updateGroupScore(name,data);
+      e.target.reset();
+      document.querySelectorAll('.time-buttons button').forEach(b=>b.classList.remove('active'));
+      document.getElementById('treasureTime').value = 0;
+      closeModal(scoreModal);
+    });
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click',()=>{
+      deleteGroup(window.groupToDelete);
+      window.groupToDelete = null;
+      closeModal(confirmDeleteModal);
+    });
+
+    // Init
+    renderGroupList(); renderScoreTable();
+  </script>
+</body>
+</html>

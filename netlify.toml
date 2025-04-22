@@ -1,0 +1,7 @@
+# netlify.toml
+[build]
+  publish   = "."                     # on publie la racine
+  functions = "netlify/functions"     # dossier des functions
+
+[dev]
+  functions = "netlify/functions"     # active les functions en local si tu utilises netlify-cli

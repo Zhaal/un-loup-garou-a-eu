@@ -304,7 +304,7 @@
     async function loadFromGitHub() {
       try {
         const apiUrl =
-          'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
+          'https://raw.githubusercontent.com/Zhaal/public-scores/main/scores-loup-garou.json';
         const response = await fetch(`${apiUrl}?ref=main`, {
           headers: { 'Accept': 'application/vnd.github.v3.raw' },
           cache: 'no-store'

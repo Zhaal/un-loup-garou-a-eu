@@ -240,7 +240,7 @@
 
 const groups = {};
 
-fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-loup-garou.json')
+fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-loup-garou.json?cache_bust=' + Date.now())
   .then(response => {
     if (!response.ok) throw new Error('Erreur de chargement des scores');
     return response.json();

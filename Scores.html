@@ -208,7 +208,7 @@
           </div>
           <input id="voyanteCards" type="hidden" value="0"/>
           
-          <label>Réflexion rapide ?</label>
+          <label>Réflexion rapide ? (moins de 2 minutes) </label>
           <div class="radio-group">
             <div class="radio-option">
               <input type="radio" id="reflexionNo" name="reflexionEarly" value="false" checked>
@@ -221,7 +221,7 @@
           </div>
         </fieldset>
         <fieldset>
-          <legend>Performance <small>(-1 pt/30 s)</small></legend>
+          <legend>Temps d'exploration de la salle de trésor <small>(-1 pt/30 s)</small></legend>
           <input id="treasureTime" type="hidden" value="0"/>
           <div class="time-buttons">
             <button type="button" data-time="30">30 s</button>
@@ -240,20 +240,20 @@
         </fieldset>
         <fieldset>
           <legend>Rituel</legend>
-          <label>Erreurs au rituel</label>
+                 <label>Voleur utilisé ?</label>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" id="voleurNo" name="voleurCorrected" value="false" checked>
+              <label for="voleurNo">Non</label>
+            </div>   
+          <label>Résultat du rituel</label>
           <div class="ritual-buttons">
             <button type="button" data-ritual="0" data-voleur="false">Sans erreur, Succès</button>
             <button type="button" data-ritual="1" data-voleur="false">Une erreur (déclencher le Voleur)</button>
             <button type="button" data-ritual="2" data-voleur="false">Deux erreurs, Échec</button>
           </div>
           <input id="ritualErrors" type="hidden" value="0"/>
-          
-          <label>Voleur corrigé ?</label>
-          <div class="radio-group">
-            <div class="radio-option">
-              <input type="radio" id="voleurNo" name="voleurCorrected" value="false" checked>
-              <label for="voleurNo">Non</label>
-            </div>
+            
             <div class="radio-option">
               <input type="radio" id="voleurYes" name="voleurCorrected" value="true">
               <label for="voleurYes">Oui (-10 pts)</label>

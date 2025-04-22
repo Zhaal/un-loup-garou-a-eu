@@ -238,7 +238,7 @@
       }
     }
 
-    const groups = {};
+const groups = {};
 
 fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-loup-garou.json')
   .then(response => {
@@ -247,12 +247,14 @@ fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-lo
   })
   .then(data => {
     Object.assign(groups, data);
+    console.log('✅ Données chargées :', groups); // pour debug
     renderGroupList();
     renderScoreTable();
   })
   .catch(err => {
-    console.warn('Aucun score chargé :', err);
+    console.warn('⚠️ Aucun score chargé :', err);
   });
+
 
     const BASE_SCORE = 50, MAX_BASE = 50;
 
@@ -423,6 +425,7 @@ fetch('https://raw.githubusercontent.com/Zhaal/un-loup-garou-a-eu/main/scores-lo
       window.groupToDelete = null;
       closeModal(confirmDeleteModal);
     });
+
 
   </script>
 </body>

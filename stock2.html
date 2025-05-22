@@ -487,14 +487,17 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       }
       achats.push(achat);
       saveData("asso_produits", produits);
+autoSaveToGitHub();
       saveData("asso_achats", achats);
+autoSaveToGitHub();
       showStockAlerts();
       showStocksSynth();
       if(achat.paye) {
         paiements.push({id:uuid(), userId:currentCommande.userId, montant:achat.total, date:Date.now(), mode:"achat"});
         saveData("asso_paiements", paiements);
+autoSaveToGitHub();
       }
-      showConfirmation("Merci pour votre achat !");
+      showConfirmation("Merci !");
       setTimeout(showUsersList, 1600);
       return false;
     }
@@ -591,6 +594,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         users.push(u);
       }
       saveData("asso_users", users);
+autoSaveToGitHub();
       panelUsers();
       return false;
     }
@@ -599,6 +603,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       let ind = users.findIndex(x=>x.id===id);
       users[ind].deleted = true;
       saveData("asso_users", users);
+autoSaveToGitHub();
       panelUsers();
     }
 
@@ -650,6 +655,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         produits.push(p);
       }
       saveData("asso_produits", produits);
+autoSaveToGitHub();
       panelStock();
       showStockAlerts();
       showStocksSynth();
@@ -660,6 +666,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       let ind = produits.findIndex(x=>x.id===id);
       produits[ind].deleted = true;
       saveData("asso_produits", produits);
+autoSaveToGitHub();
       panelStock();
       showStockAlerts();
       showStocksSynth();
@@ -672,6 +679,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       if(prod.stock+val<0) return alert("Stock ne peut pas devenir négatif.");
       prod.stock += val;
       saveData("asso_produits", produits);
+autoSaveToGitHub();
       panelStock();
       showStockAlerts();
       showStocksSynth();
@@ -716,6 +724,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       if(isNaN(val)||val<=0) return alert("Montant invalide.");
       paiements.push({id:uuid(), userId, montant:val, date:Date.now(), mode:"manuel"});
       saveData("asso_paiements", paiements);
+autoSaveToGitHub();
       panelPaiements();
     }
 
@@ -828,6 +837,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       settings.mdpAdmin = f.mdpAdmin.value.trim();
       settings.mdpStock = f.mdpStock.value.trim();
       saveData("asso_settings", settings);
+autoSaveToGitHub();
       applySettings();
       showUsersList();
       return false;
@@ -875,10 +885,15 @@ async function importAutoFromGitHub() {
     const data = await response.json();
     if(data.users && data.produits && data.achats && data.paiements && data.settings) {
       saveData("asso_users", data.users);
+autoSaveToGitHub();
       saveData("asso_produits", data.produits);
+autoSaveToGitHub();
       saveData("asso_achats", data.achats);
+autoSaveToGitHub();
       saveData("asso_paiements", data.paiements);
+autoSaveToGitHub();
       saveData("asso_settings", data.settings);
+autoSaveToGitHub();
       localStorage.setItem("importedFromGitHub", "true");
       console.log('Import GitHub réussi, rechargement.');
       location.reload();

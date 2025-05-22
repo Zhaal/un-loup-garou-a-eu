@@ -249,29 +249,96 @@
       // Les champs GitHub sont inutiles côté client pour ce mode !
     };
 
-    function $(id) { return document.getElementById(id); }
-    function uuid() { return '_' + Math.random().toString(36).substr(2,9); }
-    function today() { return new Date().toISOString().slice(0,10); }
-    function formatDate(d) { return new Date(d).toLocaleString("fr-FR"); }
+function $(id) { return document.getElementById(id); }
+function uuid() { return '_' + Math.random().toString(36).substr(2,9); }
+function today() { return new Date().toISOString().slice(0,10); }
+function formatDate(d) { return new Date(d).toLocaleString("fr-FR"); }
 
-    function loadData(key, def) {
-      try { return JSON.parse(localStorage.getItem(key)) || def; }
-      catch(e) { return def; }
+// Nouveau flag pour éviter la sauvegarde à l'ouverture
+let isFirstLoad = true;
+
+// Chargement localStorage OU valeurs par défaut
+let users, produits, achats, paiements, settings;
+function loadAllData() {
+  users = loadData("asso_users", defaultUsers);
+  produits = loadData("asso_produits", defaultProduits);
+  achats = loadData("asso_achats", []);
+  paiements = loadData("asso_paiements", []);
+  settings = loadData("asso_settings", defaultSettings);
+}
+
+function loadData(key, def) {
+  try { return JSON.parse(localStorage.getItem(key)) || def; }
+  catch(e) { return def; }
+}
+function saveData(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+  if (!isFirstLoad) autoSaveToGitHub();
+}
+
+// Sauvegarde automatique : bloque à l'ouverture, ne s’active qu’après la première action utilisateur
+async function autoSaveToGitHub() {
+  if (isFirstLoad) return; // NE RIEN FAIRE si c'est le tout premier chargement
+  try {
+    const data = { users, produits, achats, paiements, settings };
+    const res = await fetch('/.netlify/functions/saveStock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      console.warn('Erreur sauvegarde GitHub :', err);
+    } else {
+      console.log('Auto-sauvegarde GitHub OK');
     }
-    function saveData(key, val) {
-      localStorage.setItem(key, JSON.stringify(val));
-      autoSaveToGitHub(); // Sauvegarde automatique à chaque changement
+  } catch (err) {
+    console.warn('Erreur auto-sauvegarde GitHub :', err);
+  }
+}
+
+// Modification de l'import GitHub pour ne PAS sauvegarder à l'ouverture
+async function importAutoFromGitHub() {
+  try {
+    if(localStorage.getItem("importedFromGitHub") === "true") {
+      localStorage.removeItem("importedFromGitHub");
+      return false;
     }
+    const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/stock-gardiens.json';
+    const response = await fetch(`${apiUrl}?ref=main`, {
+      headers: { 'Accept': 'application/vnd.github.v3.raw' },
+      cache: 'no-store'
+    });
+    if (!response.ok) {
+      console.warn('Impossible de charger les données GitHub :', response.status);
+      return false;
+    }
+    const data = await response.json();
+    if(data.users && data.produits && data.achats && data.paiements && data.settings) {
+      localStorage.setItem("asso_users", JSON.stringify(data.users));
+      localStorage.setItem("asso_produits", JSON.stringify(data.produits));
+      localStorage.setItem("asso_achats", JSON.stringify(data.achats));
+      localStorage.setItem("asso_paiements", JSON.stringify(data.paiements));
+      localStorage.setItem("asso_settings", JSON.stringify(data.settings));
+      localStorage.setItem("importedFromGitHub", "true");
+      console.log('Import GitHub réussi, rechargement.');
+      location.reload();
+      return true;
+    } else {
+      console.warn('Fichier GitHub invalide (pas tous les champs)');
+      return false;
+    }
+  } catch (err) {
+    console.warn('Erreur import GitHub:', err);
+    return false;
+  }
+}
 
-    let users = loadData("asso_users", defaultUsers);
-    let produits = loadData("asso_produits", defaultProduits);
-    let achats = loadData("asso_achats", []);
-    let paiements = loadData("asso_paiements", []);
-    let settings = loadData("asso_settings", defaultSettings);
-
-document.addEventListener("DOMContentLoaded", async ()=>{
+// --- Initialisation (DOMContentLoaded) ---
+document.addEventListener("DOMContentLoaded", async () => {
   await importAutoFromGitHub();
-  // Ensuite, le reste :
+  loadAllData();
+  isFirstLoad = false; // Lancement terminé, les actions utilisateur peuvent désormais sauvegarder
   applySettings();
   showStockAlerts();
   showUsersList();
@@ -283,6 +350,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     }
   });
 });
+
 
 
 

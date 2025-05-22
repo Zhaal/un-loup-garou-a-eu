@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Les Gardiens du Jeu</title>
+  <title>Gestion de stock - Association</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root {
@@ -83,8 +83,6 @@
       min-width: 140px;
       position: relative;
     }
-.btn-sm { font-size:0.95em; padding:0.32em 0.9em; border-radius:1em; }
-
     .user-btn:hover, .user-btn:focus {
       background: #e0fbfc;
     }
@@ -124,6 +122,7 @@
     .btn-success:hover, .btn-success:focus {
       background: #1e893c;
     }
+    .btn-sm { font-size:0.95em; padding:0.32em 0.9em; border-radius:1em; }
     table {
       border-collapse: collapse;
       width: 100%;
@@ -202,7 +201,7 @@
 <body>
   <header>
     <img src="" alt="" id="logo" style="display:none;">
-    <span id="assoTitle">Les Gardiens du Jeu</span>
+    <span id="assoTitle">Les Gardiens du jeu</span>
   </header>
   <main class="container">
     <!-- Alerts/Stock bar -->
@@ -217,7 +216,7 @@
       <div class="center">
         <button class="btn" onclick="showAdminPanel('users')">👤 Gestion des membres</button>
         <button class="btn" onclick="showAdminPanel('stock')">📦 Gestion du stock</button>
-        <button class="btn" onclick="showAdminPanel('paiements')">💶 Synthèse paiements</button>
+        <button class="btn" onclick="showAdminPanel('paiements')">💶 Ardoises</button>
         <button class="btn" onclick="showAdminPanel('tresorerie')">📊 Trésorerie</button>
         <button class="btn" onclick="showSettings()">⚙️ Paramètres</button>
       </div>
@@ -232,7 +231,6 @@
     <!-- Confirmation visuelle/sonore -->
     <div id="modalConfirm" class="hidden" style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; background:#fffdfded; display:flex; align-items:center; justify-content:center; font-size:2.5em; font-weight:bold; color:var(--success); pointer-events:none; transition:opacity 0.5s;"></div>
   </main>
-  <!-- Fichier audio local, ou remplace par un fichier local (optionnel, non bloquant) -->
   <audio id="audioMerci" src="merci.mp3"></audio>
   <script>
     // --- DATA MODEL & STORAGE ---
@@ -245,9 +243,10 @@
     const defaultSettings = {
       mdpAdmin: "adm",
       mdpStock: "sto",
-      assoTitle: "Les Gardiens du Jeu",
+      assoTitle: "Les Gardiens du jeu",
       logo: "",
-      couleurs: {accent: "#2b7a78", main_bg: "#f7f7fa"}
+      couleurs: {accent: "#2b7a78", main_bg: "#f7f7fa"},
+      // Les champs GitHub sont inutiles côté client pour ce mode !
     };
 
     function $(id) { return document.getElementById(id); }
@@ -261,25 +260,32 @@
     }
     function saveData(key, val) {
       localStorage.setItem(key, JSON.stringify(val));
+      autoSaveToGitHub(); // Sauvegarde automatique à chaque changement
     }
+
     let users = loadData("asso_users", defaultUsers);
     let produits = loadData("asso_produits", defaultProduits);
     let achats = loadData("asso_achats", []);
     let paiements = loadData("asso_paiements", []);
     let settings = loadData("asso_settings", defaultSettings);
 
-    document.addEventListener("DOMContentLoaded", ()=>{
-      applySettings();
-      showStockAlerts();
-      showUsersList();
-      $("searchUser").addEventListener("input", showUsersList);
-      $("searchUser").addEventListener("keypress", function(e) {
-        if (e.key === "Enter") {
-          const btn = document.querySelector(".user-btn");
-          if(btn) btn.click();
-        }
-      });
-    });
+document.addEventListener("DOMContentLoaded", async ()=>{
+  await importAutoFromGitHub();
+  // Ensuite, le reste :
+  applySettings();
+  showStockAlerts();
+  showUsersList();
+  $("searchUser").addEventListener("input", showUsersList);
+  $("searchUser").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+      const btn = document.querySelector(".user-btn");
+      if(btn) btn.click();
+    }
+  });
+});
+
+
+
 
     // --- Affichage compact/discret des stocks ---
     function showStocksSynth() {
@@ -363,18 +369,15 @@
       $("adminPanel").classList.add("hidden");
 
       let u = users.find(x=>x.id===userId);
+      let ardoise = getSolde(userId);
+      let ardoiseColor = ardoise > 0 ? "#e63946" : "#2b7a78";
       let html = `<button class="btn" onclick="showUsersList()">← Retour</button>
-        <h2>Bonjour, ${u.prenom} ${u.nom}</h2>`;
-let ardoise = getSolde(userId);
-let ardoiseColor = ardoise > 0 ? "#e63946" : "#2b7a78";
-let ardoiseTxt = `<div style="margin:0.7em 0 1.3em 0;font-size:1.15em;">
-  <span style="color:#313c4b;">Ardoise actuelle :</span>
-  <span style="font-weight:bold; color:${ardoiseColor}; font-size:1.12em; margin-left:0.4em;">${ardoise} €</span>
-  <button class="btn btn-sm" onclick="showUserHistory(${userId})" style="margin-left:1.3em;padding:0.3em 0.8em;font-size:0.97em;">Voir l’historique</button>
-</div>`;
-html += ardoiseTxt;
-
-      if(u.avatar) html += `<div style="text-align:center;"><img class="avatar" src="${u.avatar}" style="width:92px;height:92px;margin:1em auto;"></div>`;
+        <h2>Bonjour, ${u.prenom} ${u.nom}</h2>
+        <div style="margin:0.7em 0 1.3em 0;font-size:1.15em;">
+          <span style="color:#313c4b;">Ardoise actuelle :</span>
+          <span style="font-weight:bold; color:${ardoiseColor}; font-size:1.12em; margin-left:0.4em;">${ardoise} €</span>
+          <button class="btn btn-sm" onclick="showUserHistory(${userId})" style="margin-left:1.3em;padding:0.3em 0.8em;font-size:0.97em;">Voir l’historique</button>
+        </div>`;
       html += `<div id="produitsBtns" class="flex-row" style="margin-bottom:1em;">`;
       for(let p of produits) {
         if(p.deleted || p.stock === 0) continue;
@@ -396,39 +399,6 @@ html += ardoiseTxt;
       $("achatSection").innerHTML = html;
       updateCommandeList();
     }
-
-function showUserHistory(userId) {
-  let u = users.find(x=>x.id===userId);
-  let html = `<button class="btn" onclick="showAchat(${userId})">← Retour</button>
-    <h2>Historique de ${u.prenom} ${u.nom}</h2>
-    <div style="margin-bottom:1em;">
-      <b>Ardoise actuelle :</b>
-      <span style="color:${getSolde(userId)>0?"#e63946":"#20515a"};font-weight:bold;">${getSolde(userId)} €</span>
-    </div>`;
-  html += `<table><thead><tr><th>Date</th><th>Type</th><th>Détail</th><th>Montant (€)</th></tr></thead><tbody>`;
-  // Achats
-  let histos = [];
-  for (let a of achats.filter(a=>a.userId===userId)) {
-    let detail = a.produits.map(p=>`${p.nom} x${p.qte}`).join(", ");
-    histos.push({date:a.date, type:(a.paye?"Achat (payé)":"Achat (ardoise)"), detail, montant:a.total});
-  }
-  // Paiements
-  for (let p of paiements.filter(p=>p.userId===userId)) {
-    histos.push({date:p.date, type:"Paiement "+(p.mode==="manuel"?"(manuel)":"(achat)"), detail:"", montant:p.montant});
-  }
-  histos.sort((a,b)=>a.date-b.date);
-  for (let h of histos) {
-    html += `<tr>
-      <td>${formatDate(h.date)}</td>
-      <td>${h.type}</td>
-      <td>${h.detail||""}</td>
-      <td>${h.type.startsWith("Paiement")?'<span style="color:#2b7a78;">+':'<span style="color:#e63946;">-'}${h.montant} €</span></td>
-    </tr>`;
-  }
-  html += `</tbody></table>`;
-  $("achatSection").innerHTML = html;
-}
-
     function ajoutProduitCommande(prodId) {
       let prod = produits.find(p=>p.id===prodId);
       let item = currentCommande.produits.find(it=>it.prodId===prodId);
@@ -517,16 +487,50 @@ function showUserHistory(userId) {
       }
       achats.push(achat);
       saveData("asso_produits", produits);
+autoSaveToGitHub();
       saveData("asso_achats", achats);
+autoSaveToGitHub();
       showStockAlerts();
       showStocksSynth();
       if(achat.paye) {
         paiements.push({id:uuid(), userId:currentCommande.userId, montant:achat.total, date:Date.now(), mode:"achat"});
         saveData("asso_paiements", paiements);
+autoSaveToGitHub();
       }
-      showConfirmation("Merci !");
+      showConfirmation("Merci pour votre achat !");
       setTimeout(showUsersList, 1600);
       return false;
+    }
+
+    // --- Historique utilisateur ---
+    function showUserHistory(userId) {
+      let u = users.find(x=>x.id===userId);
+      let html = `<button class="btn" onclick="showAchat(${userId})">← Retour</button>
+        <h2>Historique de ${u.prenom} ${u.nom}</h2>
+        <div style="margin-bottom:1em;">
+          <b>Ardoise actuelle :</b>
+          <span style="color:${getSolde(userId)>0?"#e63946":"#20515a"};font-weight:bold;">${getSolde(userId)} €</span>
+        </div>`;
+      html += `<table><thead><tr><th>Date</th><th>Type</th><th>Détail</th><th>Montant (€)</th></tr></thead><tbody>`;
+      let histos = [];
+      for (let a of achats.filter(a=>a.userId===userId)) {
+        let detail = a.produits.map(p=>`${p.nom} x${p.qte}`).join(", ");
+        histos.push({date:a.date, type:(a.paye?"Achat (payé)":"Achat (ardoise)"), detail, montant:a.total});
+      }
+      for (let p of paiements.filter(p=>p.userId===userId)) {
+        histos.push({date:p.date, type:"Paiement "+(p.mode==="manuel"?"(manuel)":"(achat)"), detail:"", montant:p.montant});
+      }
+      histos.sort((a,b)=>a.date-b.date);
+      for (let h of histos) {
+        html += `<tr>
+          <td>${formatDate(h.date)}</td>
+          <td>${h.type}</td>
+          <td>${h.detail||""}</td>
+          <td>${h.type.startsWith("Paiement")?'<span style="color:#2b7a78;">+':'<span style="color:#e63946;">-'}${h.montant} €</span></td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+      $("achatSection").innerHTML = html;
     }
 
     // --- ADMIN PANELS ---
@@ -590,6 +594,7 @@ function showUserHistory(userId) {
         users.push(u);
       }
       saveData("asso_users", users);
+autoSaveToGitHub();
       panelUsers();
       return false;
     }
@@ -598,6 +603,7 @@ function showUserHistory(userId) {
       let ind = users.findIndex(x=>x.id===id);
       users[ind].deleted = true;
       saveData("asso_users", users);
+autoSaveToGitHub();
       panelUsers();
     }
 
@@ -649,6 +655,7 @@ function showUserHistory(userId) {
         produits.push(p);
       }
       saveData("asso_produits", produits);
+autoSaveToGitHub();
       panelStock();
       showStockAlerts();
       showStocksSynth();
@@ -659,6 +666,7 @@ function showUserHistory(userId) {
       let ind = produits.findIndex(x=>x.id===id);
       produits[ind].deleted = true;
       saveData("asso_produits", produits);
+autoSaveToGitHub();
       panelStock();
       showStockAlerts();
       showStocksSynth();
@@ -671,6 +679,7 @@ function showUserHistory(userId) {
       if(prod.stock+val<0) return alert("Stock ne peut pas devenir négatif.");
       prod.stock += val;
       saveData("asso_produits", produits);
+autoSaveToGitHub();
       panelStock();
       showStockAlerts();
       showStocksSynth();
@@ -678,23 +687,19 @@ function showUserHistory(userId) {
 
     // --- Synthèse paiements & ardoises (corrigée) ---
     function getSolde(userId) {
-      // Somme des achats non payés (ardoise)
       let totalArdoise = achats.filter(a => a.userId === userId && !a.paye)
         .reduce((s, a) => s + a.total, 0);
-      // Somme des paiements manuels
       let totalPaiementsManuels = paiements.filter(p => p.userId === userId && p.mode === "manuel")
         .reduce((s, p) => s + p.montant, 0);
       return totalArdoise - totalPaiementsManuels;
     }
     function panelPaiements() {
       let html = `<button class="btn" onclick="showUsersList()">← Retour</button><h2>Synthèse paiements & ardoises</h2>
-      <table><thead><tr><th>Membre</th><th>Total payé (€)</th><th>Ardoise (€)</th><th>Actions</th></tr></thead><tbody>`;
+      <table><thead><tr><th>Membre</th><th>Ardoise réglé (€)</th><th>Ardoise (€)</th><th>Actions</th></tr></thead><tbody>`;
       for(let u of users) {
         if(u.deleted) continue;
-        // Total payé = paiements manuels
         let totalPaye = paiements.filter(p=>p.userId===u.id && p.mode === "manuel")
           .reduce((s,p)=>s+p.montant,0);
-        // Achats non payés
         let totalAchat = achats.filter(a=>a.userId===u.id && !a.paye)
           .reduce((s,a)=>s+a.total,0);
         let solde = totalAchat - totalPaye;
@@ -704,6 +709,7 @@ function showUserHistory(userId) {
           <td>${solde>0?'<span style="color:var(--danger);font-weight:bold">'+solde+'</span>':solde} €</td>
           <td>
             <button class="btn" onclick="ajoutPaiement(${u.id})">Ajouter paiement</button>
+            <button class="btn btn-sm" onclick="showUserHistoryPaiement(${u.id})" title="Voir l’historique"><span style="font-size:1.2em;">🔍</span> Historique</button>
           </td>
         </tr>`;
       }
@@ -718,7 +724,39 @@ function showUserHistory(userId) {
       if(isNaN(val)||val<=0) return alert("Montant invalide.");
       paiements.push({id:uuid(), userId, montant:val, date:Date.now(), mode:"manuel"});
       saveData("asso_paiements", paiements);
+autoSaveToGitHub();
       panelPaiements();
+    }
+
+    // --- Historique dans synthèse paiements
+    function showUserHistoryPaiement(userId) {
+      let u = users.find(x=>x.id===userId);
+      let html = `<button class="btn" onclick="panelPaiements()">← Retour</button>
+        <h2>Historique de ${u.prenom} ${u.nom}</h2>
+        <div style="margin-bottom:1em;">
+          <b>Ardoise actuelle :</b>
+          <span style="color:${getSolde(userId)>0?"#e63946":"#20515a"};font-weight:bold;">${getSolde(userId)} €</span>
+        </div>`;
+      html += `<table><thead><tr><th>Date</th><th>Type</th><th>Détail</th><th>Montant (€)</th></tr></thead><tbody>`;
+      let histos = [];
+      for (let a of achats.filter(a=>a.userId===userId)) {
+        let detail = a.produits.map(p=>`${p.nom} x${p.qte}`).join(", ");
+        histos.push({date:a.date, type:(a.paye?"Achat (payé)":"Achat (ardoise)"), detail, montant:a.total});
+      }
+      for (let p of paiements.filter(p=>p.userId===userId)) {
+        histos.push({date:p.date, type:"Paiement "+(p.mode==="manuel"?"(manuel)":"(achat)"), detail:"", montant:p.montant});
+      }
+      histos.sort((a,b)=>a.date-b.date);
+      for (let h of histos) {
+        html += `<tr>
+          <td>${formatDate(h.date)}</td>
+          <td>${h.type}</td>
+          <td>${h.detail||""}</td>
+          <td>${h.type.startsWith("Paiement")?'<span style="color:#2b7a78;">+':'<span style="color:#e63946;">-'}${h.montant} €</span></td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+      $("adminPanel").innerHTML = html;
     }
 
     // --- PANEL TRÉSORERIE & SUIVI MENSUEL ---
@@ -736,64 +774,62 @@ function showUserHistory(userId) {
       $("adminPanel").innerHTML = html;
       majTresorerie();
     }
-function majTresorerie() {
-  let mois = $("moisSel").value;
-  let achatsMois = achats.filter(a => a.date && new Date(a.date).toISOString().slice(0, 7) === mois);
-  let totalVente = achatsMois.reduce((s, a) => s + a.total, 0);
-  let parProd = {};
-  let parProdEuros = {};
-  for (let p of produits) {
-    parProd[p.id] = 0;
-    parProdEuros[p.id] = 0;
-  }
-  for (let a of achatsMois) {
-    for (let item of a.produits) {
-      parProd[item.prodId] = (parProd[item.prodId] || 0) + item.qte;
-      parProdEuros[item.prodId] = (parProdEuros[item.prodId] || 0) + (item.qte * item.prix);
+    function majTresorerie() {
+      let mois = $("moisSel").value;
+      let achatsMois = achats.filter(a=>a.date && new Date(a.date).toISOString().slice(0, 7) === mois);
+      let totalVente = achatsMois.reduce((s, a) => s + a.total, 0);
+      let parProd = {};
+      let parProdEuros = {};
+      for (let p of produits) {
+        parProd[p.id] = 0;
+        parProdEuros[p.id] = 0;
+      }
+      for (let a of achatsMois) {
+        for (let item of a.produits) {
+          parProd[item.prodId] = (parProd[item.prodId] || 0) + item.qte;
+          parProdEuros[item.prodId] = (parProdEuros[item.prodId] || 0) + (item.qte * item.prix);
+        }
+      }
+      let html = `<b>Total ventes :</b> ${totalVente} €<br>
+      <table><thead><tr><th>Produit</th><th>Quantité vendue</th><th>Montant (€)</th></tr></thead><tbody>`;
+      for (let p of produits) {
+        if (p.deleted) continue;
+        html += `<tr>
+          <td>${p.nom}</td>
+          <td>${parProd[p.id] || 0}</td>
+          <td>${parProdEuros[p.id] || 0} €</td>
+        </tr>`;
+      }
+      html += `</tbody></table>
+      <div style="font-size:1.2em; font-weight:bold; margin-top:1em;">Résultat total du mois : ${totalVente} €</div>`;
+      $("tresoRes").innerHTML = html;
     }
-  }
-  let html = `<b>Total ventes :</b> ${totalVente} €<br>
-  <table><thead><tr><th>Produit</th><th>Quantité vendue</th><th>Montant (€)</th></tr></thead><tbody>`;
-  for (let p of produits) {
-    if (p.deleted) continue;
-    html += `<tr>
-      <td>${p.nom}</td>
-      <td>${parProd[p.id] || 0}</td>
-      <td>${parProdEuros[p.id] || 0} €</td>
-    </tr>`;
-  }
-  html += `</tbody></table>
-  <div style="font-size:1.2em; font-weight:bold; margin-top:1em;">Résultat total du mois : ${totalVente} €</div>`;
-  $("tresoRes").innerHTML = html;
-}
-
 
     // --- PARAMÈTRES / PERSONNALISATION ---
-function showSettings() {
-  let pass = prompt("Mot de passe admin requis pour accéder aux paramètres :");
-  if(pass !== settings.mdpAdmin) {
-    alert("Mot de passe incorrect !");
-    return;
-  }
-  let html = `<button class="btn" onclick="showUsersList()">← Retour</button><h2>Paramètres</h2>
-  <form id="formSettings" onsubmit="return saveSettings()">
-    <label>Nom de l’association :<br><input class="input-lg" name="assoTitle" value="${settings.assoTitle||""}"></label><br>
-    <label>Logo (URL, optionnel) :<br><input class="input-lg" name="logo" value="${settings.logo||""}"></label><br>
-    <label>Mot de passe admin (gestion membres) :<br><input class="input-lg" name="mdpAdmin" type="password" value="${settings.mdpAdmin||""}"></label><br>
-    <label>Mot de passe stock (gestion produits) :<br><input class="input-lg" name="mdpStock" type="password" value="${settings.mdpStock||""}"></label><br>
-    <button class="btn btn-success" type="submit">Enregistrer</button>
-  </form>
-  <br>
-  <button class="btn btn-danger" onclick="resetData()">Réinitialiser toutes les données</button>
-  <br><br>
-  <b>Personnalisation couleurs à venir…</b>
-  `;
-  $("adminPanel").innerHTML = html;
-  $("homeSection").classList.add("hidden");
-  $("achatSection").classList.add("hidden");
-  $("adminPanel").classList.remove("hidden");
-}
-
+    function showSettings() {
+      let pass = prompt("Mot de passe admin requis pour accéder aux paramètres :");
+      if(pass !== settings.mdpAdmin) {
+        alert("Mot de passe incorrect !");
+        return;
+      }
+      let html = `<button class="btn" onclick="showUsersList()">← Retour</button><h2>Paramètres</h2>
+      <form id="formSettings" onsubmit="return saveSettings()">
+        <label>Nom de l’association :<br><input class="input-lg" name="assoTitle" value="${settings.assoTitle||""}"></label><br>
+        <label>Logo (URL, optionnel) :<br><input class="input-lg" name="logo" value="${settings.logo||""}"></label><br>
+        <label>Mot de passe admin (gestion membres) :<br><input class="input-lg" name="mdpAdmin" type="password" value="${settings.mdpAdmin||""}"></label><br>
+        <label>Mot de passe stock (gestion produits) :<br><input class="input-lg" name="mdpStock" type="password" value="${settings.mdpStock||""}"></label><br>
+        <button class="btn btn-success" type="submit">Enregistrer</button>
+      </form>
+      <br>
+      <button class="btn btn-danger" onclick="resetData()">Réinitialiser toutes les données</button>
+      <br><br>
+      <b>Personnalisation couleurs à venir…</b>
+      `;
+      $("adminPanel").innerHTML = html;
+      $("homeSection").classList.add("hidden");
+      $("achatSection").classList.add("hidden");
+      $("adminPanel").classList.remove("hidden");
+    }
     function saveSettings() {
       let f = document.forms.formSettings;
       settings.assoTitle = f.assoTitle.value.trim();
@@ -801,12 +837,13 @@ function showSettings() {
       settings.mdpAdmin = f.mdpAdmin.value.trim();
       settings.mdpStock = f.mdpStock.value.trim();
       saveData("asso_settings", settings);
+autoSaveToGitHub();
       applySettings();
       showUsersList();
       return false;
     }
     function applySettings() {
-      $("assoTitle").textContent = settings.assoTitle||"Les Gardiens du Jeu";
+      $("assoTitle").textContent = settings.assoTitle||"Les Gardiens du jeu";
       if(settings.logo) {
         $("logo").src = settings.logo; $("logo").style.display = "";
       } else { $("logo").style.display = "none"; }
@@ -829,6 +866,70 @@ function showSettings() {
       try { $("audioMerci").play(); } catch(e){}
       setTimeout(()=>{m.classList.add("hidden")}, 1400);
     }
+async function importAutoFromGitHub() {
+  try {
+    // Pour éviter la boucle infinie
+    if(localStorage.getItem("importedFromGitHub") === "true") {
+      localStorage.removeItem("importedFromGitHub");
+      return false; // déjà importé, ne rien faire
+    }
+    const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/stock-gardiens.json';
+    const response = await fetch(`${apiUrl}?ref=main`, {
+      headers: { 'Accept': 'application/vnd.github.v3.raw' },
+      cache: 'no-store'
+    });
+    if (!response.ok) {
+      console.warn('Impossible de charger les données GitHub :', response.status);
+      return false;
+    }
+    const data = await response.json();
+    if(data.users && data.produits && data.achats && data.paiements && data.settings) {
+      saveData("asso_users", data.users);
+autoSaveToGitHub();
+      saveData("asso_produits", data.produits);
+autoSaveToGitHub();
+      saveData("asso_achats", data.achats);
+autoSaveToGitHub();
+      saveData("asso_paiements", data.paiements);
+autoSaveToGitHub();
+      saveData("asso_settings", data.settings);
+autoSaveToGitHub();
+      localStorage.setItem("importedFromGitHub", "true");
+      console.log('Import GitHub réussi, rechargement.');
+      location.reload();
+      return true;
+    } else {
+      console.warn('Fichier GitHub invalide (pas tous les champs)');
+      return false;
+    }
+  } catch (err) {
+    console.warn('Erreur import GitHub:', err);
+    return false;
+  }
+}
+
+    // --- Sauvegarde automatique Github via API (Netlify / Vercel / etc) ---
+    async function autoSaveToGitHub() {
+      try {
+        const data = {
+          users, produits, achats, paiements, settings
+        };
+        // Remplace ici par l'URL de ta Netlify function (ou autre API serverless)
+        const res = await fetch('/.netlify/functions/saveStock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          console.warn('Erreur sauvegarde GitHub :', err);
+        } else {
+          console.log('Auto-sauvegarde GitHub OK');
+        }
+      } catch (err) {
+        console.warn('Erreur auto-sauvegarde GitHub :', err);
+      }
+    }
 
     // --- Correctif pour Chrome/Windows : fonctions globales pour onclick ---
     window.showAdminPanel = showAdminPanel;
@@ -848,6 +949,8 @@ function showSettings() {
     window.showUsersList = showUsersList;
     window.showSettings = showSettings;
     window.resetData = resetData;
+    window.showUserHistory = showUserHistory;
+    window.showUserHistoryPaiement = showUserHistoryPaiement;
   </script>
 </body>
 </html>

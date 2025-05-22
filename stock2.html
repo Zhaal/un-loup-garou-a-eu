@@ -868,7 +868,7 @@
     }
 async function importAutoFromGitHub() {
   try {
-    // Mets ici le lien de TON dépôt et TON fichier JSON
+    // Ici, mets bien ton URL GitHub brute
     const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/stock-gardiens.json';
     const response = await fetch(`${apiUrl}?ref=main`, {
       headers: { 'Accept': 'application/vnd.github.v3.raw' },
@@ -879,7 +879,7 @@ async function importAutoFromGitHub() {
       return false;
     }
     const data = await response.json();
-    // On écrase tout le localStorage si les données sont valides
+    // On vérifie la présence de toutes les données nécessaires
     if(data.users && data.produits && data.achats && data.paiements && data.settings) {
       saveData("asso_users", data.users);
       saveData("asso_produits", data.produits);

@@ -270,10 +270,8 @@
     let settings = loadData("asso_settings", defaultSettings);
 
 document.addEventListener("DOMContentLoaded", async ()=>{
-  // --- FORCAGE : charger systématiquement depuis GitHub au démarrage ---
   await importAutoFromGitHub();
-  // (Le reload sera appelé dans la fonction si OK)
-  // Si l'import échoue, on continue sur les données locales (failover)
+  // Ensuite, le reste :
   applySettings();
   showStockAlerts();
   showUsersList();
@@ -285,6 +283,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     }
   });
 });
+
 
 
 
@@ -859,7 +858,11 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     }
 async function importAutoFromGitHub() {
   try {
-    // Ici, mets bien ton URL GitHub brute
+    // Pour éviter la boucle infinie
+    if(localStorage.getItem("importedFromGitHub") === "true") {
+      localStorage.removeItem("importedFromGitHub");
+      return false; // déjà importé, ne rien faire
+    }
     const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/stock-gardiens.json';
     const response = await fetch(`${apiUrl}?ref=main`, {
       headers: { 'Accept': 'application/vnd.github.v3.raw' },
@@ -870,14 +873,14 @@ async function importAutoFromGitHub() {
       return false;
     }
     const data = await response.json();
-    // On vérifie la présence de toutes les données nécessaires
     if(data.users && data.produits && data.achats && data.paiements && data.settings) {
       saveData("asso_users", data.users);
       saveData("asso_produits", data.produits);
       saveData("asso_achats", data.achats);
       saveData("asso_paiements", data.paiements);
       saveData("asso_settings", data.settings);
-      console.log('Import GitHub réussi.');
+      localStorage.setItem("importedFromGitHub", "true");
+      console.log('Import GitHub réussi, rechargement.');
       location.reload();
       return true;
     } else {

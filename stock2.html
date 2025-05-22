@@ -687,7 +687,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     }
     function panelPaiements() {
       let html = `<button class="btn" onclick="showUsersList()">← Retour</button><h2>Synthèse paiements & ardoises</h2>
-      <table><thead><tr><th>Membre</th><th>Total payé (€)</th><th>Ardoise (€)</th><th>Actions</th></tr></thead><tbody>`;
+      <table><thead><tr><th>Membre</th><th>Ardoise réglé (€)</th><th>Ardoise (€)</th><th>Actions</th></tr></thead><tbody>`;
       for(let u of users) {
         if(u.deleted) continue;
         let totalPaye = paiements.filter(p=>p.userId===u.id && p.mode === "manuel")

@@ -201,7 +201,7 @@
 <body>
   <header>
     <img src="" alt="" id="logo" style="display:none;">
-    <span id="assoTitle">Gestion de stock Association</span>
+    <span id="assoTitle">Les Gardiens du jeu</span>
   </header>
   <main class="container">
     <!-- Alerts/Stock bar -->
@@ -216,7 +216,7 @@
       <div class="center">
         <button class="btn" onclick="showAdminPanel('users')">👤 Gestion des membres</button>
         <button class="btn" onclick="showAdminPanel('stock')">📦 Gestion du stock</button>
-        <button class="btn" onclick="showAdminPanel('paiements')">💶 Synthèse paiements</button>
+        <button class="btn" onclick="showAdminPanel('paiements')">💶 Ardoises</button>
         <button class="btn" onclick="showAdminPanel('tresorerie')">📊 Trésorerie</button>
         <button class="btn" onclick="showSettings()">⚙️ Paramètres</button>
       </div>
@@ -243,7 +243,7 @@
     const defaultSettings = {
       mdpAdmin: "adm",
       mdpStock: "sto",
-      assoTitle: "Gestion de stock Association",
+      assoTitle: "Les Gardiens du jeu",
       logo: "",
       couleurs: {accent: "#2b7a78", main_bg: "#f7f7fa"},
       // Les champs GitHub sont inutiles côté client pour ce mode !
@@ -843,7 +843,7 @@
       return false;
     }
     function applySettings() {
-      $("assoTitle").textContent = settings.assoTitle||"Gestion de stock Association";
+      $("assoTitle").textContent = settings.assoTitle||"Les Gardiens du jeu";
       if(settings.logo) {
         $("logo").src = settings.logo; $("logo").style.display = "";
       } else { $("logo").style.display = "none"; }

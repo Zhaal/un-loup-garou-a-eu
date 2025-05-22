@@ -269,21 +269,11 @@
     let paiements = loadData("asso_paiements", []);
     let settings = loadData("asso_settings", defaultSettings);
 
-   document.addEventListener("DOMContentLoaded", async ()=>{
-  // Détection : si la base est vide, on charge en ligne (à la toute première ouverture, ou après reset)
-  let isFirst = (
-    !localStorage.getItem("asso_users") &&
-    !localStorage.getItem("asso_produits") &&
-    !localStorage.getItem("asso_achats") &&
-    !localStorage.getItem("asso_paiements") &&
-    !localStorage.getItem("asso_settings")
-  );
-  if(isFirst) {
-    let ok = await importAutoFromGitHub();
-    if(ok) return; // On laisse le reload gérer le reste
-  }
-
-  // ... (le reste du code d'initialisation existant)
+document.addEventListener("DOMContentLoaded", async ()=>{
+  // --- FORCAGE : charger systématiquement depuis GitHub au démarrage ---
+  await importAutoFromGitHub();
+  // (Le reload sera appelé dans la fonction si OK)
+  // Si l'import échoue, on continue sur les données locales (failover)
   applySettings();
   showStockAlerts();
   showUsersList();
@@ -295,6 +285,7 @@
     }
   });
 });
+
 
 
     // --- Affichage compact/discret des stocks ---

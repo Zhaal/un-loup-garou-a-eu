@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestion de stock - Association</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --main-bg: #f7f7fa;
+      --accent: #2b7a78;
+      --accent-dark: #20515a;
+      --alert: #f24e1e;
+      --success: #45b649;
+      --danger: #e63946;
+      --border: #dddddd;
+      --font-main: 'Segoe UI', 'Arial', sans-serif;
+      --radius: 1.5rem;
+    }
+    body {
+      font-family: var(--font-main);
+      background: var(--main-bg);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      border-radius: 0 0 var(--radius) var(--radius);
+      margin-bottom: 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    #logo {
+      height: 2.5rem;
+      vertical-align: middle;
+      margin-right: 1rem;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto 2rem auto;
+      padding: 1rem;
+    }
+    .section {
+      background: #fff;
+      margin-bottom: 2rem;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 16px #0001;
+      padding: 1.2rem 1.5rem 2rem 1.5rem;
+      position: relative;
+    }
+    h2 {
+      color: var(--accent-dark);
+      margin-top: 0;
+    }
+    .flex-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: stretch;
+      justify-content: flex-start;
+    }
+    .user-btn {
+      flex: 1 1 180px;
+      background: #edf6f9;
+      border: 2px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 1.3rem 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--accent-dark);
+      margin-bottom: 1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #0002;
+      transition: background 0.2s;
+      text-align: center;
+      min-width: 140px;
+      position: relative;
+    }
+    .user-btn:hover, .user-btn:focus {
+      background: #e0fbfc;
+    }
+    .avatar {
+      width: 42px; height: 42px; border-radius: 50%; background: #bbb; display: inline-block; margin-right: 0.7em; object-fit: cover; vertical-align: middle;
+    }
+    .badge-alert {
+      background: var(--alert); color: #fff; border-radius: 1em; padding: 0.15em 0.6em; margin-left: 0.7em; font-size: 0.95em;
+    }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.85em 1.3em;
+      font-size: 1.05em;
+      font-weight: bold;
+      margin: 0.2em 0.7em 0.2em 0;
+      cursor: pointer;
+      transition: background 0.15s;
+      outline: none;
+      box-shadow: 0 2px 8px #0001;
+      letter-spacing: 1px;
+    }
+    .btn:hover, .btn:focus {
+      background: var(--accent-dark);
+    }
+    .btn-danger {
+      background: var(--danger);
+    }
+    .btn-danger:hover, .btn-danger:focus {
+      background: #a9272d;
+    }
+    .btn-success {
+      background: var(--success);
+    }
+    .btn-success:hover, .btn-success:focus {
+      background: #1e893c;
+    }
+    .btn-sm { font-size:0.95em; padding:0.32em 0.9em; border-radius:1em; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #fff;
+      font-size: 1.06em;
+    }
+    th, td {
+      padding: 0.6em 0.4em;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    th {
+      background: #ececec;
+      color: #3a434c;
+      font-weight: bold;
+    }
+    .input-lg {
+      font-size: 1.3em;
+      padding: 0.55em 0.7em;
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      width: 98%;
+      margin-bottom: 1.1em;
+      background: #fff;
+      outline: none;
+      margin-top: 0.3em;
+      box-sizing: border-box;
+    }
+    .input-sm {
+      font-size: 1em;
+      padding: 0.4em 0.5em;
+      border-radius: 1em;
+      border: 1.2px solid var(--border);
+      background: #fff;
+      width: auto;
+      margin-right: 0.7em;
+      box-sizing: border-box;
+    }
+    .center {
+      text-align: center;
+      margin-top: 2em;
+      margin-bottom: 2em;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .alert-bar {
+      font-size: 1.12em;
+      background: var(--alert);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 0.7em 1em;
+      margin: 0.6em 0 1.1em 0;
+      display: flex;
+      align-items: center;
+      gap: 1em;
+      animation: blink 2s linear infinite alternate;
+    }
+    @keyframes blink {
+      from { opacity: 1; }
+      to { opacity: 0.8; }
+    }
+    @media (max-width: 800px) {
+      .container { padding: 0.3em; }
+      .section { padding: 1em 0.3em 1.2em 0.3em; }
+      .flex-row { flex-direction: column; gap: 0.4em; }
+      .user-btn { font-size: 1.1em; min-width: 90px; }
+      th, td { font-size: 0.98em; padding: 0.4em; }
+    }
+    @media (max-width: 400px) {
+      .section, .container { padding: 0.2em; }
+      h2 { font-size: 1.2em; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="" alt="" id="logo" style="display:none;">
+    <span id="assoTitle">Gestion de stock Association</span>
+  </header>
+  <main class="container">
+    <!-- Alerts/Stock bar -->
+    <div id="stockAlerts" class="section"></div>
+
+    <!-- Home / Users list -->
+    <section id="homeSection" class="section">
+      <h2>Qui êtes-vous ?</h2>
+      <input type="search" id="searchUser" class="input-lg" placeholder="Rechercher un utilisateur..." autocomplete="off">
+      <div id="stocksSynth" style="margin:0.7em 0 0.2em 0; font-size:1em; font-weight:500; color:#37414d;"></div>
+      <div id="usersGrid" class="flex-row"></div>
+      <div class="center">
+        <button class="btn" onclick="showAdminPanel('users')">👤 Gestion des membres</button>
+        <button class="btn" onclick="showAdminPanel('stock')">📦 Gestion du stock</button>
+        <button class="btn" onclick="showAdminPanel('paiements')">💶 Synthèse paiements</button>
+        <button class="btn" onclick="showAdminPanel('tresorerie')">📊 Trésorerie</button>
+        <button class="btn" onclick="showSettings()">⚙️ Paramètres</button>
+      </div>
+    </section>
+
+    <!-- Achat d'articles (après sélection utilisateur) -->
+    <section id="achatSection" class="section hidden"></section>
+
+    <!-- Admin panels (users, stock, paiements, tresorerie, settings) -->
+    <section id="adminPanel" class="section hidden"></section>
+
+    <!-- Confirmation visuelle/sonore -->
+    <div id="modalConfirm" class="hidden" style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; background:#fffdfded; display:flex; align-items:center; justify-content:center; font-size:2.5em; font-weight:bold; color:var(--success); pointer-events:none; transition:opacity 0.5s;"></div>
+  </main>
+  <audio id="audioMerci" src="merci.mp3"></audio>
+  <script>
+    // --- DATA MODEL & STORAGE ---
+    const defaultUsers = [];
+    const defaultProduits = [
+      {id: 1, nom: "Barre chocolatée", prix: 1, stock: 30, stockInitial: 30, seuil: 5, created: Date.now()},
+      {id: 2, nom: "Boisson 1 €", prix: 1, stock: 30, stockInitial: 30, seuil: 5, created: Date.now()},
+      {id: 3, nom: "Boisson 2 €", prix: 2, stock: 30, stockInitial: 30, seuil: 5, created: Date.now()}
+    ];
+    const defaultSettings = {
+      mdpAdmin: "adm",
+      mdpStock: "sto",
+      assoTitle: "Gestion de stock Association",
+      logo: "",
+      couleurs: {accent: "#2b7a78", main_bg: "#f7f7fa"},
+      // Les champs GitHub sont inutiles côté client pour ce mode !
+    };
+
+    function $(id) { return document.getElementById(id); }
+    function uuid() { return '_' + Math.random().toString(36).substr(2,9); }
+    function today() { return new Date().toISOString().slice(0,10); }
+    function formatDate(d) { return new Date(d).toLocaleString("fr-FR"); }
+
+    function loadData(key, def) {
+      try { return JSON.parse(localStorage.getItem(key)) || def; }
+      catch(e) { return def; }
+    }
+    function saveData(key, val) {
+      localStorage.setItem(key, JSON.stringify(val));
+      autoSaveToGitHub(); // Sauvegarde automatique à chaque changement
+    }
+
+    let users = loadData("asso_users", defaultUsers);
+    let produits = loadData("asso_produits", defaultProduits);
+    let achats = loadData("asso_achats", []);
+    let paiements = loadData("asso_paiements", []);
+    let settings = loadData("asso_settings", defaultSettings);
+
+   document.addEventListener("DOMContentLoaded", async ()=>{
+  // Détection : si la base est vide, on charge en ligne (à la toute première ouverture, ou après reset)
+  let isFirst = (
+    !localStorage.getItem("asso_users") &&
+    !localStorage.getItem("asso_produits") &&
+    !localStorage.getItem("asso_achats") &&
+    !localStorage.getItem("asso_paiements") &&
+    !localStorage.getItem("asso_settings")
+  );
+  if(isFirst) {
+    let ok = await importAutoFromGitHub();
+    if(ok) return; // On laisse le reload gérer le reste
+  }
+
+  // ... (le reste du code d'initialisation existant)
+  applySettings();
+  showStockAlerts();
+  showUsersList();
+  $("searchUser").addEventListener("input", showUsersList);
+  $("searchUser").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+      const btn = document.querySelector(".user-btn");
+      if(btn) btn.click();
+    }
+  });
+});
+
+
+    // --- Affichage compact/discret des stocks ---
+    function showStocksSynth() {
+      let html = produits
+        .filter(p=>!p.deleted)
+        .map(p=>{
+          let bg = "#e7f6ef", color = "#236151", emoji = "";
+          if(p.stock === 0) {
+            bg = "#ffeaea"; color="#c0292b"; emoji="❌";
+          } else if (p.stock <= (p.seuil||5)) {
+            bg = "#fff9e2"; color="#ad7b11"; emoji="⚠️";
+          }
+          return `
+            <span style="
+              margin-right:1.7em;
+              font-size:1.08em;">
+              <span style="font-weight:500; color:#313c4b;">${p.nom}</span>
+              <span style="
+                display:inline-block;
+                min-width:2.2em;
+                text-align:center;
+                margin-left:0.35em;
+                padding:0.1em 0.65em;
+                border-radius:0.9em;
+                background:${bg};
+                color:${color};
+                font-weight:bold;
+                border:1.2px solid #d5dbe4;">
+                ${p.stock}${emoji}
+              </span>
+            </span>
+          `;
+        })
+        .join("");
+      $("stocksSynth").innerHTML = html;
+    }
+
+    function showStockAlerts() {
+      const div = $("stockAlerts");
+      div.innerHTML = "";
+      let alerts = [];
+      for (let prod of produits) {
+        if(prod.deleted) continue;
+        if (prod.stock === 0) {
+          alerts.push(`<span class="alert-bar"><b>${prod.nom}</b> épuisé ! <span class="badge-alert">⚠️</span></span>`);
+        } else if (prod.stock <= (prod.seuil||5)) {
+          alerts.push(`<span class="alert-bar" style="background: orange; color:#222;"><b>${prod.nom}</b> bientôt épuisé (reste ${prod.stock})</span>`);
+        }
+      }
+      div.innerHTML = alerts.join("") || "";
+    }
+
+    function showUsersList() {
+      $("homeSection").classList.remove("hidden");
+      $("achatSection").classList.add("hidden");
+      $("adminPanel").classList.add("hidden");
+      let search = $("searchUser").value.toLowerCase().trim();
+      let grid = $("usersGrid");
+      showStocksSynth();
+      grid.innerHTML = "";
+      let us = users.filter(u=>!u.deleted && ((u.nom+" "+u.prenom).toLowerCase().includes(search)));
+      if(us.length === 0) {
+        grid.innerHTML = "<div style='font-size:1.3em; color:#888;'>Aucun membre trouvé…</div>";
+        return;
+      }
+      for (let u of us) {
+        let avatar = u.avatar ? `<img class="avatar" src="${u.avatar}"/>` : `<span class="avatar" style="background:#ccc;"></span>`;
+        let solde = getSolde(u.id);
+        let soldeAff = solde<0 ? `<span class="badge-alert">Ardoise: ${solde} €</span>` : "";
+        grid.innerHTML += `<button class="user-btn" onclick="showAchat(${u.id})">${avatar}${u.prenom} ${u.nom} ${soldeAff}</button>`;
+      }
+    }
+
+    // --- Achat "boutons produits" ---
+    let currentCommande = {userId: null, produits: []};
+
+    function showAchat(userId) {
+      currentCommande = {userId, produits: []};
+      $("homeSection").classList.add("hidden");
+      $("achatSection").classList.remove("hidden");
+      $("adminPanel").classList.add("hidden");
+
+      let u = users.find(x=>x.id===userId);
+      let ardoise = getSolde(userId);
+      let ardoiseColor = ardoise > 0 ? "#e63946" : "#2b7a78";
+      let html = `<button class="btn" onclick="showUsersList()">← Retour</button>
+        <h2>Bonjour, ${u.prenom} ${u.nom}</h2>
+        <div style="margin:0.7em 0 1.3em 0;font-size:1.15em;">
+          <span style="color:#313c4b;">Ardoise actuelle :</span>
+          <span style="font-weight:bold; color:${ardoiseColor}; font-size:1.12em; margin-left:0.4em;">${ardoise} €</span>
+          <button class="btn btn-sm" onclick="showUserHistory(${userId})" style="margin-left:1.3em;padding:0.3em 0.8em;font-size:0.97em;">Voir l’historique</button>
+        </div>`;
+      html += `<div id="produitsBtns" class="flex-row" style="margin-bottom:1em;">`;
+      for(let p of produits) {
+        if(p.deleted || p.stock === 0) continue;
+        html += `<button class="user-btn" style="min-width:150px;" onclick="ajoutProduitCommande(${p.id})">${p.nom}<br><b>${p.prix} €</b><br><span style="font-size:0.9em;">Stock: ${p.stock}</span></button>`;
+      }
+      html += `</div>`;
+      html += `
+        <div id="commandeList"></div>
+        <div style="margin:1em 0;font-size:1.35em;">
+          Total : <span id="achatTotal">0</span> €
+          <br>
+          <label>Paiement 
+            <input type="checkbox" id="payeeCB" checked> (cocher si payé, décocher = ardoise)
+          </label>
+        </div>
+        <button class="btn btn-success" onclick="validerAchat()">Valider l'achat</button>
+        <button class="btn btn-danger" onclick="viderCommande()">Vider la commande</button>
+      `;
+      $("achatSection").innerHTML = html;
+      updateCommandeList();
+    }
+    function ajoutProduitCommande(prodId) {
+      let prod = produits.find(p=>p.id===prodId);
+      let item = currentCommande.produits.find(it=>it.prodId===prodId);
+      if(item) {
+        if(item.qte < prod.stock)
+          item.qte++;
+        else
+          alert("Stock insuffisant pour ce produit !");
+      } else {
+        if(prod.stock>0)
+          currentCommande.produits.push({prodId, nom: prod.nom, qte:1, prix: prod.prix});
+        else
+          alert("Produit épuisé !");
+      }
+      updateCommandeList();
+    }
+    function retirerProduitCommande(prodId) {
+      let item = currentCommande.produits.find(it=>it.prodId===prodId);
+      if(item) {
+        if(item.qte>1) item.qte--;
+        else currentCommande.produits = currentCommande.produits.filter(it=>it.prodId!==prodId);
+        updateCommandeList();
+      }
+    }
+    function supprimerProduitCommande(prodId) {
+      currentCommande.produits = currentCommande.produits.filter(it=>it.prodId!==prodId);
+      updateCommandeList();
+    }
+    function viderCommande() {
+      if(confirm("Vider toute la commande ?"))
+        currentCommande.produits = [];
+      updateCommandeList();
+    }
+    function updateCommandeList() {
+      let html = "";
+      if(currentCommande.produits.length===0) {
+        html = `<div style="color:#888; margin-bottom:1em;">Aucun produit sélectionné…</div>`;
+      } else {
+        html = `<table><thead><tr>
+          <th>Produit</th><th>Quantité</th><th>Prix</th><th></th>
+        </tr></thead><tbody>`;
+        for(let it of currentCommande.produits) {
+          let prod = produits.find(p=>p.id===it.prodId);
+          html += `<tr>
+            <td>${it.nom}</td>
+            <td>
+              <button class="btn" onclick="retirerProduitCommande(${it.prodId})" style="padding:0 0.7em;">−</button>
+              ${it.qte}
+              <button class="btn" onclick="ajoutProduitCommande(${it.prodId})" style="padding:0 0.7em;">+</button>
+            </td>
+            <td>${it.prix*it.qte} €</td>
+            <td><button class="btn btn-danger" onclick="supprimerProduitCommande(${it.prodId})">Supprimer</button></td>
+          </tr>`;
+        }
+        html += `</tbody></table>`;
+      }
+      let total = currentCommande.produits.reduce((s,it)=>s+it.qte*it.prix,0);
+      $("commandeList").innerHTML = html;
+      $("achatTotal").textContent = total;
+    }
+    function validerAchat() {
+      if(currentCommande.produits.length===0) {
+        alert("Sélectionnez au moins un article.");
+        return false;
+      }
+      for(let it of currentCommande.produits) {
+        let prod = produits.find(p=>p.id===it.prodId);
+        if(prod.stock < it.qte) {
+          alert(`Stock insuffisant pour ${prod.nom}`);
+          return false;
+        }
+      }
+      let achat = {
+        id: uuid(),
+        userId: currentCommande.userId,
+        produits: JSON.parse(JSON.stringify(currentCommande.produits)),
+        total: currentCommande.produits.reduce((s,it)=>s+it.qte*it.prix,0),
+        date: Date.now(),
+        paye: !!$("payeeCB").checked,
+        mode: $("payeeCB").checked ? "payé" : "ardoise"
+      };
+      for(let it of achat.produits) {
+        let prod = produits.find(p=>p.id===it.prodId);
+        prod.stock -= it.qte;
+        if(prod.stock<0) prod.stock=0;
+      }
+      achats.push(achat);
+      saveData("asso_produits", produits);
+      saveData("asso_achats", achats);
+      showStockAlerts();
+      showStocksSynth();
+      if(achat.paye) {
+        paiements.push({id:uuid(), userId:currentCommande.userId, montant:achat.total, date:Date.now(), mode:"achat"});
+        saveData("asso_paiements", paiements);
+      }
+      showConfirmation("Merci pour votre achat !");
+      setTimeout(showUsersList, 1600);
+      return false;
+    }
+
+    // --- Historique utilisateur ---
+    function showUserHistory(userId) {
+      let u = users.find(x=>x.id===userId);
+      let html = `<button class="btn" onclick="showAchat(${userId})">← Retour</button>
+        <h2>Historique de ${u.prenom} ${u.nom}</h2>
+        <div style="margin-bottom:1em;">
+          <b>Ardoise actuelle :</b>
+          <span style="color:${getSolde(userId)>0?"#e63946":"#20515a"};font-weight:bold;">${getSolde(userId)} €</span>
+        </div>`;
+      html += `<table><thead><tr><th>Date</th><th>Type</th><th>Détail</th><th>Montant (€)</th></tr></thead><tbody>`;
+      let histos = [];
+      for (let a of achats.filter(a=>a.userId===userId)) {
+        let detail = a.produits.map(p=>`${p.nom} x${p.qte}`).join(", ");
+        histos.push({date:a.date, type:(a.paye?"Achat (payé)":"Achat (ardoise)"), detail, montant:a.total});
+      }
+      for (let p of paiements.filter(p=>p.userId===userId)) {
+        histos.push({date:p.date, type:"Paiement "+(p.mode==="manuel"?"(manuel)":"(achat)"), detail:"", montant:p.montant});
+      }
+      histos.sort((a,b)=>a.date-b.date);
+      for (let h of histos) {
+        html += `<tr>
+          <td>${formatDate(h.date)}</td>
+          <td>${h.type}</td>
+          <td>${h.detail||""}</td>
+          <td>${h.type.startsWith("Paiement")?'<span style="color:#2b7a78;">+':'<span style="color:#e63946;">-'}${h.montant} €</span></td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+      $("achatSection").innerHTML = html;
+    }
+
+    // --- ADMIN PANELS ---
+    function showAdminPanel(mode) {
+      let pass = prompt(mode==="users"?"Mot de passe admin":"Mot de passe stock");
+      if((mode==="users"&&pass!==settings.mdpAdmin) || (mode!=="users"&&pass!==settings.mdpStock)) {
+        alert("Mot de passe incorrect !");
+        return;
+      }
+      $("homeSection").classList.add("hidden");
+      $("achatSection").classList.add("hidden");
+      $("adminPanel").classList.remove("hidden");
+      if(mode==="users") panelUsers();
+      else if(mode==="stock") panelStock();
+      else if(mode==="paiements") panelPaiements();
+      else if(mode==="tresorerie") panelTresorerie();
+    }
+
+    // --- PANEL UTILISATEURS ---
+    function panelUsers() {
+      let html = `<button class="btn" onclick="showUsersList()">← Retour</button><h2>Gestion des membres</h2>`;
+      html += `<table><thead><tr><th>Prénom</th><th>Nom</th><th>Avatar</th><th>Actions</th></tr></thead><tbody>`;
+      for(let u of users) {
+        if(u.deleted) continue;
+        html += `<tr>
+          <td>${u.prenom}</td>
+          <td>${u.nom}</td>
+          <td>${u.avatar?'<img class="avatar" src="'+u.avatar+'"/>':""}</td>
+          <td>
+            <button class="btn" onclick="editUser(${u.id})">Modifier</button>
+            <button class="btn btn-danger" onclick="deleteUser(${u.id})">Supprimer</button>
+          </td>
+        </tr>`;
+      }
+      html += `</tbody></table>
+        <button class="btn btn-success" onclick="editUser()">Ajouter un membre</button>
+        <br><br><b>Historique à venir…</b>
+      `;
+      $("adminPanel").innerHTML = html;
+    }
+    function editUser(id) {
+      let u = id? users.find(x=>x.id===id): {nom:"", prenom:"", avatar:""};
+      let html = `<button class="btn" onclick="panelUsers()">← Annuler</button><h2>${id?"Modifier":"Ajouter"} un membre</h2>
+        <form id="formUser" onsubmit="return saveUser(${id||"null"})">
+          <label>Prénom:<br><input class="input-lg" name="prenom" required value="${u.prenom||""}"></label><br>
+          <label>Nom:<br><input class="input-lg" name="nom" required value="${u.nom||""}"></label><br>
+          <label>Avatar (URL ou base64, optionnel):<br><input class="input-lg" name="avatar" value="${u.avatar||""}"></label><br>
+          <button class="btn btn-success" type="submit">${id?"Enregistrer":"Ajouter"}</button>
+        </form>`;
+      $("adminPanel").innerHTML = html;
+    }
+    function saveUser(id) {
+      let f = document.forms.formUser;
+      let u = {id: id||Date.now(), nom: f.nom.value.trim(), prenom: f.prenom.value.trim(), avatar: f.avatar.value.trim()};
+      if(!u.nom || !u.prenom) { alert("Nom et prénom requis"); return false; }
+      if(id) {
+        let ind = users.findIndex(x=>x.id===id);
+        users[ind] = {...users[ind], ...u};
+      } else {
+        u.created = Date.now();
+        users.push(u);
+      }
+      saveData("asso_users", users);
+      panelUsers();
+      return false;
+    }
+    function deleteUser(id) {
+      if(!confirm("Confirmer suppression ?")) return;
+      let ind = users.findIndex(x=>x.id===id);
+      users[ind].deleted = true;
+      saveData("asso_users", users);
+      panelUsers();
+    }
+
+    // --- PANEL STOCK/PRODUITS ---
+    function panelStock() {
+      let html = `<button class="btn" onclick="showUsersList()">← Retour</button><h2>Gestion du stock / Produits</h2>`;
+      html += `<table><thead><tr><th>Nom</th><th>Prix</th><th>Stock</th><th>Seuil</th><th>Actions</th></tr></thead><tbody>`;
+      for(let p of produits) {
+        if(p.deleted) continue;
+        html += `<tr>
+          <td>${p.nom}</td>
+          <td>${p.prix} €</td>
+          <td>${p.stock}</td>
+          <td>${p.seuil||5}</td>
+          <td>
+            <button class="btn" onclick="editProduit(${p.id})">Modifier</button>
+            <button class="btn btn-danger" onclick="deleteProduit(${p.id})">Supprimer</button>
+            <button class="btn" onclick="ajusterStock(${p.id})">Stock + / -</button>
+          </td>
+        </tr>`;
+      }
+      html += `</tbody></table>
+        <button class="btn btn-success" onclick="editProduit()">Ajouter un produit</button>
+        <br><br><b>Historique à venir…</b>
+      `;
+      $("adminPanel").innerHTML = html;
+    }
+    function editProduit(id) {
+      let p = id? produits.find(x=>x.id===id): {nom:"", prix:1, stock:10, stockInitial:10, seuil:5};
+      let html = `<button class="btn" onclick="panelStock()">← Annuler</button><h2>${id?"Modifier":"Ajouter"} un produit</h2>
+        <form id="formProduit" onsubmit="return saveProduit(${id||"null"})">
+          <label>Nom:<br><input class="input-lg" name="nom" required value="${p.nom||""}"></label><br>
+          <label>Prix (€):<br><input class="input-lg" name="prix" type="number" required min="0" value="${p.prix||1}"></label><br>
+          <label>Stock initial:<br><input class="input-lg" name="stock" type="number" required min="0" value="${id?p.stock:p.stockInitial||10}"></label><br>
+          <label>Seuil d’alerte:<br><input class="input-lg" name="seuil" type="number" min="0" value="${p.seuil||5}"></label><br>
+          <button class="btn btn-success" type="submit">${id?"Enregistrer":"Ajouter"}</button>
+        </form>`;
+      $("adminPanel").innerHTML = html;
+    }
+    function saveProduit(id) {
+      let f = document.forms.formProduit;
+      let p = {id: id||Date.now(), nom: f.nom.value.trim(), prix: Number(f.prix.value), stock: Number(f.stock.value), stockInitial: Number(f.stock.value), seuil: Number(f.seuil.value)};
+      if(!p.nom) { alert("Nom requis"); return false; }
+      if(id) {
+        let ind = produits.findIndex(x=>x.id===id);
+        produits[ind] = {...produits[ind], ...p};
+      } else {
+        p.created = Date.now();
+        produits.push(p);
+      }
+      saveData("asso_produits", produits);
+      panelStock();
+      showStockAlerts();
+      showStocksSynth();
+      return false;
+    }
+    function deleteProduit(id) {
+      if(!confirm("Confirmer suppression ?")) return;
+      let ind = produits.findIndex(x=>x.id===id);
+      produits[ind].deleted = true;
+      saveData("asso_produits", produits);
+      panelStock();
+      showStockAlerts();
+      showStocksSynth();
+    }
+    function ajusterStock(id) {
+      let prod = produits.find(x=>x.id===id);
+      let qte = prompt(`Ajuster le stock de ${prod.nom}.\nEntrer un nombre positif (ajout) ou négatif (retrait):`, "0");
+      let val = Number(qte);
+      if(isNaN(val)) return alert("Nombre invalide.");
+      if(prod.stock+val<0) return alert("Stock ne peut pas devenir négatif.");
+      prod.stock += val;
+      saveData("asso_produits", produits);
+      panelStock();
+      showStockAlerts();
+      showStocksSynth();
+    }
+
+    // --- Synthèse paiements & ardoises (corrigée) ---
+    function getSolde(userId) {
+      let totalArdoise = achats.filter(a => a.userId === userId && !a.paye)
+        .reduce((s, a) => s + a.total, 0);
+      let totalPaiementsManuels = paiements.filter(p => p.userId === userId && p.mode === "manuel")
+        .reduce((s, p) => s + p.montant, 0);
+      return totalArdoise - totalPaiementsManuels;
+    }
+    function panelPaiements() {
+      let html = `<button class="btn" onclick="showUsersList()">← Retour</button><h2>Synthèse paiements & ardoises</h2>
+      <table><thead><tr><th>Membre</th><th>Total payé (€)</th><th>Ardoise (€)</th><th>Actions</th></tr></thead><tbody>`;
+      for(let u of users) {
+        if(u.deleted) continue;
+        let totalPaye = paiements.filter(p=>p.userId===u.id && p.mode === "manuel")
+          .reduce((s,p)=>s+p.montant,0);
+        let totalAchat = achats.filter(a=>a.userId===u.id && !a.paye)
+          .reduce((s,a)=>s+a.total,0);
+        let solde = totalAchat - totalPaye;
+        html += `<tr>
+          <td>${u.prenom} ${u.nom}</td>
+          <td>${totalPaye} €</td>
+          <td>${solde>0?'<span style="color:var(--danger);font-weight:bold">'+solde+'</span>':solde} €</td>
+          <td>
+            <button class="btn" onclick="ajoutPaiement(${u.id})">Ajouter paiement</button>
+            <button class="btn btn-sm" onclick="showUserHistoryPaiement(${u.id})" title="Voir l’historique"><span style="font-size:1.2em;">🔍</span> Historique</button>
+          </td>
+        </tr>`;
+      }
+      html += `</tbody></table>
+      <br><b>Historique à venir…</b>
+      `;
+      $("adminPanel").innerHTML = html;
+    }
+    function ajoutPaiement(userId) {
+      let montant = prompt("Entrer le montant payé (€):", "0");
+      let val = Number(montant);
+      if(isNaN(val)||val<=0) return alert("Montant invalide.");
+      paiements.push({id:uuid(), userId, montant:val, date:Date.now(), mode:"manuel"});
+      saveData("asso_paiements", paiements);
+      panelPaiements();
+    }
+
+    // --- Historique dans synthèse paiements
+    function showUserHistoryPaiement(userId) {
+      let u = users.find(x=>x.id===userId);
+      let html = `<button class="btn" onclick="panelPaiements()">← Retour</button>
+        <h2>Historique de ${u.prenom} ${u.nom}</h2>
+        <div style="margin-bottom:1em;">
+          <b>Ardoise actuelle :</b>
+          <span style="color:${getSolde(userId)>0?"#e63946":"#20515a"};font-weight:bold;">${getSolde(userId)} €</span>
+        </div>`;
+      html += `<table><thead><tr><th>Date</th><th>Type</th><th>Détail</th><th>Montant (€)</th></tr></thead><tbody>`;
+      let histos = [];
+      for (let a of achats.filter(a=>a.userId===userId)) {
+        let detail = a.produits.map(p=>`${p.nom} x${p.qte}`).join(", ");
+        histos.push({date:a.date, type:(a.paye?"Achat (payé)":"Achat (ardoise)"), detail, montant:a.total});
+      }
+      for (let p of paiements.filter(p=>p.userId===userId)) {
+        histos.push({date:p.date, type:"Paiement "+(p.mode==="manuel"?"(manuel)":"(achat)"), detail:"", montant:p.montant});
+      }
+      histos.sort((a,b)=>a.date-b.date);
+      for (let h of histos) {
+        html += `<tr>
+          <td>${formatDate(h.date)}</td>
+          <td>${h.type}</td>
+          <td>${h.detail||""}</td>
+          <td>${h.type.startsWith("Paiement")?'<span style="color:#2b7a78;">+':'<span style="color:#e63946;">-'}${h.montant} €</span></td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+      $("adminPanel").innerHTML = html;
+    }
+
+    // --- PANEL TRÉSORERIE & SUIVI MENSUEL ---
+    function panelTresorerie() {
+      let moisList = Array.from(new Set(achats.map(a=>a.date?new Date(a.date).toISOString().slice(0,7):"")));
+      moisList.sort().reverse();
+      let sel = `<select id="moisSel" class="input-sm" onchange="majTresorerie()">`;
+      for(let m of moisList) {
+        if(m) sel += `<option value="${m}">${m}</option>`;
+      }
+      sel += `</select>`;
+      let html = `<button class="btn" onclick="showUsersList()">← Retour</button><h2>Trésorerie mensuelle</h2>
+      Mois : ${sel}
+      <div id="tresoRes"></div>`;
+      $("adminPanel").innerHTML = html;
+      majTresorerie();
+    }
+    function majTresorerie() {
+      let mois = $("moisSel").value;
+      let achatsMois = achats.filter(a=>a.date && new Date(a.date).toISOString().slice(0, 7) === mois);
+      let totalVente = achatsMois.reduce((s, a) => s + a.total, 0);
+      let parProd = {};
+      let parProdEuros = {};
+      for (let p of produits) {
+        parProd[p.id] = 0;
+        parProdEuros[p.id] = 0;
+      }
+      for (let a of achatsMois) {
+        for (let item of a.produits) {
+          parProd[item.prodId] = (parProd[item.prodId] || 0) + item.qte;
+          parProdEuros[item.prodId] = (parProdEuros[item.prodId] || 0) + (item.qte * item.prix);
+        }
+      }
+      let html = `<b>Total ventes :</b> ${totalVente} €<br>
+      <table><thead><tr><th>Produit</th><th>Quantité vendue</th><th>Montant (€)</th></tr></thead><tbody>`;
+      for (let p of produits) {
+        if (p.deleted) continue;
+        html += `<tr>
+          <td>${p.nom}</td>
+          <td>${parProd[p.id] || 0}</td>
+          <td>${parProdEuros[p.id] || 0} €</td>
+        </tr>`;
+      }
+      html += `</tbody></table>
+      <div style="font-size:1.2em; font-weight:bold; margin-top:1em;">Résultat total du mois : ${totalVente} €</div>`;
+      $("tresoRes").innerHTML = html;
+    }
+
+    // --- PARAMÈTRES / PERSONNALISATION ---
+    function showSettings() {
+      let pass = prompt("Mot de passe admin requis pour accéder aux paramètres :");
+      if(pass !== settings.mdpAdmin) {
+        alert("Mot de passe incorrect !");
+        return;
+      }
+      let html = `<button class="btn" onclick="showUsersList()">← Retour</button><h2>Paramètres</h2>
+      <form id="formSettings" onsubmit="return saveSettings()">
+        <label>Nom de l’association :<br><input class="input-lg" name="assoTitle" value="${settings.assoTitle||""}"></label><br>
+        <label>Logo (URL, optionnel) :<br><input class="input-lg" name="logo" value="${settings.logo||""}"></label><br>
+        <label>Mot de passe admin (gestion membres) :<br><input class="input-lg" name="mdpAdmin" type="password" value="${settings.mdpAdmin||""}"></label><br>
+        <label>Mot de passe stock (gestion produits) :<br><input class="input-lg" name="mdpStock" type="password" value="${settings.mdpStock||""}"></label><br>
+        <button class="btn btn-success" type="submit">Enregistrer</button>
+      </form>
+      <br>
+      <button class="btn btn-danger" onclick="resetData()">Réinitialiser toutes les données</button>
+      <br><br>
+      <b>Personnalisation couleurs à venir…</b>
+      `;
+      $("adminPanel").innerHTML = html;
+      $("homeSection").classList.add("hidden");
+      $("achatSection").classList.add("hidden");
+      $("adminPanel").classList.remove("hidden");
+    }
+    function saveSettings() {
+      let f = document.forms.formSettings;
+      settings.assoTitle = f.assoTitle.value.trim();
+      settings.logo = f.logo.value.trim();
+      settings.mdpAdmin = f.mdpAdmin.value.trim();
+      settings.mdpStock = f.mdpStock.value.trim();
+      saveData("asso_settings", settings);
+      applySettings();
+      showUsersList();
+      return false;
+    }
+    function applySettings() {
+      $("assoTitle").textContent = settings.assoTitle||"Gestion de stock Association";
+      if(settings.logo) {
+        $("logo").src = settings.logo; $("logo").style.display = "";
+      } else { $("logo").style.display = "none"; }
+      document.body.style.setProperty("--accent", settings.couleurs?.accent||"#2b7a78");
+      document.body.style.setProperty("--main-bg", settings.couleurs?.main_bg||"#f7f7fa");
+    }
+
+    // --- RÉINITIALISATION ---
+    function resetData() {
+      if(!confirm("Attention ! Cette action est irréversible.\nToutes les données seront effacées.\nConfirmez ?")) return;
+      if(!confirm("Vraiment ? Dernière chance !")) return;
+      localStorage.clear();
+      location.reload();
+    }
+
+    function showConfirmation(msg) {
+      let m = $("modalConfirm");
+      m.textContent = msg;
+      m.classList.remove("hidden");
+      try { $("audioMerci").play(); } catch(e){}
+      setTimeout(()=>{m.classList.add("hidden")}, 1400);
+    }
+async function importAutoFromGitHub() {
+  try {
+    // Mets ici le lien de TON dépôt et TON fichier JSON
+    const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/stock-gardiens.json';
+    const response = await fetch(`${apiUrl}?ref=main`, {
+      headers: { 'Accept': 'application/vnd.github.v3.raw' },
+      cache: 'no-store'
+    });
+    if (!response.ok) {
+      console.warn('Impossible de charger les données GitHub :', response.status);
+      return false;
+    }
+    const data = await response.json();
+    // On écrase tout le localStorage si les données sont valides
+    if(data.users && data.produits && data.achats && data.paiements && data.settings) {
+      saveData("asso_users", data.users);
+      saveData("asso_produits", data.produits);
+      saveData("asso_achats", data.achats);
+      saveData("asso_paiements", data.paiements);
+      saveData("asso_settings", data.settings);
+      console.log('Import GitHub réussi.');
+      location.reload();
+      return true;
+    } else {
+      console.warn('Fichier GitHub invalide (pas tous les champs)');
+      return false;
+    }
+  } catch (err) {
+    console.warn('Erreur import GitHub:', err);
+    return false;
+  }
+}
+
+    // --- Sauvegarde automatique Github via API (Netlify / Vercel / etc) ---
+    async function autoSaveToGitHub() {
+      try {
+        const data = {
+          users, produits, achats, paiements, settings
+        };
+        // Remplace ici par l'URL de ta Netlify function (ou autre API serverless)
+        const res = await fetch('/.netlify/functions/saveStock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          console.warn('Erreur sauvegarde GitHub :', err);
+        } else {
+          console.log('Auto-sauvegarde GitHub OK');
+        }
+      } catch (err) {
+        console.warn('Erreur auto-sauvegarde GitHub :', err);
+      }
+    }
+
+    // --- Correctif pour Chrome/Windows : fonctions globales pour onclick ---
+    window.showAdminPanel = showAdminPanel;
+    window.panelUsers = panelUsers;
+    window.panelStock = panelStock;
+    window.panelPaiements = panelPaiements;
+    window.panelTresorerie = panelTresorerie;
+    window.editUser = editUser;
+    window.saveUser = saveUser;
+    window.deleteUser = deleteUser;
+    window.editProduit = editProduit;
+    window.saveProduit = saveProduit;
+    window.deleteProduit = deleteProduit;
+    window.ajusterStock = ajusterStock;
+    window.ajoutPaiement = ajoutPaiement;
+    window.showAchat = showAchat;
+    window.showUsersList = showUsersList;
+    window.showSettings = showSettings;
+    window.resetData = resetData;
+    window.showUserHistory = showUserHistory;
+    window.showUserHistoryPaiement = showUserHistoryPaiement;
+  </script>
+</body>
+</html>

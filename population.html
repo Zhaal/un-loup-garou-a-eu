@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Génération de la Population</title>
+    <style>
+        :root {
+            --primary-color: #0077b6;
+            --primary-hover: #023e8a;
+            --secondary-color: #f4f4f4;
+            --border-color: #ddd;
+            --text-dark: #333;
+            --danger-color: #d00000;
+            --success-color: #28a745;
+            --job-color: #c97b0a;
+            --save-color: #1e6e0f;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--secondary-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 500px 1fr;
+            gap: 20px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        #config-panel, #results-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3, h4 { color: var(--primary-color); }
+        h2 { border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-top: 0; }
+        h3 { margin-top: 25px; }
+        h4 { font-size: 1.1em; border-bottom: none; margin: 15px 0 10px; }
+        h5 { font-size: 1.05em; color: #333; margin: 10px 0 5px 0;}
+        .control-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+        textarea { min-height: 80px; resize: vertical; }
+        input[readonly] { background-color: #e9ecef; font-weight: bold; }
+        
+        button {
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 1em;
+            font-weight: 500;
+        }
+        button:hover { background: var(--primary-hover); }
+        button:disabled { background: #cccccc; cursor: not-allowed; }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .button-group button {
+            flex-grow: 1;
+        }
+
+        .race-management-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        #save-races-db-btn {
+            background-color: var(--save-color);
+        }
+        
+        .race-card {
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .race-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .race-card-header h4 { margin: 0; border: none; padding: 0; }
+        .race-card-header .delete-race-btn {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        #total-percentage { font-weight: bold; text-align: right; margin-top: 10px; padding: 8px; border-radius: 4px; }
+        
+        #validation-checklist { margin-bottom: 20px; }
+        #validation-checklist p { font-weight: bold; }
+        #validation-checklist ul { list-style: none; padding: 0; margin-top: 10px; }
+        #validation-checklist li {
+            padding: 8px; margin-bottom: 5px; border-radius: 4px;
+            transition: all 0.3s ease;
+            border-left: 5px solid;
+            font-size: 0.9em;
+        }
+        #validation-checklist li.valid {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: var(--success-color);
+        }
+        #validation-checklist li.invalid {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: var(--danger-color);
+        }
+        #validation-checklist li::before {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        #validation-checklist li.valid::before { content: '✔'; }
+        #validation-checklist li.invalid::before { content: '❌'; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none; justify-content: center;
+            align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 8px; width: 90%;
+            max-width: 1600px; height: 90vh; display: flex; flex-direction: column;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; }
+        .modal-close { font-size: 2rem; cursor: pointer; font-weight: bold; }
+        .modal-body { 
+            overflow: hidden;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            flex-grow: 1;
+        }
+        #population-display, #history-log {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #history-log-content {
+            overflow-y: auto;
+            padding: 5px;
+            flex-grow: 1;
+        }
+        #history-log-content p {
+            font-size: 0.9em;
+            margin: 0 0 8px 0;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 8px;
+        }
+        #real-time-stats {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        #real-time-stats h4 {
+            margin: 0 0 10px 0;
+        }
+        #real-time-stats ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.95em;
+        }
+        #real-time-stats li {
+            margin-bottom: 5px;
+        }
+        #real-time-stats ul ul {
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .tab-button {
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1em;
+            color: var(--text-dark);
+        }
+        .tab-button.active {
+            font-weight: bold;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: -2px;
+        }
+        
+        /* --- SCROLL FIX STARTS HERE --- */
+        .tab-panels {
+            flex-grow: 1; /* Allows the panel container to take up available vertical space */
+            display: flex; /* Makes it a flex container for its single active child panel */
+            overflow: hidden; /* Clips any overflow, the scrolling will be handled by a deeper child */
+        }
+        .tab-panel {
+            display: none; /* Inactive panels are hidden */
+            flex-direction: column; /* All panels are now flex columns */
+            flex-grow: 1; /* The active panel will grow to fill its container (.tab-panels) */
+            padding-top: 15px;
+        }
+        .tab-panel.active {
+            display: flex; /* Active panels are shown as flex containers */
+        }
+        .tab-panel-content {
+            flex-grow: 1; /* The content div itself grows to fill the remaining space */
+            overflow-y: auto; /* This element is the one that will scroll if content overflows */
+            padding-right: 10px; /* Add some padding to avoid scrollbar overlapping content */
+        }
+        /* --- SCROLL FIX ENDS HERE --- */
+
+        details { border: 1px solid #eee; border-radius: 4px; margin-bottom: 8px; }
+        summary { padding: 10px; cursor: pointer; font-weight: bold; background: #f8f9fa; }
+        
+        .family-tree ul {
+            list-style: none;
+            padding-left: 25px;
+            border-left: 1px solid #ccc;
+        }
+        .family-tree li {
+            padding: 4px 0;
+            line-height: 1.4;
+            position: relative;
+        }
+        .family-tree li::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: -15px;
+            width: 15px;
+            height: 1px;
+            background-color: #ccc;
+        }
+
+        .person-job {
+            font-style: italic;
+            color: var(--job-color);
+        }
+        .dead {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        .maiden-name, .origin-info {
+            font-style: italic;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .family-history {
+            background-color: #f0f3f5;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 5px 15px 15px 15px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        .family-history h5 {
+            margin: 10px 0 5px 0;
+            color: var(--primary-color);
+            font-size: 1em;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .family-history ul {
+            padding-left: 20px;
+            margin: 5px 0;
+            list-style-type: disc;
+        }
+        .family-history li {
+             margin-bottom: 4px;
+        }
+        .family-history .open-history-modal-btn {
+            font-size: 0.8em;
+            padding: 3px 8px;
+            margin-top: 10px;
+            width: 100%;
+            background-color: #6c757d;
+        }
+        .family-history-moved p {
+            margin: 10px 0 5px 0;
+            line-height: 1.5;
+        }
+        .evolution-section {
+             margin-bottom: 20px;
+        }
+        .evolution-section ul {
+            list-style: none;
+            padding: 0;
+        }
+         .evolution-section li {
+            padding: 5px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .evolution-section li:last-child {
+            border-bottom: none;
+        }
+         .job-name {
+            font-weight: 500;
+        }
+         .job-count {
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+       <div id="config-panel">
+            <h2>Configuration de la Simulation</h2>
+            <div class="control-group grid-2-col">
+                <div>
+                    <label>Année Actuelle</label>
+                    <input type="text" id="current-year" value="Année 0" readonly>
+                </div>
+                <div>
+                    <label>Familles Fondatrices (Total)</label>
+                    <input type="text" id="total-families" value="0" readonly>
+                </div>
+            </div>
+            <h3>Gestion des Races</h3>
+            <div class="control-group">
+                <label for="preset-race-select">Charger une race pré-définie</label>
+                <div style="display: flex; gap: 10px;">
+                    <select id="preset-race-select">
+                        <option value="">-- Choisir une race --</option>
+                    </select>
+                    <button id="load-preset-race-btn" style="width: auto; flex-shrink: 0;">Charger</button>
+                </div>
+            </div>
+            <div class="race-management-buttons">
+                <button id="add-race-btn">+ Ajouter une Race (Manuelle)</button>
+                <button id="save-races-db-btn">Sauvegarder les Races</button>
+            </div>
+            <div id="race-list"></div>
+            <p id="total-percentage">Total des pourcentages : 0%</p>
+        </div>
+        <div id="results-panel">
+            <h2>Lancement</h2>
+            <div id="validation-checklist">
+                <p>Pour lancer la simulation, veuillez remplir les conditions suivantes :</p>
+                <ul>
+                    <li id="check-percentage" class="invalid"></li>
+                    <li id="check-families" class="invalid"></li>
+                    <li id="check-races" class="invalid"></li>
+                </ul>
+            </div>
+            <div class="button-group">
+                <button id="start-simulation-btn" disabled>Lancer la Simulation (G0)</button>
+                <button id="view-results-btn" disabled>Voir le Résultat</button>
+            </div>
+        </div>
+    </div>
+    
+    <template id="race-card-template"><div class="race-card"><div class="race-card-header"><h4>Nouvelle Race</h4><button class="delete-race-btn">Supprimer</button></div><div class="control-group"><label>Nom de la Race</label><input type="text" class="race-name" placeholder="Ex: Humain"></div><div class="grid-2-col"><div class="control-group"><label>Espérance de vie</label><input type="number" class="race-lifespan" value="80" min="1"></div><div class="control-group"><label>Âge adulte</label><input type="number" class="race-adultage" value="18" min="1"></div></div><div class="grid-2-col"><div class="control-group"><label>Prénoms Masculins (séparés par virgule)</label><textarea class="race-firstnames-m" placeholder="Arthur, Lancelot, ..."></textarea></div><div class="control-group"><label>Prénoms Féminins (séparés par virgule)</label><textarea class="race-firstnames-f" placeholder="Guenièvre, Morgane, ..."></textarea></div></div><div class="control-group"><label>Noms de famille (séparés par virgule)</label><textarea class="race-lastnames" placeholder="Pendragon, De Leonis, ..."></textarea></div><div class="control-group"><label>Pourcentage de présence (%)</label><input type="number" class="race-percentage" value="0" min="0" max="100"></div></div></template>
+
+    <div id="population-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h2 id="population-modal-title">Population de la Région</h2><span class="modal-close">&times;</span></div>
+            <div id="population-modal-body" class="modal-body">
+                <div id="population-display">
+                    <div class="tab-nav"></div>
+                    <div class="tab-panels"></div>
+                </div>
+                <div id="history-log">
+                    <h3>Historique des Événements</h3>
+                    <div id="history-log-content"></div>
+                    <div id="real-time-stats">
+                        <h4>Statistiques</h4>
+                        <ul>
+                            <li id="stats-births">Naissances : 0</li>
+                            <li id="stats-deaths">Décès : 0</li>
+                            <li id="stats-marriages">Mariages : 0</li>
+                            <li id="stats-migrations">Migrations : 0
+                                <ul>
+                                    <li id="stats-mig-marriage">↳ par mariage : 0</li>
+                                    <li id="stats-mig-opportunity">↳ par opportunité : 0</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="history-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 800px; height: 80vh;">
+            <div class="modal-header">
+                <h2 id="history-modal-title">Historique de la famille</h2>
+                <span id="history-modal-close" class="modal-close">&times;</span>
+            </div>
+            <div id="history-modal-body" style="overflow-y: auto; padding: 15px;">
+                </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- MISE EN CACHE DES ÉLÉMENTS DU DOM ---
+        const totalFamiliesInput = document.getElementById('total-families');
+        const addRaceBtn = document.getElementById('add-race-btn');
+        const raceListDiv = document.getElementById('race-list');
+        const raceCardTemplate = document.getElementById('race-card-template');
+        const totalPercentageP = document.getElementById('total-percentage');
+        const startSimBtn = document.getElementById('start-simulation-btn');
+        const viewResultsBtn = document.getElementById('view-results-btn');
+        const populationModal = document.getElementById('population-modal');
+        const historyModal = document.getElementById('history-modal');
+        const checkPercentEl = document.getElementById('check-percentage');
+        const checkFamiliesEl = document.getElementById('check-families');
+        const checkRacesEl = document.getElementById('check-races');
+        const saveRacesBtn = document.getElementById('save-races-db-btn');
+        const currentYearInput = document.getElementById('current-year');
+        const presetRaceSelect = document.getElementById('preset-race-select');
+        const loadPresetRaceBtn = document.getElementById('load-preset-race-btn');
+
+        const statsBirthsEl = document.getElementById('stats-births');
+        const statsDeathsEl = document.getElementById('stats-deaths');
+        const statsMarriagesEl = document.getElementById('stats-marriages');
+        const statsMigrationsEl = document.getElementById('stats-migrations');
+        const statsMigMarriageEl = document.getElementById('stats-mig-marriage');
+        const statsMigOpportunityEl = document.getElementById('stats-mig-opportunity');
+
+        // --- VARIABLES DE SIMULATION ---
+        let allRegions = {};
+        let simulation = {
+            year: 0, population: [], families: {},
+            races: {}, eventLog: []
+        };
+        
+        // --- DONNÉES DE CONFIGURATION ---
+        
+        // MODIFICATION: Les données ci-dessous proviennent du fichier race.html
+        const PRESET_RACES = {
+            "Humain": {
+                "name": "Humain",
+                "lifespan": 80,
+                "adultAge": 18,
+                "firstNamesM": "Aldric, Balthazar, Caspian, Cedric, Dorian, Elric, Finnian, Gareth, Gideon, Hadrian, Icarus, Percival, Lancelot, Arthur, Gawain, Tristan, Roland, Olivier, Renaud, Guillaume, Geoffrey, Alistair, Braden, Corin, Duncan, Erik, Falk, Gregor, Hector, Jasper, Kaelan, Leoric, Merrick, Neville, Orin, Phineas, Quentin, Ronan, Sterling, Theron, Ulric, Valerius, Wolfram, Xylos, Yoric, Zayne, Alaric, Benedict, Cassian, Drake, Emeric, Florian, Godfrey, Horatio, Julian, Kyler, Lucian, Maximus, Nathaniel, Oscar, Pierce, Reginald, Sebastian, Theodore, Urien, Victor, Wesley, Xavier, Yves, Zane, Anton, Bertram, Corbin, Desmond, Everett, Felix, Gerard, Hubert, Ingram, Joffrey, Konrad, Leopold, Morgan, Norris, Odo, Pascal, Raymond, Silas, Tobin, Urban, Vincent, Wallace, Warren, York, Abban, Abram, Adriel, Aethelred, Alden, Alwin, Anselm, Arden, Armando, Arnaud, Ashford, Aubrey, Augustin, Averill, Baird, Baldwin, Bard, Barnaby, Barrett, Barton, Basil, Beaumont, Bennett, Blaine, Boniface, Bowen, Boyce, Brandon, Brice, Byron, Cadman, Calder, Carlton, Carlyle, Casimir, Cecil, Chadwick, Chaney, Clarence, Clement, Clifford, Clovis, Coleman, Conrad, Corwin, Cuthbert, Cyril, Dalton, Damon, Dane, Darrell, Delmar, Dennis, Derrick, Diggory, Dominic, Donovan, Dudley, Durand, Dustin, Dwight, Earl, Edgar, Edmund, Edwin, Egbert, Eldred, Elias, Ellery, Elmer, Elmo, Emery, Errol, Erwin, Eugene, Eustace, Evan, Everest, Ewan, Fabian, Farrell, Ferdinand, Ferris, Fletcher, Forrest, Foster, Francis, Franklin, Frederick, Freeman, Fulton, Gabriel, Gale, Galen, Gardner, Garrett, Garth, Gaston, Gavin, Gentry, Gerald, Gilbert, Giles, Gilroy, Goddard, Godwin, Goodwin, Gordon, Granger, Grant, Granville, Gregory, Gresham, Griffin, Griffith, Grover, Guido, Guilford, Guy, Haden, Halbert, Hale, Hamlin, Harding, Harlan, Harold, Harrison, Harvey, Haskell, Hastings, Hayden, Heath, Henry, Herbert, Herman, Hilary, Holden, Hollis, Homer, Howard, Howell, Hubbard, Humphrey, Hunter, Huxley, Ian, Immanuel, Irwin, Ivan, Ivo, Jacob, Jacques, Jamal, Jarrett, Jarvis, Jerome, Jesse, Joel, Jonas, Jordan, Joseph, Joshua, Joyce, Judd, Jude, Justin, Kane, Keane, Keaton, Keegan, Kelvin, Kendall, Kendrick, Kenelm, Kennard, Kent, Kenyon, Kermit, Kerr, Kevin, Killian, Kimball, King, Kirk, Knight, Knox, Kyle",
+                "firstNamesF": "Aveline, Brienne, Calista, Seraphina, Isolde, Rowena, Genevieve, Lyra, Elara, Gwendolyn, Morgana, Guinevere, Eleanor, Beatrice, Constance, Philippa, Rosamund, Sybil, Adelaide, Alice, Amelina, Annabel, Arabella, Audrey, Avice, Barbara, Blanche, Bridget, Camilla, Cassandra, Cecily, Charlotte, Christina, Clarice, Colette, Cynthia, Delia, Denise, Diana, Edith, Eileen, Elaine, Elizabeth, Eloise, Emily, Emma, Ermina, Esther, Eulalia, Eunice, Eve, Felicia, Fiona, Florence, Frances, Frederica, Gabriella, Georgina, Gertrude, Gisela, Gladys, Gloria, Grace, Grizelda, Guida, Gundred, Hannah, Harriet, Hazel, Heather, Helen, Heloise, Henrietta, Hester, Hilda, Honora, Ida, Imogen, Irene, Iris, Isabella, Isolda, Jacqueline, Jane, Janet, Jemima, Jennifer, Jessica, Joan, Jocelyn, Josephine, Joyce, Judith, Julia, Juliana, Juliet, Juno, Justine, Katherine, Kathleen, Laura, Lauren, Lavinia, Lena, Leona, Lillian, Lily, Linda, Lisa, Loretta, Lorna, Lorraine, Louisa, Lucille, Lucy, Lucretia, Lydia, Mabel, Madeline, Maeve, Magdalen, Marcella, Margaret, Margery, Marian, Marilyn, Marina, Marion, Martha, Matilda, Maud, Maureen, Mavis, Maxine, May, Melisande, Meredith, Mildred, Millicent, Minerva, Mirabel, Miranda, Miriam, Muriel, Myra, Myrtle, Nadine, Nancy, Naomi, Nerida, Nicola, Nicole, Nina, Nora, Norma, Octavia, Olive, Ophelia, Oriel, Pamela, Pansy, Patricia, Paula, Pauline, Pearl, Penelope, Philippa, Phoebe, Phyllis, Polly, Poppy, Priscilla, Prudence, Rachel, Rebecca, Regina, Rhoda, Rita, Roberta, Rosabel, Rosalind, Rose, Rosemary, Roxana, Ruby, Ruth, Sabrina, Samantha, Sarah, Selina, Sharon, Sheila, Shirley, Sibyl, Sonia, Sophia, Stella, Stephanie, Susan, Sylvia, Tabitha, Tamara, Teresa, Thea, Thelma, Theodora, Tiffany, Ursula, Valerie, Vanessa, Vera, Veronica, Victoria, Viola, Violet, Virginia, Vivian, Wanda, Wendy, Wilhelmina, Winifred, Yvonne, Zelda, Zoe, Zofia, Adelina, Adrienne, Agatha, Agnes, Aida, Aileen, Alberta, Alda, Alexandra, Alfreda, Alma, Althea, Amanda, Amelia, Anastasia, Andrea, Angela, Angelica, Anita, Ann, Anna, Antoinette, April, Arlene, Audrey, Augusta, Aurelia, Aurora, Ava, Avis, Babette, Belinda, Belle, Beryl, Bessie, Bethany, Betty, Beulah, Beverly, Billie, Birdie, Bonnie, Brenda, Bronwyn, Camille, Carla, Carmel, Carol, Caroline, Carrie, Catherine, Celia, Charlene, Chelsea, Cheryl, Chloe, Christabel, Claire, Clara, Clarice",
+                "lastNames": "Ashwood, Blackwood, Ironhand, Stormwind, Silvermane, Shadowend, Fireheart, Stonehelm, Winterfall, Bloodmoon, Ravenswood, Dragonfyre, Oakhaven, Sunstrider, Nightshade, Steelshaper, Whisperwind, Grimshaw, Moonshadow, Starfall, Blackwater, Highfield, Lowfield, Greenfield, Brownfield, Westfield, Northwood, Southwood, Eastwood, Westbrook, Northbrook, Southbrook, Eastgate, Westgate, Hightower, Lowtower, Greentower, Browntower, Brightwater, Darkwater, Swiftwater, Stillwater, Redriver, Blackriver, Whiteriver, Greenriver, Northbridge, Southbridge, Eastbridge, Westbridge, Stonebridge, Woodbridge, Ironbridge, Goldbridge, Silverford, Blackford, Whiteford, Greenford, Northcliff, Southcliff, Eastcliff, Westcliff, Highcliff, Lowcliff, Stonecliff, Woodcliff, Ironcliff, Goldcliff, Silvercrest, Blackcrest, Whitecrest, Greencrest, Northcrest, Southcrest, Eastcrest, Westcrest, Highcrest, Lowcrest, Stonecrest, Woodcrest, Ironcrest, Goldcrest, Silverdale, Blackdale, Whitedale, Greendale, Northdale, Southdale, Eastdale, Westdale, Highdale, Lowdale, Stonedale, Wooddale, Irondale, Golddale, Silverholm, Blackholm, Whiteholm, Greenholm, Northolm, Southolm, Eastholm, Westholm, Higholm, Lowolm, Stoneholm, Woodholm, Ironholm, Goldholm, Silverwood, Blackwood, Whitewood, Greenwood, Northwood, Southwood, Eastwood, Westwood, Highwood, Lowwood, Stonewood, Ironwood, Goldwood, Silverleaf, Blackleaf, Whiteleaf, Greenleaf, Northleaf, Southleaf, Eastleaf, Westleaf, Highleaf, Lowleaf, Stoneleaf, Woodleaf, Ironleaf, Goldleaf, Silverbrook, Blackbrook, Whitebrook, Greenbrook, Northbrook, Southbrook, Eastbrook, Westbrook, Highbrook, Lowbrook, Stonebrook, Woodbrook, Ironbrook, Goldbrook, Silverstream, Blackstream, Whitestream, Greenstream, Northstream, Southstream, Eaststream, Weststream, Highstream, Lowstream, Stonestream, Woodstream, Ironstream, Goldstream, Silverwell, Blackwell, Whitewell, Greenwell, Northwell, Southwell, Eastwell, Westwell, Highwell, Lowell, Stonewell, Woodwell, Ironwell, Goldwell, Silverthorne, Blackthorne, Whitethorne, Greenthorne, Norththorne, Souththorne, Easthorne, Westhorne, Highthorne, Lowthorne, Stonethorne, Woodthorne, Ironthorne, Goldthorne, Silverridge, Blackridge, Whiteridge, Greenridge, Northridge, Southridge, Eastridge, Westridge, Highridge, Lowridge, Stoneridge, Woodridge, Ironridge, Goldridge, Silverpeak, Blackpeak, Whitepeak, Greenpeak, Northpeak, Southpeak, Eastpeak, Westpeak, Highpeak, Lowpeak, Stonepeak, Woodpeak, Ironpeak, Goldpeak, Silvermountain, Blackmountain, Whitemountain, Greenmountain, Northmountain, Southmountain, Eastmountain, Westmountain, Highmountain, Lowmountain, Stonemountain, Woodmountain, Ironmountain, Goldmountain, Silverhill, Blackhill, Whitehill, Greenhill, Northhill, Southhill, Easthill, Westhill, Highhill, Lowhill, Stonehill, Woodhill, Ironhill, Goldhill, Silvervalley, Blackvalley, Whitevalley, Greenvalley, Northvalley, Southvalley, Eastvalley, Westvalley, Highvalley, Lowvalley, Stonevalley, Woodvalley, Ironvalley, Goldvalley, Silverfield, Blackfield, Whitefield, Greenfield, Northfield, Southfield, Eastfield, Westfield, Highfield, Lowfield, Stonefield, Woodfield, Ironfield, Goldfield, Silvercroft, Blackcroft, Whitecroft, Greencroft, Northcroft, Southcroft, Eastcroft, Westcroft, Highcroft, Lowcroft, Stonecroft, Woodcroft, Ironcroft, Goldcroft, Silvermead, Blackmead, Whitemead, Greenmead, Northmead, Southmead, Eastmead, Westmead, Highmead, Lowmead, Stonemead, Woodmead, Ironmead, Goldmead, Silverland, Blackland, Whiteland, Greenland, Northland, Southland, Eastland, Westland, Highland, Lowland, Stoneland, Woodland, Ironland, Goldland, Silvermarsh, Blackmarsh, Whitemarsh, Greenmarsh, Northmarsh, Southmarsh, Eastmarsh, Westmarsh, Highmarsh, Lowmarsh, Stonemarsh, Woodmarsh, Ironmarsh, Goldmarsh, Silverfen, Blackfen, Whitefen, Greenfen, Northfen, Southfen, Eastfen, Westfen, Highfen, Lowfen, Stonefen, Woodfen, Ironfen, Goldfen, Silvermoor, Blackmoor, Whitemoor, Greenmoor, Northmoor, Southmoor, Eastmoor, Westmoor, Highmoor, Lowmoor, Stonemoor, Woodmoor, Ironmoor, Goldmoor, Silverburn, Blackburn, Whiteburn, Greenburn, Northburn, Southburn, Eastburn, Westburn, Highburn, Lowburn, Stoneburn, Woodburn, Ironburn, Goldburn, Silverford, Blackford, Whiteford, Greenford, Northford, Southford, Eastford, Westford, Highford, Lowford, Stoneford, Woodford, Ironford, Goldford, Silverport, Blackport, Whiteport, Greenport, Northport, Southport, Eastport, Westport, Highport, Lowport, Stoneport, Woodport, Ironport, Goldport, Silverhaven, Blackhaven, Whitehaven, Greenhaven, Northhaven, Southhaven, Easthaven, Westhaven, Highhaven, Lowhaven, Stonehaven, Woodhaven, Ironhaven, Goldhaven, Silvergarde, Blackgarde, Whitegarde, Greengarde, Northgarde, Southgarde, Eastgarde, Westgarde, Highgarde, Lowgarde, Stonegarde, Woodgarde, Irongarde, Goldgarde, Silverwall, Blackwall, Whitewall, Greenwall, Northwall, Southwall, Eastwall, Westwall, Highwall, Lowwall, Stonewall, Woodwall, Ironwall, Goldwall, Silverguard, Blackguard, Whiteguard, Greenguard, Northguard, Southguard, Eastguard, Westguard, Highguard, Lowguard, Stoneguard, Woodguard, Ironguard, Goldguard, Silverhand, Blackhand, Whitehand, Greenhand, Northhand, Southhand, Easthand, Westhand, Highhand, Lowhand, Stonehand, Woodhand, Ironhand, Goldhand, Silverfist, Blackfist, Whitefist, Greenfist, Northfist, Southfist, Eastfist, Westfist, Highfist, Lowfist, Stonefist, Woodfist, Ironfist, Goldfist, Silverhammer, Blackhammer, Whitehammer, Greenhammer, Northhammer, Southhammer, Easthammer, Westhammer, Highhammer, Lowhammer, Stonehammer, Woodhammer, Ironhammer, Goldhammer, Silveraxe, Blackaxe, Whiteaxe, Greenaxe, Northaxe, Southaxe, Eastaxe, Westaxe, Highaxe, Lowaxe, Stoneaxe, Woodaxe, Ironaxe, Goldaxe, Silvershield, Blackshield, Whiteshield, Greenshield, Northshield, Southshield, Eastshield, Westshield, Highshield, Lowshield, Stoneshield, Woodshield, Ironshield, Goldshield, Silversword, Blacksword, Whitesword, Greensword, Northsword, Southsword, Eastsword, Westsword, Highsword, Lowsword, Stonesword, Woodsword, Ironsword, Goldsword, Silverblade, Blackblade, Whiteblade, Greenblade, Northblade, Southblade, Eastblade, Westblade, Highblade, Lowblade, Stoneblade, Woodblade, Ironblade, Goldblade, Silverbow, Blackbow, Whitebow, Greenbow, Northbow, Southbow, Eastbow, Westbow, Highbow, Lowbow, Stonebow, Woodbow, Ironbow, Goldbow, Silverarrow, Blackarrow, Whitearrow, Greenarrow, Northarrow, Southarrow, Eastarrow, Westarrow, Higharrow, Lowarrow, Stonearrow, Woodarrow, Ironarrow, Goldarrow, Silverheart, Blackheart, Whiteheart, Greenheart, Northheart, Southheart, Eastheart, Westheart, Highheart, Lowheart, Stoneheart, Woodheart, Ironheart, Goldheart, Silversoul, Blacksoul, Whitesoul, Greensoul, Northsoul, Southsoul, Eastsoul, Westsoul, Highsoul, Lowsoul, Stonesoul, Woodsoul, Ironsoul, Goldsoul, Silvermind, Blackmind, Whitemind, Greenmind, Northmind, Southmind, Eastmind, Westmind, Highmind, Lowmind, Stonemind, Woodmind, Ironmind, Goldmind, Silverspirit, Blackspirit, Whitespirit, Greenspirit, Northspirit, Southspirit, Eastspirit, Westspirit, Highspirit, Lowspirit, Stonespirit, Woodspirit, Ironspirit, Goldspirit"
+            },
+            "Elfe": {
+                "name": "Elfe",
+                "lifespan": 750,
+                "adultAge": 100,
+                "firstNamesM": "Aelar, Laeron, Erion, Faelar, Gaelen, Hadrian, Ilimor, Lierin, Rael, Sorael, Aelrindel, Aerendyl, Amras, Aranel, Beleg, Celebrimbor, Daeron, Edrahil, Elros, Erestor, Fingon, Gil-galad, Glorfindel, Haldir, Ingwë, Laeroth, Lindir, Maeglin, Orophin, Pheren, Quil-elen, Riardon, Saeros, Thranduil, Turgon, Voronwë, Aegnor, Amdír, Angrod, Aredhel, Caranthir, Celegorm, Curufin, Denethor, Dior, Eärnur, Elladan, Elrohir, Eöl, Ereinion, Finarfin, Finduilas, Finrod, Fëanor, Galadhon, Galdor, Gelmir, Gimil, Guilin, Gwindor, Haleth, Imin, Inglor, Iorlas, Kael, Legolas, Lenwë, Lomion, Mablung, Mahtan, Míriel, Nerdanel, Orodreth, Pengolodh, Rían, Rúmil, Salgant, Tathar, Telchar, Thorondor, Tuor, Ulmo, Valandil, Vanyar, Aegis, Aelwyn, Aerion, Alathon, Alcarin, Aldaron, Almaren, Alqualondë, Amon, Anarion, Andor, Anfalas, Anglachel, Arathorn, Arien, Armenelos, Astaldo, Calion, Cirdan, Coronal, Dagor, Earendil, Eldarion, Elendil, Elwe, Enel, Eonwe, Erellont, Eru, Falathar, Faramir, Fëanturi, Finwë, Fornost, Galathilion, Galdor, Gilthoniel, Gondolin, Hador, Haladan, Hirluin, Húrin, Hyarmendacil, Idril, Ilúvatar, Indis, Irmo, Isildur, Laurelin, Lórien, Lúthien, Malantur, Mandos, Manwë, Melian, Meneldil, Narsil, Nessa, Nienna, Noldor, Númenor, Ohtar, Olwë, Ossë, Pallando, Radagast, Rómendacil, Saruman, Sauron, Silmaril, Sindar, Tar-Minastir, Teler, Telperion, Thingol, Uinen, Ulfang, Ulfast, Ulwarth, Ungoliant, Vairë, Vala, Varda, Yavanna, Aerandir, Alcarin, Amandil, Anárion, Argeleb, Beorn, Celeborn, Círdan, Elatan, Elendur, Elentir, Elmo, Eomund, Eorl, Erkenbrand, Estel, Falco, Fastred, Fengel, Folcwine, Forlong, Freca, Frumgar, Gamling, Ghan-buri-Ghan, Gléowine, Gríma, Guthláf, Háma, Harding, Helm, Herubrand, Herugrim, Hirgon, Húrin, Imrahil, Ioreth, Ivorwen, Lalaith, Léod, Lóna, Lothíriel, Morwen, Nienor, Ohtar, Orleg, Radhruin, Rían, Tarannon, Telemnar, Telumehtar, Thengel, Théoden, Théodred, Thorin, Túrin, Tuor, Valacar, Vidugavia, Vorondil, Walda, Wulf",
+                "firstNamesF": "Althaea, Elara, Idril, Lyra, Maev, Naivara, Sariel, Taena, Valari, Xylia, Aerin, Amarië, Anairë, Arwen, Aredhel, Celebrian, Earwen, Elwing, Emeldir, Erendis, Finduilas, Galadriel, Gilraen, Idril, Ioreth, Lalwen, Lúthien, Melian, Míriel, Morwen, Nerdanel, Nienor, Nimrodel, Rían, Serindë, Tar-Ancalimë, Tinúviel, Undómiel, Yavanna, Adanel, Ailinel, Almiel, Amdís, Ancalimë, Andróg, Angrim, Ar-Adûnakhôr, Ar-Gimilzôr, Ar-Inziladûn, Ar-Pharazôn, Ar-Sakalthôr, Ar-Zimrathôn, Arien, Armenel, Artanis, Berúthiel, Celebrindal, Círdan, Elanor, Eldalótë, Elenwë, Elerrína, Elestirnë, Elfwine, Erien, Estë, Fíriel, Gilmith, Glóredhel, Haleth, Hareth, Herumor, Híril, Indis, Írildë, Isilmë, Íviel, Lindórië, Lóni, Lothíriel, Luinil, Maeglin, Mairon, Melthin, Meril, Mithrellas, Nellas, Nimloth, Níniel, Oiolossë, Ororo, Palarran, Pelendur, Rána, Rían, Rómenna, Salmar, Silmariën, Tár-Míriel, Tauriel, Telperiën, Thuringwethil, Tindómerel, Uinen, Uldor, Ulrad, Urwen, Vána, Vanyar, Vardamir, Varda, Vëantur, Vinitharya, Voronwë, Wilwarin, Wingelot, Yávien, Zamîn, Zimraphel, Aelin, Aelinor, Aeress, Aerona, Aethel, Alae, Alaglossa, Alaste, Alatariel, Alathea, Alcarin, Aldae, Aldalómë, Aldawen, Aldúya, Alfirin, Almir, Almirië, Alqualonde, Alquawen, Althaea, Altáriel, Amaria, Amarie, Amarië, Amarth, Amdir, Amdîr, Amon, Amras, Amrod, Anairë, Anar, Ancalagon, Ancalimë, Ancalimon, Andras, Andreth, Andril, Androth, Andróg, Anduin, Anfalas, Angainor, Angband, Angbor, Anglachel, Angmar, Angren, Angrist, Angrod, Anárion, Ancalagon, Ancalimë, Anárion, Annatar, Annúminas, Arador, Aragorn, Aranel, Aranrút, Aranwë, Arathorn, Aredhel, Argeleb, Argonath, Arien, Arnor, Aros, Arroch, Arthad, Arvedui, Arvernien, Arwen, Asfaloth, Atanamir, Atanatar, Aulë, Avranc, Axantur, Azaghâl, Balar, Balin, Barad-dûr, Baragund, Barahir, Baran, Baranduin, Bard, Beleg, Belegaer, Belegost, Belthronding, Bëor, Beren, Berúthiel, Boromir, Boron, Brandir, Bregolas, Brithombar, Brithon, Brodda, Butterbur, Calacirya, Calaquendi, Calenardhon, Calion, Calmacil, Camlost, Carach, Caradhras, Caranthir, Carcharoth, Cardolan, Carnil, Celeborn, Celebrian, Celebrimbor, Celebrindor, Celegorm, Celon, Celos, Círdan, Cirion, Cirith, Ciryaher, Ciryatur, Ciryon, Coimas",
+                "lastNames": "Sylverwood, Moonshadow, Starflower, Whisperwind, Swiftbrook, Greenleaf, Sunstrider, Shadowgleam, Evenwood, Brightwood, Sunwood, Moonwood, Starwood, Silverwood, Goldwood, Dawnwood, Duskwood, Nightwood, Daywood, Evenleaf, Brightleaf, Sunleaf, Moonleaf, Starleaf, Silverleaf, Goldleaf, Dawnleaf, Duskleaf, Nightleaf, Dayleaf, Evenbrook, Brightbrook, Sunbrook, Moonbrook, Starbrook, Silverbrook, Goldbrook, Dawnbrook, Duskbrook, Nightbrook, Daybrook, Evenstream, Brightstream, Sunstream, Moonstream, Starstream, Silverstream, Goldstream, Dawnstream, Duskstream, Nightstream, Daystream, Evenwater, Brightwater, Sunwater, Moonwater, Starwater, Silverwater, Goldwater, Dawnwater, Duskwater, Nightwater, Daywater, Evenflower, Brightflower, Sunflower, Moonflower, Starflower, Silverflower, Goldflower, Dawnflower, Duskflower, Nightflower, Dayflower, Evengrass, Brightgrass, Sungrass, Moongrass, Stargrass, Silvergrass, Goldgrass, Dawngrass, Duskgrass, Nightgrass, Daygrass, Evenglade, Brightglade, Sunglade, Moonglade, Starglade, Silverglade, Goldglade, Dawnglade, Duskglade, Nightglade, Dayglade, Evenmeadow, Brightmeadow, Sunmeadow, Moonmeadow, Starmeadow, Silvermeadow, Goldmeadow, Dawnmeadow, Duskmeadow, Nightmeadow, Daymeadow, Evenmist, Brightmist, Sunmist, Moonmist, Starmist, Silvermist, Goldmist, Dawnmist, Duskmist, Nightmist, Daymist, Evenshade, Brightshade, Sunshade, Moonshade, Starshade, Silvershade, Goldshade, Dawnshade, Duskshade, Nightshade, Dayshade, Evenlight, Brightlight, Sunlight, Moonlight, Starlight, Silverlight, Goldlight, Dawnlight, Dusklight, Nightlight, Daylight, Evenbeam, Brightbeam, Sunbeam, Moonbeam, Starbeam, Silverbeam, Goldbeam, Dawnbeam, Duskbeam, Nightbeam, Daybeam, Evengleam, Brightgleam, Sungleam, Moongleam, Stargleam, Silvergleam, Goldgleam, Dawngleam, Duskgleam, Nightgleam, Daygleam, Evenspark, Brightspark, Sunspark, Moonspark, Starspark, Silverspark, Goldspark, Dawnspark, Duskspark, Nightspark, Dayspark, Evenshine, Brightshine, Sunshine, Moonshine, Starshine, Silvershine, Goldshine, Dawnshine, Duskshine, Nightshine, Dayshine, Evensong, Brightsong, Sunsong, Moonsong, Starsong, Silversong, Goldsong, Dawnsong, Dusksong, Nightsong, Daysong, Evenwhisper, Brightwhisper, Sunwhisper, Moonwhisper, Starwhisper, Silverwhisper, Goldwhisper, Dawnwhisper, Duskwhisper, Nightwhisper, Daywhisper, Evenwind, Brightwind, Sunwind, Moonwind, Starwind, Silverwind, Goldwind, Dawnwind, Duskwind, Nightwind, Daywind, Evenbreeze, Brightbreeze, Sunbreeze, Moonbreeze, Starbreeze, Silverbreeze, Goldbreeze, Dawnbreeze, Duskbreeze, Nightbreeze, Daybreeze, Evengale, Brightgale, Sungale, Moongale, Stargale, Silvergale, Goldgale, Dawngale, Duskgale, Nightgale, Daygale, Evenstorm, Brightstorm, Sunstorm, Moonstorm, Starstorm, Silverstorm, Goldstorm, Dawnstorm, Duskstorm, Nightstorm, Daystorm, Evenfire, Brightfire, Sunfire, Moonfire, Starfire, Silverfire, Goldfire, Dawnfire, Duskfire, Nightfire, Dayfire, Evenfrost, Brightfrost, Sunfrost, Moonfrost, Starfrost, Silverfrost, Goldfrost, Dawnfrost, Duskfrost, Nightfrost, Dayfrost, Evensnow, Brightsnow, Sunsnow, Moonsnow, Starsnow, Silversnow, Goldsnow, Dawnsnow, Dusksnow, Nightsnow, Daysnow, Evenice, Brightice, Sunice, Moonice, Starice, Silverice, Goldice, Dawnice, Duskice, Nightice, Dayice, Evenstone, Brightstone, Sunstone, Moonstone, Starstone, Silverstone, Goldstone, Dawnstone, Duskstone, Nightstone, Daystone, Evenrock, Brightrock, Sunrock, Moonrock, Starrock, Silverrock, Goldrock, Dawnrock, Duskrock, Nightrock, Dayrock, Evenheart, Brightheart, Sunheart, Moonheart, Starheart, Silverheart, Goldheart, Dawnheart, Duskheart, Nightheart, Dayheart, Evensoul, Brightsoul, Sunsoul, Moonsoul, Starsoul, Silversoul, Goldsoul, Dawnsoul, Dusksoul, Nightsoul, Daysoul, Evenmind, Brightmind, Sunmind, Moonmind, Starmind, Silvermind, Goldmind, Dawnmind, Duskmind, Nightmind, Daymind, Evenspirit, Brightspirit, Sunspirit, Moonspirit, Starspirit, Silverspirit, Goldspirit, Dawnspirit, Duskspirit, Nightspirit, Dayspirit, Evendream, Brightdream, Sundream, Moondream, Stardream, Silverdream, Golddream, Dawndream, Duskdream, Nightdream, Daydream, Evenhope, Brighthope, Sunhope, Moonhope, Starhope, Silverhope, Goldhope, Dawnhope, Duskhope, Nighthope, Dayhope, Evenjoy, Brightjoy, Sunjoy, Moonjoy, Starjoy, Silverjoy, Goldjoy, Dawnjoy, Duskjoy, Nightjoy, Dayjoy, Evenlove, Brightlove, Sunlove, Moonlove, Starlove, Silverlove, Goldlove, Dawnlove, Dusklove, Nightlove, Daylove, Evenpeace, Brightpeace, Sunpeace, Moonpeace, Starpeace, Silverpeace, Goldpeace, Dawnpeace, Duskpeace, Nightpeace, Daypeace, Evensorrow, Brightsorrow, Sunsorrow, Moonsorrow, Starsorrow, Silversorrow, Goldsorrow, Dawnsorrow, Dusksorrow, Nightsorrow, Daysorrow, Evenwrath, Brightwrath, Sunwrath, Moonwrath, Starwrath, Silverwrath, Goldwrath, Dawnwrath, Duskwrath, Nightwrath, Daywrath, Evenfury, Brightfury, Sunfury, Moonfury, Starfury, Silverfury, Goldfury, Dawnfury, Duskfury, Nightfury, Dayfury, Evenmight, Brightmight, Sunmight, Moonmight, Starmight, Silvermight, Goldmight, Dawnmight, Duskmight, Nightmight, Daymight, Evenstrength, Brightstrength, Sunstrength, Moonstrength, Starstrength, Silverstrength, Goldstrength, Dawnstrength, Duskstrength, Nightstrength, Daystrength, Evenpower, Brightpower, Sunpower, Moonpower, Starpower, Silverpower, Goldpower, Dawnpower, Duskpower, Nightpower, Daypower, Evenvalor, Brightvalor, Sunvalor, Moonvalor, Starvalor, Silvervalor, Goldvalor, Dawnvalor, Duskvalor, Nightvalor, Dayvalor, Evenglory, Brightglory, Sunglory, Moonglory, Starglory, Silverglory, Goldglory, Dawnglory, Duskglory, Nightglory, Dayglory, Evenhonor, Brighthonor, Sunhonor, Moonhonor, Starhonor, Silverhonor, Goldhonor, Dawnhonor, Duskhonor, Nighthonor, Dayhonor, Evenpride, Brightpride, Sunpride, Moonpride, Starpride, Silverpride, Goldpride, Dawnpride, Duskpride, Nightpride, Daypride, Evengrace, Brightgrace, Sungrace, Moongrace, Stargrace, Silvergrace, Goldgrace, Dawngrace, Duskgrace, Nightgrace, Daygrace, Evenbeauty, Brightbeauty, Sunbeauty, Moonbeauty, Starbeauty, Silverbeauty, Goldbeauty, Dawnbeauty, Duskbeauty, Nightbeauty, Daybeauty, Evenwisdom, Brightwisdom, Sunwisdom, Moonwisdom, Starwisdom, Silverwisdom, Goldwisdom, Dawnwisdom, Duskwisdom, Nightwisdom, Daywisdom"
+            },
+            "Nain": {
+                "name": "Nain",
+                "lifespan": 250,
+                "adultAge": 50,
+                "firstNamesM": "Balin, Dwalin, Thorin, Gimli, Gloin, Oin, Bifur, Bofur, Bombur, Dori, Nori, Ori, Fili, Kili, Durin, Thrain, Thror, Dain, Borin, Farin, Fundin, Groin, Grar, Nain, Narvi, Bodin, Brokkr, Eitri, Fafnir, Hreidmar, Ivaldi, Lit, Motsognir, Nordri, Sudri, Austri, Vestri, Alviss, Andvari, Berling, Durnir, Durthror, Fjalar, Galar, Gandalfr, Heptifili, Lofar, Lyngheid, Nabbi, Radsvid, Sviur, Thekk, Thjodrorir, Vig, Vindalf, Virfir, Yngvi, Adal, Adalbert, Agil, Aistulf, Alberich, Alboin, Aldegar, Amelung, Ansgar, Ariowit, Arnegis, Arnulf, Ascaric, Audoin, Authari, Baduila, Berengar, Bernlef, Bero, Bertilo, Bisinus, Borom, Bragi, Brand, Brond, Burin, Dag, Dagobert, Dankmar, Degenhard, Dietmar, Dietrich, Drogo, Drung, Durfast, Eberhard, Eckehard, Edroc, Einhard, Eitri, Engelram, Erdwulf, Erkinger, Ermanaric, Ernst, Erwin, Fafner, Falko, Faramund, Fastolf, Feredir, Fimbur, Floki, Folkwin, Forn, Frar, Fredegar, Fridolin, Frithugar, Frodo, Fulk, Gaimar, Gaiseric, Gandalf, Garibald, Gebicca, Genserich, Gerold, Giselher, Godegisel, Godomar, Gorm, Gotar, Grimbold, Grim, Grimbald, Grimald, Grimbeorn, Grimfast, Grimgar, Grimgut, Grimhelm, Grimjaw, Grimkell, Grimkir, Grimlock, Grimlod, Grimnir, Grimold, Grimor, Grimstone, Grimulf, Grindan, Grindian, Grindel, Grindin, Grof, Grolf, Gror, Grothi, Grothkar, Grund, Grundi, Gundahar, Gundobad, Gundovald, Gunthar, Gunthram, Guntram, Gurin, Guthlaf, Hador, Hadubrand, Hagen, Haki, Hal, Haldan, Halfdan, Hamal, Harek, Hartmut, Hedin, Heimir, Helgi, Hengist, Hereric, Heribald, Herigar, Heriman, Heriwulf, Herman, Hermina, Hildir, Hlodowig, Hogni, Hrolf, Hrothgar, Hrut, Hugi, Hun, Hunald, Hunding, Huneric, Huni, Ibor, Iduming, Ing, Ingo, Ingolf, Ingvar, Irmin, Isarn, Isembard, Isembart, Isembold, Isemgrim, Isengrim, Isern, Ivald, Jarn, Jarnhand, Jarnhelm, Jarnkell, Jarnkir, Jarnlock, Jarnlod, Jarnor, Jarnstone, Jarnulf, Jor, Jorn, Jorund, Kain, Karl, Karli, Kettil, Kili, Kjar, Kjartan, Kjotvi, Knui, Knut, Kol, Kolbein, Kori, Kormak, Leif, Lodin, Lodur, Lofar, Logi, Loki, Lor, Lork, Lorni, Lorn, Ludin, Ludolf, Magni, Mal, Maldor, Malf, Malfin, Malfur, Malgar, Malgin, Malgor, Malgrin, Malguk, Malgun, Malgur, Malgus, Malk, Malkin, Malkor, Mallor, Malor",
+                "firstNamesF": "Astrid, Brunhilde, Dagmar, Eldora, Finna, Gerda, Helga, Ingrid, Ragna, Sigrid, Dis, Dagna, Eir, Freya, Frigg, Fulla, Gefjon, Gna, Hlin, Idunn, Jord, Lofn, Nanna, Saga, Sif, Sjofn, Skadi, Syn, Thorgerd, Thrúd, Var, Vor, Aesa, Alfhild, Arnbjorg, Aslaug, Aud, Bera, Bjorg, Bodil, Borghild, Dagny, Dalla, Edda, Eydis, Finna, Geira, Gudrun, Gunnhild, Gyda, Halldora, Hallveig, Herdis, Hild, Holmfrid, Inga, Jorunn, Estrid, Ragnhild, Svanhild, Thora, Thyra, Ulfhild, Unn, Valgerd, Vigdis, Yrsa, Auda, Frida, Grima, Hrefna, Hlif, Hjordis, Kolfinna, Oddny, Ormhild, Runa, Solveig, Steinunn, Thorfinna, Thorunn, Thurid, Yngvild, Alda, Aldara, Aldina, Aldis, Aldona, Aldreda, Alfhilda, Algarda, Algrid, Alruna, Althilda, Alveig, Alvilda, Alvina, Amber, Amma, An, Ana, Anesa, Angela, Angrboda, Anhid, Annhild, Annika, Annsa, Ansa, Arin, Arna, Arnbjorg, Arndis, Arnfinna, Arngerd, Arngunn, Arnkatla, Arnleif, Arnlief, Arnora, Arnrid, Arnthora, Arnthrud, Asa, Asdis, Asfrid, Asgerd, Asgerda, Ashild, Ashilda, Askatla, Aslaug, Asleif, Asny, Asta, Asthild, Asthilda, Astrior, Astridr, Asvor, Auda, Audhild, Audhilda, Audna, Audny, Audun, Aun, Auna, Aunesa, Aunia, Aunild, Aunilda, Aunn, Aunna, Aunsa, Ausa, Ausia, Austa, Austrid, Authild, Authillda, Authrid, Ava, Avilda, Avina, Bára, Baug, Baugeid, Baugerd, Bauthild, Bauthilda, Beda, Begga, Beita, Bera, Bergljot, Bergljót, Bergthora, Bergthóra, Bergþóra, Beta, Betta, Bira, Birgitta, Birna, Birtna, Bjargey, Bjargeyja, Bjarkey, Bjarkeyja, Bjarta, Bjartmey, Bjartmeyja, Bjol, Bjola, Bjolf, Bjoll, Bjolla, Bjollan, Bjollaug, Bjolley, Bjollveig, Bjorg, Bjorgey, Bjorgeyja, Bjork, Bjorkey, Bjorkeyja, Blá, Blaer, Blaeja, Blaeja, Blain, Blainn, Blaith, Blaithin, Bláth, Bláthín, Bláthíne, Bláthíona, Bláthnaid, Bláthnaid, Bláthnat, Bláthnait, Bláthnait",
+                "lastNames": "Ironfist, Stonehammer, Bronzebeard, Deepdelver, Mithrilvein, Goldhand, Rockbreaker, Strongale, Anvilarm, Axebreaker, Barrelchest, Battlehammer, Blackanvil, Boulderborn, Boulderfist, Boulderfoot, Boulderhelm, Boulderhide, Bouldershoulder, Boulderstone, Bronzeaxe, Bronzebeard, Bronzefist, Bronzefoot, Bronzehammer, Bronzehelm, Bronzehide, Bronzeshield, Bronzeshoulder, Bronzestone, Clan, Copperbeard, Copperfist, Copperfoot, Copperhammer, Copperhelm, Copperhide, Coppershield, Coppershoulder, Copperstone, Crag, Cragarm, Cragaxe, Cragbeard, Cragborn, Cragbreaker, Cragchest, Cragdelver, Cragfist, Cragfoot, Craghammer, Craghand, Craghelm, Craghide, Cragjaw, Cragmaw, Cragshield, Cragshoulder, Cragstone, Dark, Darkanvil, Darkaxe, Darkbeard, Darkborn, Darkbreaker, Darkchest, Darkdelver, Darkfist, Darkfoot, Darkhammer, Darkhand, Darkhelm, Darkhide, Darkiron, Darkjaw, Darkmaw, Darkrock, Darkshield, Darkshoulder, Darkstone, Deep, Deepanvil, Deepaxe, Deepbeard, Deepborn, Deepbreaker, Deepchest, Deepdelver, Deepfist, Deepfoot, Deephammer, Deephand, Deephelm, Deephide, Deepiron, Deepjaw, Deepmaw, Deeprock, Deepshield, Deepshoulder, Deepstone, Diamond, Diamondanvil, Diamondaxe, Diamondbeard, Diamondborn, Diamondbreaker, Diamondchest, Diamonddelver, Diamondfist, Diamondfoot, Diamondhammer, Diamondhand, Diamondhelm, Diamondhide, Diamondiron, Diamondjaw, Diamondmaw, Diamondrock, Diamondshield, Diamondshoulder, Diamondstone, Earth, Earthanvil, Earthaxe, Earthbeard, Earthborn, Earthbreaker, Earthchest, Earthdelver, Earthfist, Earthfoot, Earthhammer, Earthhand, Earthhelm, Earthhide, Earthiron, Earthjaw, Earthmaw, Earthrock, Earthshield, Earthshoulder, Earthstone, Fire, Fireanvil, Fireaxe, Firebeard, Fireborn, Firebreaker, Firechest, Firedelver, Firefist, Firefoot, Firehammer, Firehand, Firehelm, Firehide, Fireiron, Firejaw, Firemaw, Firerock, Fireshield, Fireshoulder, Firestone, Flint, Flintanvil, Flintaxe, Flintbeard, Flintborn, Flintbreaker, Flintchest, Flintdelver, Flintfist, Flintfoot, Flinthammer, Flinthand, Flinthelm, Flinthide, Flintiron, Flintjaw, Flintmaw, Flintrock, Flintshield, Flintshoulder, Flintstone, Forge, Forgearm, Forgebear, Forgebeard, Forgeborn, Forgebreaker, Forgechest, Forgefist, Forgefoot, Forgehammer, Forgehand, Forgehelm, Forgehide, Forgeiron, Forgejaw, Forgemaw, Forgeshield, Forgeshoulder, Forgestone, Gold, Goldanvil, Goldaxe, Goldbeard, Goldborn, Goldbreaker, Goldchest, Golddelver, Goldfist, Goldfoot, Goldhammer, Goldhand, Goldhelm, Goldhide, Goldiron, Goldjaw, Goldmaw, Goldrock, Goldshield, Goldshoulder, Goldstone, Granite, Graniteanvil, Graniteaxe, Granitebeard, Graniteborn, Granitebreaker, Granitechest, Granitedelver, Granitefist, Granitefoot, Granitehammer, Granitehand, Granitehelm, Granitehide, Graniteiron, Granitejaw, Granitemaw, Graniterock, Graniteshield, Graniteshoulder, Granitestone, Gray, Grayanvil, Grayaxe, Graybeard, Grayborn, Graybreaker, Graychest, Graydelver, Grayfist, Grayfoot, Grayhammer, Grayhand, Grayhelm, Grayhide, Grayiron, Grayjaw, Graymaw, Grayrock, Grayshield, Grayshoulder, Graystone, Grim, Grimanvil, Grimaxe, Grimbeard, Grimborn, Grimbreaker, Grimchest, Grimdelver, Grimfist, Grimfoot, Grimhammer, Grimhand, Grimhelm, Grimhide, Grimiron, Grimjaw, Grimmaw, Grimrock, Grimshield, Grimshoulder, Grimstone, Hammer, Hammeranvil, Hammeraxe, Hammerbeard, Hammerborn, Hammerbreaker, Hammerchest, Hammerdelver, Hammerfist, Hammerfoot, Hammerhand, Hammerhelm, Hammerhide, Hammeriron, Hammerjaw, Hammermaw, Hammerrock, Hammershield, Hammershoulder, Hammerstone, Hard, Hardanvil, Hardaxe, Hardbeard, Hardborn, Hardbreaker, Hardchest, Harddelver, Hardfist, Hardfoot, Hardhammer, Hardhand, Hardhelm, Hardhide, Hardiron, Hardjaw, Hardmaw, Hardrock, Hardshield, Hardshoulder, Hardstone, Ice, Iceanvil, Iceaxe, Icebeard, Iceborn, Icebreaker, Icechest, Icedelver, Icefist, Icefoot, Icehammer, Icehand, Icehelm, Icehide, Iceiron, Icejaw, Icemaw, Icerock, Iceshield, Iceshoulder, Icestone, Iron, Ironanvil, Ironaxe, Ironbeard, Ironborn, Ironbreaker, Ironchest, Irondelver, Ironfist, Ironfoot, Ironhammer, Ironhand, Ironhelm, Ironhide, Ironjaw, Ironmaw, Ironrock, Ironshield, Ironshoulder, Ironstone, Mithril, Mithrilanvil, Mithrilaxe, Mithrilbeard, Mithrilborn, Mithrilbreaker, Mithrilchest, Mithrildelver, Mithrilfist, Mithrilfoot, Mithrilhammer, Mithrilhand, Mithrilhelm, Mithrilhide, Mithriliron, Mithriljaw, Mithrilmaw, Mithrilrock, Mithrilshield, Mithrilshoulder, Mithrilstone, Mountain, Mountainanvil, Mountainaxe, Mountainbeard, Mountainborn, Mountainbreaker, Mountainchest, Mountaindelver, Mountainfist, Mountainfoot, Mountainhammer, Mountainhand, Mountainhelm, Mountainhide, Mountainiron, Mountainjaw, Mountainmaw, Mountainrock, Mountainshield, Mountainshoulder, Mountainstone, Obsidian, Obsidiananvil, Obsidianaxe, Obsidianbeard, Obsidianborn, Obsidianbreaker, Obsidianchest, Obsidiandelver, Obsidianfist, Obsidianfoot, Obsidianhammer, Obsidianhand, Obsidianhelm, Obsidianhide, Obsidianiron, Obsidianjaw, Obsidianmaw, Obsidianrock, Obsidianshield, Obsidianshoulder, Obsidianstone, Onyx, Onyxanvil, Onyxaxe, Onyxbeard, Onyxborn, Onyxbreaker, Onyxchest, Onyxdelver, Onyxfist, Onyxfoot, Onyxhammer, Onyxhand, Onyxhelm, Onyxhide, Onyxiron, Onyxjaw, Onyxmaw, Onyxrock, Onyxshield, Onyxshoulder, Onyxstone, Quartz, Quartzanvil, Quartzaxe, Quartzbeard, Quartzborn, Quartzbreaker, Quartzchest, Quartzdelver, Quartzfist, Quartzfoot, Quartzhammer, Quartzhand, Quartzhelm, Quartzhide, Quartziron, Quartzjaw, Quartzmaw, Quartzrock, Quartzshield, Quartzshoulder, Quartzstone, Red, Redanvil, Redaxe, Redbeard, Redborn, Redbreaker, Redchest, Reddelver, Redfist, Redfoot, Redhammer, Redhand, Redhelm, Redhide, Rediron, Redjaw, Redmaw, Redrock, Redshield, Redshoulder, Redstone, Rock, Rockanvil, Rockaxe, Rockbeard, Rockborn, Rockbreaker, Rockchest, Rockdelver, Rockfist, Rockfoot, Rockhammer, Rockhand, Rockhelm, Rockhide, Rockiron, Rockjaw, Rockmaw, Rockshield, Rockshoulder, Rockstone, Ruby, Rubyanvil, Rubyaxe, Rubybeard, Rubyborn, Rubybreaker, Rubychest, Rubydelver, Rubyfist, Rubyfoot, Rubyhammer, Rubyhand, Rubyhelm, Rubyhide, Rubyiron, Rubyjaw, Rubymaw, Rubyrock, Rubyshield, Rubyshoulder, Rubystone, Rune, Runeanvil, Runeaxe, Runebeard, Runeborn, Runebreaker, Runechest, Runedelver, Runefist, Runefoot, Runehammer, Runehand, Runehelm, Runehide, Runeiron, Runejaw, Runemaw, Runerock, Runeshield, Runeshoulder, Runestone"
+            },
+            "Orc": {
+                "name": "Orc",
+                "lifespan": 60,
+                "adultAge": 14,
+                "firstNamesM": "Grom, Thrall, Orgrim, Kargath, Garrosh, Hellscream, Durotan, Ner'zhul, Gul'dan, Azog, Bolg, Gork, Mork, Grimgor, Skarsnik, Wurrzag, Ghazghkull, Yarrick, Nazdreg, Old Zogwort, Wazdakka, Gutsmek, Grishnákh, Uglúk, Shagrat, Gorbag, Lurtz, Mauhúr, Snaga, Vrasku, Ufthak, Lugdush, Muzgash, Radbug, Bûrz, Grôk, Hûk, Grol, Zog, Mog, Ug, Brok, Drak, Thrak, Krag, Zarg, Gorg, Morg, Urk, Burk, Durk, Grak, Snarl, Grok, Korg, Rorg, Torg, Vorg, Worg, Zorg, Arg, Borg, Corg, Dorg, Forg, Horg, Jorg, Lorg, Norg, Porg, Qorg, Sorg, Vorg, Yorg, Zorg, Aag, Bag, Cag, Dag, Fag, Gag, Hag, Jag, Kag, Lag, Mag, Nag, Pag, Qag, Rag, Sag, Tag, Vag, Wag, Xag, Yag, Zag, Aak, Bak, Cak, Dak, Fak, Gak, Hak, Jak, Kak, Lak, Mak, Nak, Pak, Qak, Rak, Sak, Tak, Vak, Wak, Xak, Yak, Zak, Aal, Bal, Cal, Dal, Fal, Gal, Hal, Jal, Kal, Lal, Mal, Nal, Pal, Qal, Ral, Sal, Tal, Val, Wal, Xal, Yal, Zal, Aam, Bam, Cam, Dam, Fam, Gam, Ham, Jam, Kam, Lam, Mam, Nam, Pam, Qam, Ram, Sam, Tam, Vam, Wam, Xam, Yam, Zam, Aan, Ban, Can, Dan, Fan, Gan, Han, Jan, Kan, Lan, Man, Nan, Pan, Qan, Ran, San, Tan, Van, Wan, Xan, Yan, Zan, Aap, Bap, Cap, Dap, Fap, Gap, Hap, Jap, Kap, Lap, Map, Nap, Pap, Qap, Rap, Sap, Tap, Vap, Wap, Xap, Yap, Zap, Aar, Bar, Car, Dar, Far, Gar, Har, Jar, Kar, Lar, Mar, Nar, Par, Qar, Rar, Sar, Tar, Var, War, Xar, Yar, Zar, Aas, Bas, Cas, Das, Fas, Gas, Has, Jas, Kas, Las, Mas, Nas, Pas, Qas, Ras, Sas, Tas, Vas, Was, Xas, Yas, Zas, Aat, Bat, Cat, Dat, Fat, Gat, Hat, Jat, Kat, Lat, Mat, Nat, Pat, Qat, Rat, Sat, Tat, Vat, Wat, Xat, Yat, Zat, Aav, Bav, Cav, Dav, Fav, Gav, Hav, Jav, Kav, Lav, Mav, Nav, Pav, Qav, Rav, Sav, Tav, Vav, Wav, Xav, Yav, Zav, Aaw, Baw, Caw, Daw, Faw, Gaw, Haw, Jaw, Kaw, Law, Maw, Naw, Paw, Qaw, Raw, Saw, Taw, Vaw, Waw, Xaw, Yaw, Zaw, Aax, Bax, Cax, Dax, Fax, Gax, Hax, Jax, Kax, Lax, Max, Nax, Pax, Qax, Rax, Sax, Tax, Vax, Wax, Xax, Yax, Zax, Aay, Bay, Cay, Day, Fay, Gay, Hay, Jay, Kay, Lay, May, Nay, Pay, Qay, Ray, Say, Tay, Vay, Way, Xay, Yay, Zay, Aaz, Baz, Caz, Daz, Faz, Gaz, Haz, Jaz, Kaz, Laz, Maz, Naz, Paz, Qaz, Raz, Saz, Taz, Vaz, Waz, Xaz, Yaz, Zaz",
+                "firstNamesF": "Aggra, Draka, Groma, Garona, Karga, Nazgrel, Rokara, Azga, Boga, Durg, Gorga, Grima, Helga, Igr, Jarg, Kula, Larga, Morga, Narga, Orga, Roga, Sarga, Toga, Urga, Vorga, Worga, Zorga, Agra, Briga, Criga, Driga, Friga, Griga, Hriga, Jriga, Kriga, Lriga, Mriga, Nriga, Priga, Qriga, Rriga, Sriga, Triga, Vriga, Wriga, Xriga, Yriga, Zriga, Azka, Bzka, Czka, Dzka, Fzka, Gzka, Hzka, Jzka, Kzka, Lzka, Mzka, Nzka, Pzka, Qzka, Rzka, Szka, Tzka, Vzka, Wzka, Xzka, Yzka, Zzka, Azla, Bzla, Czla, Dzla, Fzla, Gzla, Hzla, Jzla, Kzla, Lzla, Mzla, Nzla, Pzla, Qzla, Rzla, Szla, Tzla, Vzla, Wzla, Xzla, Yzla, Zzla, Azma, Bzma, Czma, Dzma, Fzma, Gzma, Hzma, Jzma, Kzma, Lzma, Mzma, Nzma, Pzma, Qzma, Rzma, Szma, Tzma, Vzma, Wzma, Xzma, Yzma, Zzma, Azna, Bzna, Czna, Dzna, Fzna, Gzna, Hzna, Jzna, Kzna, Lzna, Mzna, Nzna, Pzna, Qzna, Rzna, Szna, Tzna, Vzna, Wzna, Xzna, Yzna, Znna, Azpa, Bzpa, Czpa, Dzpa, Fzpa, Gzpa, Hzpa, Jzpa, Kzpa, Lzpa, Mzpa, Nzpa, Pzpa, Qzpa, Rzpa, Szpa, Tzpa, Vzpa, Wzpa, Xzpa, Yzpa, Zzpa, Azra, Bzra, Czra, Dzra, Fzra, Gzra, Hzra, Jzra, Kzra, Lzra, Mzra, Nzra, Pzra, Qzra, Rzra, Szra, Tzra, Vzra, Wzra, Xzra, Yzra, Zzra, Azsa, Bzsa, Czsa, Dzsa, Fzsa, Gzsa, Hzsa, Jzsa, Ksza, Lsza, Msza, Nsza, Psza, Qsza, Rsza, Ssza, Tsza, Vsza, Wsza, Xsza, Ysza, Zsza, Azta, Bzta, Czta, Dzta, Fzta, Gzta, Hzta, Jzta, Kzta, Lzta, Mzta, Nzta, Pzta, Qzta, Rzta, Szta, Tzta, Vzta, Wzta, Xzta, Yzta, Zzta, Azva, Bzva, Czva, Dzva, Fzva, Gzva, Hzva, Jzva, Kzva, Lzva, Mzva, Nzva, Pzva, Qzva, Rzva, Szva, Tzva, Vzva, Wzva, Xzva, Yzva, Zzva, Azwa, Bzwa, Czwa, Dzwa, Fzwa, Gzwa, Hzwa, Jzwa, Kzwa, Lzwa, Mzwa, Nzwa, Pzwa, Qzwa, Rzwa, Szwa, Tzwa, Vzwa, Wzwa, Xzwa, Yzwa, Zzwa, Azxa, Bzxa, Czxa, Dzxa, Fzxa, Gzxa, Hzxa, Jzxa, Kzxa, Lzxa, Mzxa, Nzxa, Pzxa, Qzxa, Rzxa, Szxa, Tzxa, Vzxa, Wzxa, Xzxa, Yzxa, Zzxa, Azya, Bzya, Czya, Dzya, Fzya, Gzya, Hzya, Jzya, Kzya, Lzya, Mzya, Nzya, Pzya, Qzya, Rzya, Szya, Tzya, Vzya, Wzya, Xzya, Yzya, Zzya, Azza, Bzza, Czza, Dzza, Fzza, Gzza, Hzza, Jzza, Kzza, Lzza, Mzza, Nzza, Pzza, Qzza, Rzza, Szza, Tzza, Vzza, Wzza, Xzza, Yzza, Zzza",
+                "lastNames": "Doomhammer, Hellscream, Deadeye, Blackhand, Shatterhand, Bloodfist, Skullcrusher, Axebite, Axegrind, Axerip, Axescar, Axesplit, Badaxe, Badblood, Badbone, Badbreath, Badbrew, Badbruise, Badbrute, Badburn, Badclaw, Badcleave, Badclub, Badcrush, Badcut, Badfang, Badfist, Badflay, Badflesh, Badgore, Badgouge, Badgrim, Badgrind, Badgrip, Badgut, Badhack, Badhammer, Badhand, Badhide, Badhowl, Badhunter, Badjaw, Badkill, Badkiller, Badknife, Badknuckle, Badlash, Badmaim, Badmash, Badmaul, Badmaw, Badmetal, Badmight, Badmush, Badnail, Badneck, Badnose, Badpunch, Badrage, Badrip, Badripper, Badroar, Badrock, Badrot, Badscream, Badscar, Badshadow, Badshatter, Badshield, Badsinew, Badskull, Badslash, Badslay, Badslayer, Badsmash, Badsnarl, Badspear, Badspike, Badspill, Badspine, Badspit, Badsplinter, Badsplit, Badsplitter, Badstomp, Badstone, Badstrike, Badswipe, Badtear, Badteeth, Badthirst, Badthroat, Badthump, Badtide, Badtooth, Badtrack, Badtrap, Badtusk, Badugly, Badwar, Badwhip, Badwound, Badwrath, Badyell, Battle, Battleaxe, Battleblood, Battlebone, Battlebreath, Battlebrew, Battlebruise, Battlebrute, Battleburn, Battleclaw, Battlecleave, Battleclub, Battlecrush, Battlecut, Battlefang, Battlefist, Battleflay, Battleflesh, Battlegore, Battlegouge, Battlegrim, Battlegrind, Battlegrip, Battlegut, Battlehack, Battlehammer, Battlehand, Battlehide, Battlehowl, Battlehunter, Battlejaw, Battlekill, Battlekiller, Battleknife, Battleknuckle, Battlelash, Battlemaim, Battlemash, Battlemaul, Battlemaw, Battlemetal, Battlemight, Battlemush, Battlenail, Battleneck, Battlenose, Battlepunch, Battlerage, Battlerip, Battleripper, Battleroar, Battlerock, Battlerot, Battlescream, Battlescar, Battleshadow, Battleshield, Battlesinew, Battleskull, Battleslash, Battleslay, Battleslayer, Battlesmash, Battlesnarl, Battlespear, Battlespike, Battlespill, Battlespine, Battlespit, Battlesplinter, Battlesplit, Battlesplitter, Battlestomp, Battlestone, Battlestrike, Battleswipe, Battletear, Battleteeth, Battlethirst, Battlethroat, Battlethump, Battletide, Battletooth, Battletrack, Battletrap, Battletusk, Battleugly, Battlewar, Battlewhip, Battlewound, Battlewrath, Battleyell, Black, Blackaxe, Blackblood, Blackbone, Blackbreath, Blackbrew, Blackbruise, Blackbrute, Blackburn, Blackclaw, Blackcleave, Blackclub, Blackcrush, Blackcut, Blackfang, Blackfist, Blackflay, Blackflesh, Blackgore, Blackgouge, Blackgrim, Blackgrind, Blackgrip, Blackgut, Blackhack, Blackhammer, Blackhand, Blackhide, Blackhowl, Blackhunter, Blackjaw, Blackkill, Blackkiller, Blackknife, Blackknuckle, Blacklash, Blackmaim, Blackmash, Blackmaul, Blackmaw, Blackmetal, Blackmight, Blackmush, Blacknail, Blackneck, Blacknose, Blackpunch, Blackrage, Blackrip, Blackripper, Blackroar, Blackrock, Blackrot, Blackscream, Blackscar, Blackshadow, Blackshield, Blacksinew, Blackskull, Blackslash, Blackslay, Blackslayer, Blacksmash, Blacksnarl, Blackspear, Blackspike, Blackspill, Blackspine, Blackspit, Blacksplinter, Blacksplit, Blacksplitter, Blackstomp, Blackstone, Blackstrike, Blackswipe, Blacktear, Blackteeth, Blackthirst, Blackthroat, Blackthump, Blacktide, Blacktooth, Blacktrack, Blacktrap, Blacktusk, Blackugly, Blackwar, Blackwhip, Blackwound, Blackwrath, Blackyell, Blood, Bloodaxe, Bloodbone, Bloodbreath, Bloodbrew, Bloodbruise, Bloodbrute, Bloodburn, Bloodclaw, Bloodcleave, Bloodclub, Bloodcrush, Bloodcut, Bloodfang, Bloodfist, Bloodflay, Bloodflesh, Bloodgore, Bloodgouge, Bloodgrim, Bloodgrind, Bloodgrip, Bloodgut, Bloodhack, Bloodhammer, Bloodhand, Bloodhide, Bloodhowl, Bloodhunter, Bloodjaw, Bloodkill, Bloodkiller, Bloodknife, Bloodknuckle, Bloodlash, Bloodmaim, Bloodmash, Bloodmaul, Bloodmaw, Bloodmetal, Bloodmight, Bloodmush, Bloodnail, Bloodneck, Bloodnose, Bloodpunch, Bloodrage, Bloodrip, Bloodripper, Bloodroar, Bloodrock, Bloodrot, Bloodscream, Bloodscar, Bloodshadow, Bloodshield, Bloodsinew, Bloodskull, Bloodslash, Bloodslay, Bloodslayer, Bloodsmash, Bloodsnarl, Bloodspear, Bloodspike, Bloodspill, Bloodspine, Bloodspit, Bloodsplinter, Bloodsplit, Bloodsplitter, Bloodstomp, Bloodstone, Bloodstrike, Bloodswipe, Bloodtear, Bloodteeth, Bloodthirst, Bloodthroat, Bloodthump, Bloodtide, Bloodtooth, Bloodtrack, Bloodtrap, Bloodtusk, Bloodugly, Bloodwar, Bloodwhip, Bloodwound, Bloodwrath, Blooyell, Bone, Boneaxe, Boneblood, Bonebreath, Bonebrew, Bonebruise, Bonebrute, Boneburn, Boneclaw, Bonecleave, Boneclub, Bonecrush, Bonecut, Bonefang, Bonefist, Boneflay, Boneflesh, Bonegore, Bonegouge, Bonegrim, Bonegrind, Bonegrip, Bonegut, Bonehack, Bonehammer, Bonehand, Bonehide, Bonehowl, Bonehunter, Bonejaw, Bonekill, Bonekiller, Boneknife, Boneknuckle, Bonelash, Bonemaim, Bonemash, Bonemaul, Bonemaw, Bonemetal, Bonemight, Bonemush, Bonenail, Boneneck, Bonenose, Bonepunch, Bonerage, Bonerip, Boneripper, Boneroar, Bonerock, Bonerot, Bonescream, Bonescar, Boneshadow, Boneshield, Bonesinew, Boneskull, Boneslash, Boneslay, Boneslayer, Bonesmash, Bonesnarl, Bonespear, Bonespike, Bonespill, Bonespine, Bonespit, Bonesplinter, Bonesplit, Bonesplitter, Bonestomp, Bonestone, Bonestrike, Boneswipe, Bonetear, Boneteeth, Bonethirst, Bonethroat, Bonethump, Bonetide, Bonetooth, Bonetrack, Bonetrap, Bonetusk, Boneugly, Bonewar, Bonewhip, Bonewound, Bonewrath, Boneyell"
+            }
+        };
+
+        const guildData = {
+            'Guilde des Artisans': {
+                required_buildings: ['Forge', 'Menuisier / Charpentier', 'Tanneur / Maroquinier', 'Tisserand / Tailleur'],
+                min_buildings: 2,
+                min_pop: 100,
+                master_role: 'Maître de la Guilde des Artisans',
+                member_role: 'Artisan de Guilde',
+            },
+            'Guilde des Combattants': {
+                required_buildings: ['Caserne / Garde', 'Murailles', 'Arène / Colisée'],
+                min_buildings: 1,
+                min_pop: 150,
+                master_role: 'Maître de la Guilde des Combattants',
+                member_role: 'Combattant de Guilde',
+            },
+            'Guilde des Érudits': {
+                required_buildings: ['Bibliothèque / Scriptorium', 'Atelier de mage', "Échoppe d'alchimiste", 'Observatoire'],
+                min_buildings: 1,
+                min_pop: 250,
+                master_role: 'Maître de la Guilde des Érudits',
+                member_role: 'Érudit de Guilde',
+            }
+        };
+
+        const jobData = {
+            base_jobs: {
+                'Hameau': [{ role: 'Chef(fe) de hameau', tier: 2, unique: true, quantity: 1 }],
+                'Village': [{ role: 'Maire du village', tier: 2, unique: true, quantity: 1, promotes_from: ['Garde champêtre'] }, { role: 'Garde champêtre', tier: 3, quantity: 2 }],
+                'Ville': [{ role: 'Maire', tier: 1, unique: true, quantity: 1, promotes_from: ['Capitaine de la garde', 'Magistrat'] }, { role: 'Capitaine de la garde', tier: 2, unique: true, quantity: 1, promotes_from: ['Sergent'], guild_affiliation: 'Guilde des Combattants' }, { role: 'Magistrat', tier: 2, unique: true, quantity: 1, promotes_from: ['Greffier'] }, { role: 'Greffier', tier: 3, quantity: 1 }],
+                'Capitale': [{ role: 'Dirigeant(e)', tier: 1, unique: true, scope: 'region', quantity: 1 }, { role: 'Général(e) de la garde', tier: 1, unique: true, quantity: 1, promotes_from: ['Capitaine de la garde'] }, { role: 'Archiviste royal', tier: 2, unique: true, quantity: 1, promotes_from: ['Maître Bibliothécaire'], guild_affiliation: 'Guilde des Érudits' }, { role: 'Maître espion', tier: 2, unique: true, quantity: 1 }]
+            },
+            building_jobs: {
+                'Taverne / Auberge': [
+                    { role: 'Tavernier/ère', tier: 3, unique: true, quantity: 1 }, 
+                    { role: 'Serveur/euse', tier: 4, dynamic_quantity_per_pop: 40 },
+                    { role: 'Videur', tier: 4, dynamic_quantity_per_pop: 150 }
+                ],
+                'Forge': [
+                    { role: 'Maître Forgeron', tier: 2, unique: true, quantity: 1, promotes_from: ['Apprenti(e) Forgeron'], guild_affiliation: 'Guilde des Artisans' }, 
+                    { role: 'Apprenti(e) Forgeron', tier: 4, master: 'Maître Forgeron', quantity: 2, guild_source: 'Guilde des Artisans' }
+                ],
+                'Marché central': [
+                    { role: 'Maître du marché', tier: 3, unique: true, quantity: 1 }, 
+                    { role: 'Vendeur de stand', tier: 4, dynamic_quantity_per_pop: 30 }
+                ],
+                'Écuries': [
+                    { role: 'Maître d\'écurie', tier: 3, unique: true, quantity: 1, promotes_from: ['Palefrenier'] }, 
+                    { role: 'Palefrenier', tier: 4, quantity: 4 }
+                ],
+                'Boulangerie': [
+                    { role: 'Maître Boulanger', tier: 3, unique: true, quantity: 1, promotes_from: ['Mitron'], guild_affiliation: 'Guilde des Artisans' }, 
+                    { role: 'Mitron', tier: 4, master: 'Maître Boulanger', quantity: 2, guild_source: 'Guilde des Artisans' }
+                ],
+                'Menuisier / Charpentier': [
+                    { role: 'Maître Artisan', tier: 3, unique: true, quantity: 1, promotes_from: ['Compagnon'], guild_affiliation: 'Guilde des Artisans' }, 
+                    { role: 'Compagnon', tier: 4, master: 'Maître Artisan', dynamic_quantity_per_pop: 80, guild_source: 'Guilde des Artisans' }
+                ],
+                'Tanneur / Maroquinier': [
+                    { role: 'Maître Tanneur', tier: 3, unique: true, quantity: 1, promotes_from: ['Ouvrier du cuir'], guild_affiliation: 'Guilde des Artisans' }, 
+                    { role: 'Ouvrier du cuir', tier: 4, master: 'Maître Tanneur', dynamic_quantity_per_pop: 100, guild_source: 'Guilde des Artisans' }
+                ],
+                'Herboristerie': [
+                    { role: 'Herboriste', tier: 3, unique: true, quantity: 1 }, 
+                    { role: 'Cueilleur', tier: 4, quantity: 2 }
+                ],
+                'Brasserie / Distillerie': [
+                    { role: 'Maître Brasseur', tier: 3, unique: true, quantity: 1, promotes_from: ['Goûteur'], guild_affiliation: 'Guilde des Artisans' }, 
+                    { role: 'Goûteur', tier: 4, master: 'Maître Brasseur', quantity: 2, guild_source: 'Guilde des Artisans' }
+                ],
+                'Tisserand / Tailleur': [
+                    { role: 'Maître Tisserand', tier: 3, unique: true, quantity: 1, promotes_from: ['Couturier/ère'], guild_affiliation: 'Guilde des Artisans' }, 
+                    { role: 'Couturier/ère', tier: 4, master: 'Maître Tisserand', dynamic_quantity_per_pop: 80, guild_source: 'Guilde des Artisans' }
+                ],
+                'Temple / Église': [
+                    { role: 'Grand(e) Prêtre/Prêtresse', tier: 2, unique: true, quantity: 1, promotes_from: ['Acolyte', 'Soigneur du Temple'] },
+                    { role: 'Gardien du Temple', tier: 3, dynamic_quantity_per_pop: 200 },
+                    { role: 'Soigneur du Temple', tier: 3, dynamic_quantity_per_pop: 180 },
+                    { role: 'Moine / Scribe du Temple', tier: 3, dynamic_quantity_per_pop: 250 },
+                    { role: 'Acolyte', tier: 4, master: 'Grand(e) Prêtre/Prêtresse', dynamic_quantity_per_pop: 120 }
+                ],
+                'Caserne / Garde': [
+                    { role: 'Sergent', tier: 3, dynamic_quantity_per_pop: 200, promotes_from: ['Soldat de la garde'], guild_affiliation: 'Guilde des Combattants' },
+                    { role: 'Armurier de la garde', tier: 3, quantity: 1, guild_affiliation: 'Guilde des Artisans' },
+                    { role: 'Soldat de la garde', tier: 4, master: 'Sergent', dynamic_quantity_per_pop: 50, guild_source: 'Guilde des Combattants' }
+                ],
+                'Château / Manoir': [
+                    { role: 'Intendant(e)', tier: 2, unique: true, quantity: 1 },
+                    { role: 'Chef Cuisinier', tier: 3, quantity: 1 },
+                    { role: 'Garde du corps personnel', tier: 3, quantity: 4, guild_affiliation: 'Guilde des Combattants' },
+                    { role: 'Maître des chasses', tier: 3, quantity: 1 },
+                    { role: 'Domestique', tier: 5, dynamic_quantity_per_pop: 40 }
+                ],
+                'Bibliothèque / Scriptorium': [
+                    { role: 'Maître Bibliothécaire', tier: 2, unique: true, quantity: 1, promotes_from: ['Archiviste', 'Copiste / Scribe'], guild_affiliation: 'Guilde des Érudits' }, 
+                    { role: 'Copiste / Scribe', tier: 3, master: 'Maître Bibliothécaire', quantity: 3, guild_source: 'Guilde des Érudits' }, 
+                    { role: 'Archiviste', tier: 3, quantity: 1, guild_source: 'Guilde des Érudits' }
+                ],
+                "Échoppe d'alchimiste": [
+                    { role: 'Maître Alchimiste', tier: 2, unique: true, quantity: 1, promotes_from: ["Assistant(e) Alchimiste"], guild_affiliation: 'Guilde des Érudits' }, 
+                    { role: 'Assistant(e) Alchimiste', tier: 4, master: 'Maître Alchimiste', quantity: 1, guild_source: 'Guilde des Érudits' }
+                ],
+                'Atelier de mage': [
+                    { role: 'Mage résident', tier: 2, unique: true, quantity: 1, promotes_from: ["Apprenti(e) mage"], guild_affiliation: 'Guilde des Érudits' }, 
+                    { role: 'Apprenti(e) mage', tier: 4, master: 'Mage résident', quantity: 1, guild_source: 'Guilde des Érudits' }
+                ],
+                'Observatoire': [
+                    { role: 'Astronome', tier: 2, unique: true, quantity: 1, guild_affiliation: 'Guilde des Érudits' }
+                ],
+                'Arène / Colisée': [
+                    { role: 'Maître des jeux', tier: 2, unique: true, quantity: 1, promotes_from: ['Gladiateur'], guild_affiliation: 'Guilde des Combattants' }, 
+                    { role: 'Gladiateur', tier: 3, quantity: 5, guild_source: 'Guilde des Combattants' },
+                    { role: 'Soigneur de l\'arène', tier: 3, quantity: 1 }
+                ]
+            },
+            autonomous_jobs: [
+                { role: 'Chasseur / Piégeur', tier: 4 }, { role: 'Pêcheur', tier: 4 }, { role: 'Bûcheron / Charbonnier', tier: 4 }, 
+                { role: 'Mineur / Carrier', tier: 4 }, { role: 'Fermier / Éleveur', tier: 4 }, { role: 'Messager', tier: 4 }, 
+                { role: 'Barde / Ménestrel', tier: 3 }, { role: 'Mercenaire', tier: 3 }, { role: 'Éclaireur', tier: 3 },
+                { role: 'Mendiant', tier: 5, isBeggar: true }
+            ]
+        };
+
+        const DYNAMIC_BUILDING_TIERS = {
+            TIER1: { threshold: 75, types: ["Boulangerie", "Forge", "Menuisier / Charpentier"] },
+            TIER2: { threshold: 150, types: ["Taverne / Auberge", "Herboristerie", "Tisserand / Tailleur", "Tanneur / Maroquinier"] },
+            TIER3: { threshold: 300, types: ["Temple / Église", "Brasserie / Distillerie"] }
+        };
+
+        // --- FONCTIONS UTILITAIRES ---
+        function offsetToCube(q, r) { const x = q; const z = r - (q + (q & 1)) / 2; const y = -x - z; return { x, y, z }; }
+        function cubeDistance(a, b) { return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z)) / 2; }
+        
+        // --- FONCTIONS PRINCIPALES DE L'APPLICATION ---
+        function initializePage() {
+            loadAllRegions();
+            totalFamiliesInput.value = calculateTotalFamilies();
+            loadRacesFromDB();
+            populatePresetRacesDropdown();
+            updateUiState();
+            addRaceBtn.addEventListener('click', () => createAndPopulateRaceCard());
+            saveRacesBtn.addEventListener('click', saveRacesToDB);
+            loadPresetRaceBtn.addEventListener('click', handleLoadPresetRace);
+            startSimBtn.addEventListener('click', generateG0);
+            viewResultsBtn.addEventListener('click', displayPopulation);
+            
+            populationModal.querySelector('.modal-close').addEventListener('click', () => {
+                populationModal.style.display = 'none';
+            });
+
+            const historyModalClose = document.getElementById('history-modal-close');
+            historyModalClose.addEventListener('click', () => {
+                historyModal.style.display = 'none';
+            });
+            historyModal.addEventListener('click', (event) => {
+                if (event.target === historyModal) {
+                    historyModal.style.display = 'none';
+                }
+            });
+
+            document.body.addEventListener('click', function(event) {
+                if (event.target && event.target.classList.contains('open-history-modal-btn')) {
+                    const button = event.target;
+                    const familyId = button.dataset.familyId;
+                    const familyName = button.dataset.familyName;
+                    openHistoryModal(familyId, familyName);
+                }
+            });
+        }
+        
+        function populatePresetRacesDropdown() {
+            for (const raceName in PRESET_RACES) {
+                const option = document.createElement('option');
+                option.value = raceName;
+                option.textContent = raceName;
+                presetRaceSelect.appendChild(option);
+            }
+        }
+
+        function handleLoadPresetRace() {
+            const selectedRaceName = presetRaceSelect.value;
+            if (selectedRaceName && PRESET_RACES[selectedRaceName]) {
+                const existingNames = Array.from(document.querySelectorAll('.race-name')).map(input => input.value.trim().toLowerCase());
+                if (existingNames.includes(selectedRaceName.toLowerCase())) {
+                    alert(`La race "${selectedRaceName}" est déjà présente dans la liste.`);
+                    return;
+                }
+                createAndPopulateRaceCard(PRESET_RACES[selectedRaceName]);
+                updateUiState();
+            }
+            presetRaceSelect.value = ""; // Reset dropdown
+        }
+
+        function openHistoryModal(familyId, familyName) {
+            const title = document.getElementById('history-modal-title');
+            const body = document.getElementById('history-modal-body');
+
+            title.textContent = `Historique de la famille ${familyName}`;
+
+            const fullHistory = simulation.eventLog
+                .filter(e => e.familyId === familyId)
+                .slice()
+                .reverse();
+
+            const listHtml = fullHistory.map(event => {
+                const message = event.message.replace(/<\/?h3>/g, '').trim();
+                if (message) {
+                    return `<li><strong>Année ${event.year}:</strong> ${message}</li>`;
+                }
+                return '';
+            }).join('');
+
+            body.innerHTML = `<ul class="family-history">${listHtml}</ul>`;
+            historyModal.style.display = 'flex';
+        }
+
+        function logEvent(message, cityId = null, familyId = null, meta = {}) {
+            simulation.eventLog.push({
+                year: simulation.year,
+                cityId: cityId,
+                familyId: familyId,
+                message: message,
+                meta: meta
+            });
+        }
+        
+        function saveRacesToDB() {
+            const racesDB = {};
+            document.querySelectorAll('.race-card').forEach(card => {
+                const name = card.querySelector('.race-name').value.trim();
+                if (!name) return;
+                racesDB[name] = {
+                    name: name,
+                    lifespan: parseInt(card.querySelector('.race-lifespan').value),
+                    adultAge: parseInt(card.querySelector('.race-adultage').value),
+                    firstNamesM: card.querySelector('.race-firstnames-m').value,
+                    firstNamesF: card.querySelector('.race-firstnames-f').value,
+                    lastNames: card.querySelector('.race-lastnames').value
+                };
+            });
+            localStorage.setItem('allRacesDB', JSON.stringify(racesDB));
+            alert(`${Object.keys(racesDB).length} race(s) sauvegardée(s) !`);
+        }
+
+        function loadRacesFromDB() {
+            const savedRaces = localStorage.getItem('allRacesDB');
+            if (savedRaces) {
+                const racesDB = JSON.parse(savedRaces);
+                raceListDiv.innerHTML = '';
+                if (Object.keys(racesDB).length > 0) {
+                    Object.values(racesDB).forEach(raceData => {
+                        createAndPopulateRaceCard(raceData);
+                    });
+                } else {
+                    createAndPopulateRaceCard();
+                }
+            } else {
+                createAndPopulateRaceCard();
+            }
+        }
+
+        function createAndPopulateRaceCard(raceData = {}) {
+            if (!raceCardTemplate) return;
+            const cardClone = raceCardTemplate.content.cloneNode(true);
+            const raceCard = cardClone.querySelector('.race-card');
+            if (!raceCard) return;
+            raceCard.querySelector('.race-name').value = raceData.name || '';
+            raceCard.querySelector('h4').textContent = raceData.name || 'Nouvelle Race';
+            raceCard.querySelector('.race-lifespan').value = raceData.lifespan || 80;
+            raceCard.querySelector('.race-adultage').value = raceData.adultAge || 18;
+            raceCard.querySelector('.race-firstnames-m').value = raceData.firstNamesM || '';
+            raceCard.querySelector('.race-firstnames-f').value = raceData.firstNamesF || '';
+            raceCard.querySelector('.race-lastnames').value = raceData.lastNames || '';
+            raceCard.querySelector('.delete-race-btn').addEventListener('click', () => {
+                raceCard.remove();
+                updateUiState();
+            });
+            raceCard.querySelectorAll('input, textarea').forEach(el => {
+                el.addEventListener('input', updateUiState);
+            });
+            raceListDiv.appendChild(cardClone);
+        }
+
+        function loadAllRegions() {
+            const savedData = localStorage.getItem('allRegionsData');
+            if (savedData) {
+                allRegions = JSON.parse(savedData);
+            } else {
+                allRegions = {
+                    currentRegionName: 'Ma Première Région',
+                    regions: { 'Ma Première Région': { hexDistance: 10, cities: [] } }
+                };
+            }
+        }
+
+        function getCurrentRegion() {
+            if (allRegions && allRegions.currentRegionName && allRegions.regions) {
+                return allRegions.regions[allRegions.currentRegionName];
+            }
+            return null;
+        }
+
+        function calculateTotalFamilies() {
+            const currentRegion = getCurrentRegion();
+            if (!currentRegion || !currentRegion.cities) return 0;
+            return currentRegion.cities.reduce((total, city) => total + (city.config?.g0_families || 0), 0);
+        }
+
+        function updateUiState() {
+            const percentages = Array.from(document.querySelectorAll('.race-percentage'));
+            const total = percentages.reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+            totalPercentageP.textContent = `Total des pourcentages : ${total}%`;
+            checkPercentEl.textContent = `Le total des pourcentages des races doit être 100%. (Actuel: ${total}%)`;
+            const percentValid = (total === 100);
+            checkPercentEl.className = percentValid ? 'valid' : 'invalid';
+            const g0families = parseInt(totalFamiliesInput.value);
+            checkFamiliesEl.textContent = `Il doit y avoir au moins une famille fondatrice. (Actuel: ${g0families})`;
+            const familiesValid = g0families > 0;
+            checkFamiliesEl.className = familiesValid ? 'valid' : 'invalid';
+            const racesValid = allRacesHaveData();
+            checkRacesEl.textContent = `Toutes les fiches de race doivent être complètes (Nom, Prénoms M/F, Noms).`;
+            checkRacesEl.className = racesValid ? 'valid' : 'invalid';
+            startSimBtn.disabled = !(percentValid && familiesValid && racesValid);
+        }
+        
+        function allRacesHaveData(){
+            if (document.querySelectorAll('.race-card').length === 0) return false;
+            return Array.from(document.querySelectorAll('.race-card')).every(card => {
+                return card.querySelector('.race-name').value.trim() &&
+                       card.querySelector('.race-firstnames-m').value.trim() &&
+                       card.querySelector('.race-firstnames-f').value.trim() &&
+                       card.querySelector('.race-lastnames').value.trim();
+            });
+        }
+
+        function collectConfigData() {
+            const raceCards = document.querySelectorAll('.race-card');
+            const racesConfig = {};
+            raceCards.forEach(card => {
+                const name = card.querySelector('.race-name').value.trim();
+                if (!name) return;
+                racesConfig[name] = {
+                    lifespan: parseInt(card.querySelector('.race-lifespan').value),
+                    adultAge: parseInt(card.querySelector('.race-adultage').value),
+                    firstNamesM: card.querySelector('.race-firstnames-m').value.split(',').map(n => n.trim()).filter(Boolean),
+                    firstNamesF: card.querySelector('.race-firstnames-f').value.split(',').map(n => n.trim()).filter(Boolean),
+                    lastNames: card.querySelector('.race-lastnames').value.split(',').map(n => n.trim()).filter(Boolean),
+                    percentage: parseFloat(card.querySelector('.race-percentage').value)
+                };
+            });
+            return racesConfig;
+        }
+
+        function weightedRandom(items) {
+            const totalWeight = Object.values(items).reduce((sum, race) => sum + race.percentage, 0);
+            let random = Math.random() * totalWeight;
+            for (const name in items) {
+                random -= items[name].percentage;
+                if (random <= 0) { return name; }
+            }
+        }
+        
+        let nextPersonId = 0;
+        let nextBuildingId = 0;
+        function createPerson(raceName, familyName, familyId, gender, age = null, cityId, cityName, parents = []) {
+            const raceInfo = simulation.races[raceName];
+            if (!raceInfo) return null;
+            const nameList = (gender === 'M') ? raceInfo.firstNamesM : raceInfo.firstNamesF;
+            if (nameList.length === 0) return null;
+            const personAge = age !== null ? age : Math.floor(Math.random() * 21) + 20;
+            return {
+                id: nextPersonId++, firstName: nameList[Math.floor(Math.random() * nameList.length)],
+                lastName: familyName, maidenName: null,
+                age: personAge, gender: gender,
+                race: raceName, isAlive: true, familyId: familyId,
+                cityId: cityId, cityName: cityName, 
+                originCityId: cityId, originCityName: cityName,
+                wasMarried: false,
+                job: null,
+                parents: parents, spouseId: null, children: []
+            };
+        }
+        
+        // --- CYCLE DE SIMULATION ---
+        async function runFullSimulation() {
+            startSimBtn.disabled = true;
+            startSimBtn.textContent = 'Simulation en cours...';
+
+            for (let i = 0; i < 100; i++) {
+                advanceTime();
+                displayPopulation();
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            logEvent(`<strong>FIN:</strong> La simulation s'est terminée après 100 ans.`, null, null);
+            displayPopulation();
+            startSimBtn.textContent = 'Simulation terminée';
+        }
+
+        function generateG0() {
+            simulation.races = collectConfigData();
+            simulation.population = [];
+            simulation.families = {};
+            simulation.eventLog = [];
+            nextPersonId = 0;
+            nextBuildingId = 0;
+            simulation.year = 0;
+            currentYearInput.value = 'Année 0';
+
+            const currentRegion = getCurrentRegion();
+            if(!currentRegion) return;
+            
+            // Initialiser les structures de données des villes
+            currentRegion.cities.forEach(city => {
+                if(!city.config) city.config = {};
+                city.config.dynamic_buildings = [];
+                city.config.guilds = [];
+            });
+
+            const familySlots = [];
+            currentRegion.cities.forEach(city => {
+                const numFamilies = city.config?.g0_families || 0;
+                for (let i = 0; i < numFamilies; i++) {
+                    familySlots.push({ cityId: city.id, cityName: city.name });
+                }
+            });
+            familySlots.forEach((slot, index) => {
+                const familyId = `F${index}`;
+                const raceName = weightedRandom(simulation.races);
+                if (!raceName) return;
+                const raceInfo = simulation.races[raceName];
+                const familyName = raceInfo.lastNames[Math.floor(Math.random() * raceInfo.lastNames.length)] || `Famille ${index}`;
+                
+                const age1 = Math.floor(Math.random() * 7) + 18;
+                const minAge2 = Math.max(18, age1 - 5);
+                const maxAge2 = Math.min(24, age1 + 5);
+                const age2 = Math.floor(Math.random() * (maxAge2 - minAge2 + 1)) + minAge2;
+
+                const person1 = createPerson(raceName, familyName, familyId, 'M', age1, slot.cityId, slot.cityName);
+                const person2 = createPerson(raceName, familyName, familyId, 'F', age2, slot.cityId, slot.cityName);
+                
+                if (person1 && person2) {
+                    person1.spouseId = person2.id;
+                    person2.spouseId = person1.id;
+                    simulation.population.push(person1, person2);
+                    simulation.families[familyId] = { 
+                        originalName: familyName, 
+                        members: [person1.id, person2.id],
+                        location: slot.cityName
+                    };
+                }
+            });
+            assignJobs();
+            logEvent(`<strong>Année 0 :</strong> Fondation de la région avec ${simulation.population.length} personnes. Les premiers métiers ont été assignés.`, null, null);
+            
+            viewResultsBtn.disabled = false;
+            displayPopulation();
+            runFullSimulation();
+        }
+        
+        function advanceTime() {
+            simulation.year += 1;
+            logEvent(`<h3>--- Année ${simulation.year} ---</h3>`, null, null);
+            const currentRegion = getCurrentRegion();
+            if (currentRegion) {
+                currentRegion.cities.forEach(city => {
+                    updateCityInfrastructure(city);
+                    updateGuilds(city);
+                });
+            }
+            simulation.population.forEach(p => { if(p.isAlive) p.age += 1; });
+            simulation.population.forEach(p => {
+                if (p.isAlive && p.yearsSinceMigration !== undefined) {
+                    p.yearsSinceMigration++;
+                }
+            });
+            handleDeaths();
+            checkForFamilyExtinction();
+            handleMarriages();
+            handleEconomicMigration();
+            processMigrationImpact(); // Gère l'impact des migrations de masse
+            handleBirths();
+            assignJobs();
+            currentYearInput.value = `Année ${simulation.year}`;
+        }
+
+        function updateGuilds(city) {
+            if (!city.config) return;
+
+            const cityBuildings = new Set(Object.keys(city.config.buildings || {}).filter(b => city.config.buildings[b]));
+            const cityPopulation = simulation.population.filter(p => p.isAlive && p.cityId === city.id).length;
+
+            for (const [guildName, data] of Object.entries(guildData)) {
+                const existingGuild = city.config.guilds.find(g => g.name === guildName);
+                
+                const buildingsOwned = [...cityBuildings].filter(b => data.required_buildings.includes(b)).length;
+
+                if (!existingGuild && cityPopulation >= data.min_pop && buildingsOwned >= data.min_buildings) {
+                    city.config.guilds.push({ name: guildName });
+                    logEvent(`🏛️ La <strong>${guildName}</strong> a été fondée à ${city.name} !`, city.id, null);
+                }
+            }
+        }
+
+
+        function updateCityInfrastructure(city) {
+            if (!city.config) return;
+            const populationInCity = simulation.population.filter(p => p.isAlive && p.cityId === city.id).length;
+
+            // --- Logique d'Ajout ---
+            for (const tierInfo of Object.values(DYNAMIC_BUILDING_TIERS)) {
+                if (populationInCity > tierInfo.threshold) {
+                    const targetCount = Math.floor(populationInCity / tierInfo.threshold);
+                    const currentCount = city.config.dynamic_buildings.filter(b => tierInfo.types.includes(b.name)).length;
+
+                    if (targetCount > currentCount && Math.random() < 0.20) {
+                        const newBuildingType = tierInfo.types[Math.floor(Math.random() * tierInfo.types.length)];
+                        city.config.dynamic_buildings.push({ id: `bld_${nextBuildingId++}`, name: newBuildingType });
+                        logEvent(`📈 Une nouvelle ${newBuildingType} a ouvert à ${city.name}.`, city.id, null);
+                        break;
+                    }
+                }
+            }
+
+            // --- Logique de Suppression ---
+             for (const tierInfo of Object.values(DYNAMIC_BUILDING_TIERS)) {
+                const targetCount = Math.floor(populationInCity / tierInfo.threshold);
+                const buildingsOfType = city.config.dynamic_buildings.filter(b => tierInfo.types.includes(b.name));
+                const currentCount = buildingsOfType.length;
+                
+                if (currentCount > targetCount && Math.random() < 0.15) {
+                    const buildingToRemove = buildingsOfType[Math.floor(Math.random() * buildingsOfType.length)];
+                    
+                    const employees = simulation.population.filter(p => p.job?.buildingInstanceId === buildingToRemove.id);
+                    if (employees.length > 0) {
+                        const employeeNames = employees.map(e => `${e.firstName} ${e.lastName} (${e.job.role})`).join(', ');
+                        logEvent(`📉 La ${buildingToRemove.name} de ${city.name} a fermé. Employés licenciés : ${employeeNames}.`, city.id, null);
+                        employees.forEach(e => { e.job = null; });
+                    } else {
+                        logEvent(`📉 Une ${buildingToRemove.name} superflue a fermé à ${city.name}.`, city.id, null);
+                    }
+                    
+                    city.config.dynamic_buildings = city.config.dynamic_buildings.filter(b => b.id !== buildingToRemove.id);
+                    break;
+                }
+            }
+        }
+        
+        function getCityJobStatus(city) {
+            const cityPopulation = simulation.population.filter(p => p.isAlive && p.cityId === city.id);
+            const popCount = cityPopulation.length;
+            const jobStatus = { buildings: [], guilds: [], autonomous: [] };
+
+            const allBuildings = [
+                ...Object.entries(city.config?.buildings || {}).filter(([, exists]) => exists).map(([name]) => ({ id: `static_${name.replace(/[^a-z]/gi, '')}`, name })), 
+                ...(city.config?.dynamic_buildings || [])
+            ];
+
+            const filledJobs = cityPopulation.map(p => p.job).filter(Boolean);
+
+            allBuildings.forEach(building => {
+                const buildingInfo = { name: building.name, jobs: [] };
+                const jobDefs = jobData.building_jobs[building.name] || [];
+
+                jobDefs.forEach(def => {
+                    let required = def.quantity || 0;
+                    if (def.dynamic_quantity_per_pop) {
+                        required += Math.floor(popCount / def.dynamic_quantity_per_pop);
+                    }
+
+                    if (required > 0) {
+                        let filled;
+                         if (building.id.startsWith('static')) {
+                            filled = filledJobs.filter(j => j.role === def.role && !j.buildingInstanceId).length;
+                         } else {
+                            filled = filledJobs.filter(j => j.role === def.role && j.buildingInstanceId === building.id).length;
+                         }
+                        buildingInfo.jobs.push({ role: def.role, required, filled });
+                    }
+                });
+                if(buildingInfo.jobs.length > 0) {
+                   jobStatus.buildings.push(buildingInfo);
+                }
+            });
+
+            (city.config.guilds || []).forEach(guild => {
+                const guildDef = guildData[guild.name];
+                if(guildDef) {
+                    const masterFilled = filledJobs.filter(j => j.role === guildDef.master_role).length;
+                    const membersFilled = filledJobs.filter(j => j.role === guildDef.member_role).length;
+                    const memberRequired = Math.floor(popCount / 50); // 1 membre de guilde pour 50 hab
+                    
+                    jobStatus.guilds.push({
+                        name: guild.name,
+                        jobs: [
+                            {role: guildDef.master_role, required: 1, filled: masterFilled},
+                            {role: guildDef.member_role, required: memberRequired, filled: membersFilled}
+                        ]
+                    });
+                }
+            });
+            
+            jobData.autonomous_jobs.forEach(def => {
+                const filled = filledJobs.filter(j => j.role === def.role).length;
+                if (filled > 0 || !def.isBeggar) {
+                    jobStatus.autonomous.push({ role: def.role, required: 'N/A', filled });
+                }
+            });
+
+            return jobStatus;
+        }
+
+
+        function assignJobs() {
+            const currentRegion = getCurrentRegion();
+            if (!currentRegion) return;
+
+            currentRegion.cities.forEach(city => {
+                const populationInCity = simulation.population.filter(p => p.isAlive && p.cityId === city.id);
+                const cityPopulationCount = populationInCity.length;
+                if(cityPopulationCount === 0) return;
+
+                let vacantJobs = [];
+                let requiredJobsList = [];
+
+                // --- 1. Calculer tous les postes requis ---
+                // Postes de base
+                (jobData.base_jobs[city.type] || []).forEach(j => requiredJobsList.push({...j}));
+                // Postes des bâtiments (statiques + dynamiques)
+                const allBuildings = [
+                    ...Object.entries(city.config?.buildings || {}).filter(([, exists]) => exists).map(([name]) => ({ id: `static_${name.replace(/[^a-z]/gi, '')}`, name })), 
+                    ...(city.config?.dynamic_buildings || [])
+                ];
+                allBuildings.forEach(building => {
+                    (jobData.building_jobs[building.name] || []).forEach(jobDef => {
+                        let quantity = jobDef.quantity || 0;
+                        if(jobDef.dynamic_quantity_per_pop) quantity += Math.floor(cityPopulationCount / jobDef.dynamic_quantity_per_pop);
+                        for(let i=0; i<quantity; i++) requiredJobsList.push({...jobDef, buildingInstanceId: building.id.startsWith('bld_') ? building.id : undefined });
+                    });
+                });
+                // Postes des guildes
+                (city.config.guilds || []).forEach(guild => {
+                    const guildDef = guildData[guild.name];
+                    if (guildDef) {
+                        requiredJobsList.push({ role: guildDef.master_role, tier: 2 });
+                        const memberCount = Math.floor(cityPopulationCount / 50);
+                        for (let i = 0; i < memberCount; i++) {
+                            requiredJobsList.push({ role: guildDef.member_role, tier: 3, isGuildMember: true, guildName: guild.name });
+                        }
+                    }
+                });
+
+                // --- 2. Lister les postes vacants ---
+                const filledJobCounts = {};
+                populationInCity.forEach(p => {
+                    if (p.job) {
+                        const key = p.job.buildingInstanceId ? `${p.job.role}_${p.job.buildingInstanceId}` : p.job.role;
+                        filledJobCounts[key] = (filledJobCounts[key] || 0) + 1;
+                    }
+                });
+                 const requiredJobCounts = {};
+                 requiredJobsList.forEach(jobInfo => {
+                    const key = jobInfo.buildingInstanceId ? `${jobInfo.role}_${jobInfo.buildingInstanceId}` : jobInfo.role;
+                    requiredJobCounts[key] = (requiredJobCounts[key] || 0) + 1;
+                });
+                for(const key in requiredJobCounts) {
+                    const needed = requiredJobCounts[key] - (filledJobCounts[key] || 0);
+                    if(needed > 0) {
+                        const jobTemplate = requiredJobsList.find(j => (j.buildingInstanceId ? `${j.role}_${j.buildingInstanceId}` : j.role) === key);
+                        for(let i=0; i<needed; i++) vacantJobs.push({...jobTemplate});
+                    }
+                }
+                vacantJobs.sort((a, b) => (a.tier || 99) - (b.tier || 99));
+                
+                // --- 3. Boucle d'attribution ---
+                let availableCandidates = populationInCity.filter(p => !p.job);
+                vacantJobs.forEach(vacantJob => {
+                    if (availableCandidates.length === 0 && !vacantJob.promotes_from && !vacantJob.guild_affiliation) return;
+                    
+                    let candidate = null, isPromotion = false, promotionSource = '';
+
+                    // Priorité 1: Promotion directe (apprenti -> maître)
+                    if (vacantJob.promotes_from) {
+                        const promotionCandidates = populationInCity
+                            .filter(p => p.job && vacantJob.promotes_from.includes(p.job.role))
+                            .sort((a,b) => b.age - a.age); 
+                        if(promotionCandidates.length > 0) {
+                            candidate = promotionCandidates[0];
+                            isPromotion = true;
+                            promotionSource = `son poste de ${candidate.job.role}`;
+                        }
+                    }
+
+                    // Priorité 2: Promotion depuis une Guilde
+                    if (!candidate && vacantJob.guild_affiliation) {
+                        const guildDef = guildData[vacantJob.guild_affiliation];
+                        if (guildDef) {
+                            const guildMembers = populationInCity.filter(p => p.job?.role === guildDef.member_role);
+                            if (guildMembers.length > 0) {
+                                guildMembers.sort((a,b) => b.age - a.age); // Le plus expérimenté
+                                candidate = guildMembers[0];
+                                isPromotion = true;
+                                promotionSource = `la ${vacantJob.guild_affiliation}`;
+                            }
+                        }
+                    }
+
+                    // Priorité 3: Recrutement
+                    if (!candidate) {
+                        if(availableCandidates.length === 0) return;
+                        
+                        let hirePool = availableCandidates.filter(p => p.age >= (simulation.races[p.race]?.adultAge || 18));
+                        
+                        // Priorité pour les apprentis : puiser dans la guilde correspondante
+                        if (vacantJob.guild_source) {
+                            const guildDef = guildData[vacantJob.guild_source];
+                            if(guildDef) {
+                                const guildPool = hirePool.filter(p => p.job?.role === guildDef.member_role);
+                                if(guildPool.length > 0) hirePool = guildPool;
+                            }
+                        }
+
+                        if (vacantJob.tier <= 3) {
+                             const qualifiedPool = hirePool.filter(p => p.age > 25);
+                             if (qualifiedPool.length > 0) hirePool = qualifiedPool;
+                        }
+                        if (hirePool.length > 0) {
+                            hirePool.sort((a,b) => b.age - a.age); 
+                            candidate = hirePool[0];
+                        }
+                    }
+                    
+                    // Attribution du poste
+                    if(candidate) {
+                        if(isPromotion) {
+                            logEvent(`⬆️ ${candidate.firstName} ${candidate.lastName} a été promu(e) au poste de ${vacantJob.role} depuis ${promotionSource} à ${city.name}.`, city.id, candidate.familyId);
+                        } else {
+                            logEvent(`💼 ${candidate.firstName} ${candidate.lastName} a été embauché(e) comme ${vacantJob.role} à ${city.name}.`, city.id, candidate.familyId);
+                        }
+                        candidate.job = { ...vacantJob }; 
+                        if(!isPromotion) {
+                           availableCandidates = availableCandidates.filter(p => p.id !== candidate.id);
+                        }
+                    }
+                });
+                
+                // --- 4. Assignation des sans-emplois restants ---
+                let unemployedAdults = availableCandidates.filter(p => p.age >= (simulation.races[p.race]?.adultAge || 18));
+
+                // Mendicité dans les villes en difficulté
+                const cityStatus = city.config.city_status;
+                const beggarJob = jobData.autonomous_jobs.find(j => j.isBeggar);
+
+                if (beggarJob && (cityStatus === 'difficulte' || cityStatus === 'declin')) {
+                    const BEGGAR_CHANCES = {
+                        'difficulte': 0.03, // 3% de chance si la ville est en difficulté
+                        'declin': 0.07      // 7% de chance si la ville est en déclin
+                    };
+                    const chance = BEGGAR_CHANCES[cityStatus] || 0;
+
+                    if (chance > 0) {
+                        unemployedAdults.forEach(person => {
+                            if(!person.job && Math.random() < chance) {
+                                person.job = {...beggarJob};
+                            }
+                        });
+                        unemployedAdults = unemployedAdults.filter(p => !p.job);
+                    }
+                }
+                
+                // Métiers autonomes
+                const autonomousJobs = jobData.autonomous_jobs.filter(j => !j.isBeggar);
+                unemployedAdults.forEach(person => {
+                    if (Math.random() < 0.25) { // 25% de chance de tenter un métier autonome
+                        // 80% de chance de choisir un métier commun (Tier 4), 20% pour un métier plus rare (Tier 3)
+                        const jobPool = Math.random() < 0.8 
+                            ? autonomousJobs.filter(j => j.tier === 4) 
+                            : autonomousJobs.filter(j => j.tier === 3);
+                            
+                        if (jobPool.length > 0) {
+                            person.job = jobPool[Math.floor(Math.random() * jobPool.length)];
+                        }
+                    }
+                });
+            });
+        }
+
+        function degradeCityStatus(city, severity = 1) {
+            const progressionArray = ['prospere', 'stable', 'difficulte', 'declin'];
+            const progressionMap = {
+                'prospere': 0,
+                'stable': 1,
+                'difficulte': 2,
+                'declin': 3
+            };
+
+            const oldStatus = city.config.city_status || 'stable';
+            const currentIndex = progressionMap[oldStatus];
+            if(currentIndex === undefined) return;
+
+            const newIndex = Math.min(progressionArray.length - 1, currentIndex + severity);
+            const newStatus = progressionArray[newIndex];
+            
+            if (oldStatus !== newStatus) {
+                city.config.city_status = newStatus;
+                logEvent(`📉 À cause d'un afflux soudain de population, le statut de <strong>${city.name}</strong> s'est ${severity > 1 ? 'sévèrement ' : ''}dégradé de '${oldStatus}' à '${newStatus}'.`, city.id, null);
+            }
+        }
+
+        function processMigrationImpact() {
+            const currentRegion = getCurrentRegion();
+            if (!currentRegion) return;
+
+            const MIGRATION_IMPACT_THRESHOLD = 1; // Seuil en % de la population de la ville
+            const beggarJob = jobData.autonomous_jobs.find(j => j.isBeggar);
+
+            currentRegion.cities.forEach(city => {
+                const cityPopulation = simulation.population.filter(p => p.isAlive && p.cityId === city.id).length;
+                if (cityPopulation === 0) return;
+
+                // Trouver tous les migrants économiques arrivés cette année dans cette ville
+                const opportunityMigrantsEvents = simulation.eventLog.filter(e =>
+                    e.year === simulation.year &&
+                    e.cityId === city.id &&
+                    e.message.startsWith('✨') &&
+                    e.meta && e.meta.personId
+                );
+
+                const migrantCount = opportunityMigrantsEvents.length;
+                
+                if (migrantCount === 0) return;
+
+                const migrationPercentage = (migrantCount / (cityPopulation - migrantCount)) * 100; // Calculer le % par rapport à la pop avant l'arrivée
+
+                if (migrationPercentage > MIGRATION_IMPACT_THRESHOLD) {
+                    let severity = 1;
+                    if (migrationPercentage > 3) { // Plus de 3% est un choc sévère
+                        severity = 2;
+                    }
+                    // 1. Dégrader le statut de la ville
+                    degradeCityStatus(city, severity);
+
+                    // 2. Transformer les migrants sans emploi en mendiants
+                    if (beggarJob) {
+                        opportunityMigrantsEvents.forEach(event => {
+                            const migrant = simulation.population.find(p => p.id === event.meta.personId);
+                            // Si la personne a migré et n'a pas trouvé de travail immédiatement
+                            if (migrant && migrant.isAlive && !migrant.job) {
+                                migrant.job = { ...beggarJob };
+                                logEvent(`🙏 Arrivé sans ressources, ${migrant.firstName} ${migrant.lastName} est devenu mendiant à ${city.name}.`, city.id, migrant.familyId);
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        function handleDeaths() {
+            const currentRegion = getCurrentRegion();
+            if (!currentRegion) return;
+
+            simulation.population.forEach(person => {
+                if (!person.isAlive) return;
+                const raceInfo = simulation.races[person.race];
+                if (!raceInfo) return;
+
+                let died = false;
+                let deathChance = 0;
+                if (person.age > raceInfo.lifespan) {
+                    deathChance = (person.age - raceInfo.lifespan) / 15;
+                } else if (person.age > raceInfo.lifespan * 0.9) {
+                    deathChance = 0.005;
+                }
+                if (Math.random() < deathChance) {
+                    logEvent(`🕊️ ${person.firstName} ${person.lastName} (${person.job?.role || 'Sans emploi'}) est décédé(e) de vieillesse à ${person.age} ans à ${person.cityName}.`, person.cityId, person.familyId);
+                    died = true;
+                }
+
+                if (!died && person.age > 16 && person.age < (raceInfo.lifespan * 0.85)) {
+                    const city = currentRegion.cities.find(c => c.id === person.cityId);
+                    const cityStatus = city?.config?.city_status || 'stable';
+                    let diedPrematurely = false;
+                    let causeOfDeathMessage = '';
+
+                    const crimeDeathCauses = ["tué(e) lors d'un vol", "victime d'une agression de rue", "assassiné(e) par un rival", "pris(e) dans un règlement de comptes"];
+                    const famineDeathCauses = ["mort(e) de faim", "mort(e) de malnutrition due à la famine", "décédé(e) des suites de la disette"];
+                    const genericPrematureDeathCauses = ["d'une maladie soudaine", "d'un accident de travail", "d'une rixe qui a mal tourné", "en protégeant un proche", "d'une chute malencontreuse", "des mauvaises conditions de vie", "d'une épidémie locale"];
+
+                    const statusDeathRates = {
+                        'prospere':   { generic: 0.0010, crime: 0.0000, famine: 0.0000 },
+                        'stable':     { generic: 0.0015, crime: 0.0001, famine: 0.0000 },
+                        'difficulte': { generic: 0.0020, crime: 0.0015, famine: 0.0005 },
+                        'declin':     { generic: 0.0025, crime: 0.0035, famine: 0.0025 }
+                    };
+                    
+                    const rates = statusDeathRates[cityStatus] || statusDeathRates['stable'];
+                    let finalRates = { ...rates };
+
+                    let riskMultiplier = 1.0;
+                    if (person.yearsSinceMigration !== undefined && person.yearsSinceMigration < 5) {
+                        riskMultiplier = 2.5; 
+                    } else if (!person.job || person.job.isBeggar) {
+                        riskMultiplier = 2.0; 
+                    }
+
+                    finalRates.crime *= riskMultiplier;
+                    finalRates.famine *= riskMultiplier;
+                    finalRates.generic *= (riskMultiplier > 1.0 ? 1.2 : 1.0);
+
+                    if (Math.random() < finalRates.famine) {
+                        diedPrematurely = true;
+                        const cause = famineDeathCauses[Math.floor(Math.random() * famineDeathCauses.length)];
+                        causeOfDeathMessage = `💀 ${person.firstName} ${person.lastName} est ${cause} à ${person.age} ans, victime de la famine qui frappe ${person.cityName}.`;
+                    } else if (Math.random() < finalRates.crime) {
+                        diedPrematurely = true;
+                        const cause = crimeDeathCauses[Math.floor(Math.random() * crimeDeathCauses.length)];
+                        causeOfDeathMessage = `💀 ${person.firstName} ${person.lastName} a été ${cause} à ${person.age} ans, victime de l'insécurité à ${person.cityName}.`;
+                    } else if (Math.random() < finalRates.generic) {
+                        diedPrematurely = true;
+                        const cause = genericPrematureDeathCauses[Math.floor(Math.random() * genericPrematureDeathCauses.length)];
+                        causeOfDeathMessage = `💀 ${person.firstName} ${person.lastName} est décédé(e) prématurément à ${person.age} ans ${cause} à ${person.cityName}.`;
+                    }
+
+                    if (diedPrematurely) {
+                        logEvent(causeOfDeathMessage, person.cityId, person.familyId);
+                        died = true;
+                    }
+                }
+
+                if (died) {
+                    person.isAlive = false;
+                    person.job = null;
+                    if (person.spouseId !== null) {
+                        const spouse = simulation.population.find(p => p.id === person.spouseId);
+                        if (spouse) {
+                            spouse.spouseId = null;
+                            spouse.wasMarried = true;
+                        }
+                    }
+                }
+            });
+        }
+        
+        function checkForFamilyExtinction() {
+            for (const familyId in simulation.families) {
+                const family = simulation.families[familyId];
+                if (!family || !family.members || family.isExtinct) continue;
+
+                const members = family.members.map(id => simulation.population.find(p => p.id === id)).filter(Boolean);
+                const hasLivingMaleHeir = members.some(p => p.isAlive && p.gender === 'M' && p.lastName === family.originalName);
+
+                if (!hasLivingMaleHeir) {
+                    const region = getCurrentRegion();
+                    const city = region.cities.find(c => c.name === family.location);
+                    const cityId = city ? city.id : null;
+
+                    let message = `☠️ La lignée des <strong>${family.originalName}</strong> dans <strong>${family.location}</strong> s'est éteinte, n'ayant plus d'héritier mâle.`;
+                    
+                    const allPeopleWithFamilyName = simulation.population.filter(p => 
+                        p.isAlive && (p.lastName === family.originalName || p.maidenName === family.originalName));
+                    const otherCities = [...new Set(allPeopleWithFamilyName.map(p => p.cityName).filter(cityName => cityName !== family.location))];
+
+                    if (otherCities.length > 0) {
+                        message += ` Mais reste de la famille dans le ou les lieux "${otherCities.join('", "')}".`;
+                    }
+                    logEvent(message, cityId, familyId);
+                    family.isExtinct = true;
+                }
+            }
+        }
+
+        function handleBirths() {
+            const newChildren = [];
+            const couples = simulation.population.filter(p => p.isAlive && p.gender === 'M' && p.spouseId !== null);
+            couples.forEach(father => {
+                const mother = simulation.population.find(p => p.id === father.spouseId);
+                if (!mother || !mother.isAlive) return;
+                const raceInfo = simulation.races[mother.race];
+                if (!raceInfo) return;
+                const fertilityEndAge = raceInfo.lifespan * 0.55;
+                if (mother.age >= raceInfo.adultAge && mother.age < fertilityEndAge) {
+                    const maxFertilityChance = 0.20; 
+                    const fertilityRange = fertilityEndAge - raceInfo.adultAge;
+                    const yearsIntoFertility = mother.age - raceInfo.adultAge;
+                    const fertilityProgress = yearsIntoFertility / fertilityRange;
+                    const currentBirthChance = maxFertilityChance * (1 - fertilityProgress);
+                    
+                    if(Math.random() < currentBirthChance) {
+                        const childAge = 0;
+                        const childRace = Math.random() < 0.5 ? father.race : mother.race;
+                        const childGender = Math.random() < 0.5 ? 'M' : 'F';
+                        const child = createPerson(childRace, father.lastName, father.familyId, childGender, childAge, father.cityId, father.cityName, [father.id, mother.id]);
+                        if(child){
+                            father.children.push(child.id);
+                            mother.children.push(child.id);
+                            if (simulation.families[child.familyId]) {
+                                simulation.families[child.familyId].members.push(child.id);
+                            }
+                            newChildren.push(child);
+                            logEvent(`👶 Un enfant, ${child.firstName}, est né dans la famille ${father.lastName}.`, father.cityId, father.familyId);
+                        }
+                    }
+                }
+            });
+            simulation.population.push(...newChildren);
+        }
+        
+        function handleMarriages() {
+            const MARRIAGE_SEARCH_CHANCE = 0.6; 
+            const FOREIGN_MARRIAGE_CHANCE = 0.25; 
+
+            const currentRegion = getCurrentRegion();
+            if (!currentRegion) return;
+            const singleMen = simulation.population.filter(p => p.isAlive && p.spouseId === null && p.gender === 'M' && p.age >= (simulation.races[p.race]?.adultAge || 18));
+            let singleWomen = simulation.population.filter(p => p.isAlive && p.spouseId === null && p.gender === 'F' && p.age >= (simulation.races[p.race]?.adultAge || 18));
+            
+            singleMen.forEach(man => {
+                if (man.spouseId || Math.random() > MARRIAGE_SEARCH_CHANCE) return;
+
+                const filterConditions = woman => {
+                    if (woman.spouseId || woman.familyId === man.familyId) return false;
+                    return Math.abs(man.age - woman.age) <= 5;
+                };
+
+                let suitableWives = singleWomen.filter(woman => woman.cityId === man.cityId && filterConditions(woman));
+                
+                if (suitableWives.length === 0 && Math.random() < FOREIGN_MARRIAGE_CHANCE) {
+                    const manCity = currentRegion.cities.find(c => c.id === man.cityId);
+                    if (!manCity) return;
+                    const influenceToRadius = { 'local': 1, 'grand': 3, 'regional': 100 };
+                    const manInfluence = influenceToRadius[manCity.config?.market_influence] || 1;
+
+                    suitableWives = singleWomen.filter(woman => {
+                        if (woman.cityId === man.cityId || !filterConditions(woman)) return false;
+                        
+                        const womanCity = currentRegion.cities.find(c => c.id === woman.cityId);
+                        if (!womanCity) return false;
+
+                        const womanInfluence = influenceToRadius[womanCity.config?.market_influence] || 1;
+                        const distInHexes = cubeDistance(offsetToCube(manCity.q, manCity.r), offsetToCube(womanCity.q, womanCity.r));
+                        return distInHexes <= manInfluence || distInHexes <= womanInfluence;
+                    });
+                }
+                
+                if (suitableWives.length > 0) {
+                    const woman = suitableWives[Math.floor(Math.random() * suitableWives.length)];
+                    
+                    const originalWomanLastName = woman.lastName;
+                    const oldFamilyId = woman.familyId;
+                    man.spouseId = woman.id;
+                    woman.spouseId = man.id;
+                    woman.maidenName = woman.lastName;
+                    woman.lastName = man.lastName;
+                    
+                    let marriageLog = `⚭ ${man.firstName} ${man.lastName} et ${woman.firstName} ${woman.lastName} (née ${originalWomanLastName}) se sont mariés.`;
+                    if (man.wasMarried || woman.wasMarried) {
+                        const secondTimers = [];
+                        if (man.wasMarried) secondTimers.push("l'époux");
+                        if (woman.wasMarried) secondTimers.push("l'épouse");
+                        marriageLog += ` (Il s'agit d'un second mariage pour ${secondTimers.join(' et ')}).`;
+                    }
+                    logEvent(marriageLog, woman.cityId, man.familyId);
+                    logEvent(marriageLog, woman.cityId, oldFamilyId);
+
+                    const newFamilyId = man.familyId;
+                    if (oldFamilyId !== newFamilyId) {
+                        woman.familyId = newFamilyId;
+                        if (simulation.families[oldFamilyId]) {
+                            simulation.families[oldFamilyId].members = simulation.families[oldFamilyId].members.filter(id => id !== woman.id);
+                        }
+                        if (simulation.families[newFamilyId]) {
+                            simulation.families[newFamilyId].members.push(woman.id);
+                        }
+                    }
+
+                    if (man.cityId !== woman.cityId) {
+                        handleRelocation(man, woman, { type: 'marriage' });
+                    }
+
+                    singleWomen = singleWomen.filter(w => w.id !== woman.id);
+                }
+            });
+        }
+        
+        function handleRelocation(person1, person2, reason) {
+            let personToMove, targetCity;
+
+            if (reason.type === 'marriage') {
+                const cityTiers = { 'Capitale': 1, 'Ville': 2, 'Village': 3, 'Hameau': 4, 'Donjon': 5 };
+                const person1JobTier = person1.job?.tier || 99;
+                const person2JobTier = person2.job?.tier || 99;
+                const person1City = getCurrentRegion().cities.find(c=>c.id === person1.cityId);
+                const person2City = getCurrentRegion().cities.find(c=>c.id === person2.cityId);
+                if (!person1City || !person2City) return;
+                const person1CityTier = cityTiers[person1City.type] || 99;
+                const person2CityTier = cityTiers[person2City.type] || 99;
+
+                if (person1JobTier < person2JobTier - 1) { personToMove = person2; targetCity = person1City; } 
+                else if (person2JobTier < person1JobTier - 1) { personToMove = person1; targetCity = person2City; } 
+                else if (person1CityTier < person2CityTier) { personToMove = person2; targetCity = person1City; } 
+                else { personToMove = person1; targetCity = person2City; }
+            } else if (reason.type === 'opportunity') {
+                personToMove = person1;
+                targetCity = reason.destinationCity;
+                personToMove.yearsSinceMigration = 0; // Marquer comme migrant récent
+            } else {
+                return;
+            }
+            
+            const oldCityName = personToMove.cityName;
+            const oldJob = personToMove.job;
+            const oldJobText = oldJob ? `quittant son poste de ${oldJob.role}` : 'qui était sans emploi';
+            let logMessage = '';
+
+            if (reason.type === 'marriage') {
+                const spouse = (personToMove.id === person1.id) ? person2 : person1;
+                logMessage = `✈️ Pour rejoindre son/sa conjoint(e) ${spouse.firstName} ${spouse.lastName}, ${personToMove.firstName} ${personToMove.lastName} a déménagé de ${oldCityName} à ${targetCity.name}, ${oldJobText}.`;
+            } else if (reason.type === 'opportunity') {
+                logMessage = `✨ En quête d'opportunités, ${personToMove.firstName} ${personToMove.lastName} a déménagé de ${oldCityName} à ${targetCity.name}, ${oldJobText}.`;
+            }
+
+            personToMove.cityId = targetCity.id;
+            personToMove.cityName = targetCity.name;
+            personToMove.job = null;
+            
+            if (personToMove.gender === 'M' && simulation.families[personToMove.familyId]) {
+                simulation.families[personToMove.familyId].location = targetCity.name;
+            }
+
+            const eventMeta = reason.type === 'opportunity' ? { personId: personToMove.id } : {};
+            logEvent(logMessage, targetCity.id, personToMove.familyId, eventMeta);
+        }
+
+        function handleEconomicMigration() {
+            const currentRegion = getCurrentRegion();
+            if (!currentRegion) return;
+
+            const cityScores = {};
+
+            currentRegion.cities.forEach(city => {
+                const statusMultipliers = { 'prospere': 1.5, 'stable': 1.0, 'difficulte': 0.7, 'declin': 0.4 };
+                const marketMultipliers = { 'regional': 1.3, 'grand': 1.1, 'local': 1.0 };
+                let score = 1.0;
+                score *= statusMultipliers[city.config?.city_status] || 1.0;
+                score *= marketMultipliers[city.config?.market_influence] || 1.0;
+
+                const filledJobs = {};
+                simulation.population.forEach(p => {
+                    if (p.isAlive && p.job && p.cityId === city.id) {
+                        filledJobs[p.job.role] = (filledJobs[p.job.role] || 0) + 1;
+                    }
+                });
+
+                let vacantHighTierJobs = 0;
+                const requiredJobs = [...(jobData.base_jobs[city.type] || []), ...(Object.values(jobData.building_jobs).flat())];
+                requiredJobs.forEach(jobInfo => {
+                    if (jobInfo.tier <= 2) {
+                        const needed = (jobInfo.quantity || 1) - (filledJobs[jobInfo.role] || 0);
+                        if (needed > 0) vacantHighTierJobs += needed;
+                    }
+                });
+                score += vacantHighTierJobs * 0.25;
+                cityScores[city.id] = { score: score, city: city };
+            });
+
+            const potentialMigrants = simulation.population.filter(p => {
+                const raceInfo = simulation.races[p.race];
+                return p.isAlive && raceInfo && p.age > raceInfo.adultAge && (!p.job || (p.job.tier && p.job.tier >= 4));
+            });
+            
+            potentialMigrants.forEach(person => {
+                const personCity = currentRegion.cities.find(c => c.id === person.cityId);
+                if (!personCity) return;
+                const personCityStatus = personCity.config?.city_status || 'stable';
+                
+                const MIGRATION_CHECK_CHANCES = {
+                    'prospere': 0.005,
+                    'stable':   0.01,
+                    'difficulte': 0.04,
+                    'declin':   0.08
+                };
+                
+                if (Math.random() < (MIGRATION_CHECK_CHANCES[personCityStatus] || 0.01)) {
+                    const currentCityScore = cityScores[person.cityId]?.score || 0;
+                    let bestAlternative = null;
+
+                    for (const cityId in cityScores) {
+                        if (cityId !== person.cityId) {
+                            const destinationCity = cityScores[cityId].city;
+                            const kmPerHex = getCurrentRegion()?.hexDistance || 10;
+                            const distInHexes = cubeDistance(offsetToCube(personCity.q, personCity.r), offsetToCube(destinationCity.q, destinationCity.r));
+                            const distInKm = distInHexes * kmPerHex;
+                            
+                            const perceivedScore = cityScores[cityId].score * (1 - (distInKm * 0.02));
+
+                            if (perceivedScore > currentCityScore * 1.2) { 
+                                if (!bestAlternative || perceivedScore > bestAlternative.score) {
+                                    bestAlternative = {score: perceivedScore, city: destinationCity};
+                                }
+                            }
+                        }
+                    }
+                    if (bestAlternative) {
+                        const chance = (bestAlternative.score - currentCityScore) / bestAlternative.score;
+                        if (Math.random() < chance) {
+                            handleRelocation(person, null, { type: 'opportunity', destinationCity: bestAlternative.city });
+                        }
+                    }
+                }
+            });
+        }
+        
+        // --- FONCTIONS D'AFFICHAGE ---
+        function displayPopulation() {
+            const popDisplay = document.getElementById('population-display');
+            if (!popDisplay) return;
+
+            const activeMainTab = popDisplay.querySelector(':scope > .tab-nav > .tab-button.active');
+            const activeMainTabId = activeMainTab ? activeMainTab.dataset.tabId : 'population';
+
+            let activeSubTabCityId = null;
+            if (activeMainTab) {
+                const activeMainPanelId = `tab-panel-${activeMainTabId}`;
+                const activeMainPanel = document.getElementById(activeMainPanelId);
+                if (activeMainPanel) {
+                    const activeSubTab = activeMainPanel.querySelector('.tab-nav .tab-button.active');
+                    if (activeSubTab) {
+                        activeSubTabCityId = activeSubTab.dataset.cityId;
+                    }
+                }
+            }
+
+            const modalTitle = document.getElementById('population-modal-title');
+            const historyContent = document.getElementById('history-log-content');
+            const tabNav = popDisplay.querySelector(':scope > .tab-nav');
+            const tabPanels = popDisplay.querySelector(':scope > .tab-panels');
+            
+            if (!modalTitle || !historyContent || !tabNav || !tabPanels) return;
+            
+            tabNav.innerHTML = '';
+            tabPanels.innerHTML = '';
+            
+            const totalPopulation = simulation.population.filter(p => p.isAlive).length;
+            modalTitle.textContent = `Population de la Région (Année ${simulation.year}) - ${totalPopulation} habitants`;
+            
+            historyContent.innerHTML = simulation.eventLog
+                .slice().reverse().map(entry => `<p>${entry.message}</p>`).join('');
+            historyContent.scrollTop = 0;
+            
+            const currentRegion = getCurrentRegion();
+            if (!currentRegion || !currentRegion.cities) return;
+            const citiesData = [...currentRegion.cities];
+
+            // --- Création des onglets principaux (Population, Evolution) ---
+            const mainTabs = [{id: 'population', text: 'Population'}, {id: 'evolution', text: 'Évolution du Lieu'}];
+            mainTabs.forEach(mainTab => {
+                 const tabButton = document.createElement('button');
+                 tabButton.className = 'tab-button';
+                 tabButton.dataset.tabId = mainTab.id;
+                 tabButton.textContent = mainTab.text;
+                 tabNav.appendChild(tabButton);
+
+                 const tabPanel = document.createElement('div');
+                 tabPanel.className = 'tab-panel';
+                 tabPanel.id = `tab-panel-${mainTab.id}`;
+                 tabPanel.innerHTML = `<div class="tab-nav"></div><div class="tab-panels"></div>`;
+                 tabPanels.appendChild(tabPanel);
+                 
+                 tabButton.addEventListener('click', () => {
+                    popDisplay.querySelectorAll(':scope > .tab-nav > .tab-button').forEach(btn => btn.classList.remove('active'));
+                    popDisplay.querySelectorAll(':scope > .tab-panels > .tab-panel').forEach(panel => panel.classList.remove('active'));
+                    tabButton.classList.add('active');
+                    tabPanel.classList.add('active');
+                 });
+            });
+
+            // --- Remplissage de chaque onglet principal ---
+            citiesData.sort((a, b) => a.name.localeCompare(b.name)).forEach(cityData => {
+                const cityPopulationCount = simulation.population.filter(p => p.isAlive && p.cityId === cityData.id).length;
+                
+                // --- Onglet Population ---
+                const popTabPanel = document.getElementById('tab-panel-population');
+                const popSubTabNav = popTabPanel.querySelector('.tab-nav');
+                const popSubTabPanels = popTabPanel.querySelector('.tab-panels');
+                const popSubTabBtn = document.createElement('button');
+                popSubTabBtn.className = 'tab-button';
+                popSubTabBtn.dataset.cityId = cityData.id;
+                popSubTabBtn.textContent = `${cityData.name} (${cityPopulationCount} hab.)`;
+                popSubTabNav.appendChild(popSubTabBtn);
+                const popSubTabPanel = document.createElement('div');
+                popSubTabPanel.className = 'tab-panel';
+                popSubTabPanel.id = `pop-subpanel-${cityData.id}`;
+                popSubTabPanel.innerHTML = `<div class="tab-panel-content">${generateCityPopulationHtml(cityData)}</div>`;
+                popSubTabPanels.appendChild(popSubTabPanel);
+                popSubTabBtn.addEventListener('click', () => {
+                    popSubTabNav.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    popSubTabPanels.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+                    popSubTabBtn.classList.add('active');
+                    popSubTabPanel.classList.add('active');
+                });
+
+                // --- Onglet Évolution ---
+                const evoTabPanel = document.getElementById('tab-panel-evolution');
+                const evoSubTabNav = evoTabPanel.querySelector('.tab-nav');
+                const evoSubTabPanels = evoTabPanel.querySelector('.tab-panels');
+                const evoSubTabBtn = document.createElement('button');
+                evoSubTabBtn.className = 'tab-button';
+                evoSubTabBtn.dataset.cityId = cityData.id;
+                evoSubTabBtn.textContent = `${cityData.name}`;
+                evoSubTabNav.appendChild(evoSubTabBtn);
+                const evoSubTabPanel = document.createElement('div');
+                evoSubTabPanel.className = 'tab-panel';
+                evoSubTabPanel.id = `evo-subpanel-${cityData.id}`;
+                evoSubTabPanel.innerHTML = `<div class="tab-panel-content">${generateCityEvolutionHtml(cityData)}</div>`;
+                evoSubTabPanels.appendChild(evoSubTabPanel);
+                evoSubTabBtn.addEventListener('click', () => {
+                    evoSubTabNav.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    evoSubTabPanels.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+                    evoSubTabBtn.classList.add('active');
+                    evoSubTabPanel.classList.add('active');
+                });
+            });
+            
+            // --- Réactivation de l'onglet ---
+            const mainTabToActivate = tabNav.querySelector(`[data-tab-id="${activeMainTabId}"]`) || tabNav.firstChild;
+            if (mainTabToActivate) {
+                mainTabToActivate.click();
+
+                const mainPanelId = `tab-panel-${mainTabToActivate.dataset.tabId}`;
+                const subTabContainer = document.getElementById(mainPanelId);
+
+                if (subTabContainer) {
+                    const subTabNav = subTabContainer.querySelector('.tab-nav');
+                    if (subTabNav) {
+                        const cityIdToActivate = activeSubTabCityId || (citiesData[0] ? citiesData[0].id : null);
+                        const subTabToActivate = subTabNav.querySelector(`[data-city-id="${cityIdToActivate}"]`) || subTabNav.querySelector('.tab-button');
+                        if (subTabToActivate) {
+                            subTabToActivate.click();
+                        }
+                    }
+                }
+            }
+
+
+            populationModal.style.display = 'flex';
+
+            const eventLog = simulation.eventLog;
+            const birthCount = eventLog.filter(e => e.message.startsWith('👶')).length;
+            const deathCount = eventLog.filter(e => e.message.startsWith('🕊️') || e.message.startsWith('💀')).length;
+            const marriageCount = eventLog.filter(e => e.message.startsWith('⚭')).length;
+            const marriageMigrationCount = eventLog.filter(e => e.message.startsWith('✈️')).length;
+            const opportunityMigrationCount = eventLog.filter(e => e.message.startsWith('✨')).length;
+            const totalMigrationCount = marriageMigrationCount + opportunityMigrationCount;
+
+            statsBirthsEl.textContent = `Naissances : ${birthCount}`;
+            statsDeathsEl.textContent = `Décès : ${deathCount}`;
+            statsMarriagesEl.textContent = `Mariages : ${marriageCount}`;
+            statsMigrationsEl.textContent = `Migrations : ${totalMigrationCount}`;
+            statsMigMarriageEl.textContent = `↳ par mariage : ${marriageMigrationCount}`;
+            statsMigOpportunityEl.textContent = `↳ par opportunité : ${opportunityMigrationCount}`;
+        }
+
+        function generateCityEvolutionHtml(cityData) {
+            let html = '';
+
+            const cityHistoryEvents = simulation.eventLog
+                .filter(e => e.cityId === cityData.id && (e.message.startsWith('📈') || e.message.startsWith('📉') || e.message.startsWith('🏛️')))
+                .slice()
+                .reverse();
+
+            if (cityHistoryEvents.length > 0) {
+                html += `<details open>`;
+                html += `<summary>Historique des infrastructures</summary>`;
+                html += `<div class="family-history">`;
+                html += `<ul>`;
+                cityHistoryEvents.forEach(event => {
+                    html += `<li><strong>Année ${event.year}:</strong> ${event.message}</li>`;
+                });
+                html += `</ul></div></details>`;
+            }
+            
+            html += `<h3>Bâtiments et Emplois à ${cityData.name}</h3>`;
+            
+            const jobStatus = getCityJobStatus(cityData);
+            
+            jobStatus.buildings.forEach(building => {
+                html += `<div class="evolution-section">
+                            <h5>${building.name}</h5>
+                            <ul>`;
+                building.jobs.forEach(job => {
+                    html += `<li><span class="job-name">${job.role}</span> <span class="job-count">${job.filled} / ${job.required}</span></li>`;
+                });
+                html += `   </ul>
+                         </div>`;
+            });
+            
+            if (jobStatus.guilds.length > 0) {
+                 html += `<h3>Guildes</h3>`;
+                 jobStatus.guilds.forEach(guild => {
+                     html += `<div class="evolution-section">
+                                <h5>${guild.name}</h5>
+                                <ul>`;
+                    guild.jobs.forEach(job => {
+                        html += `<li><span class="job-name">${job.role}</span> <span class="job-count">${job.filled} / ${job.required}</span></li>`;
+                    });
+                    html += `   </ul>
+                             </div>`;
+                 });
+            }
+
+
+            html += `<div class="evolution-section">
+                        <h5>Métiers Autonomes</h5>
+                        <ul>`;
+            jobStatus.autonomous.forEach(job => {
+                 html += `<li><span class="job-name">${job.role}</span> <span class="job-count">${job.filled}</span></li>`;
+            });
+            html += `   </ul>
+                     </div>`;
+            
+            return html;
+        }
+
+        function generateCityPopulationHtml(cityData) {
+             let cityHtml = '';
+            const familiesInCity = Object.values(simulation.families).filter(family => {
+                const familyId = Object.keys(simulation.families).find(id => simulation.families[id] === family);
+                return simulation.population.some(p => p.isAlive && p.cityId === cityData.id && p.familyId === familyId);
+            });
+            
+            familiesInCity.sort((a,b) => a.originalName.localeCompare(b.originalName)).forEach(familyGroup => {
+                const familyId = Object.keys(simulation.families).find(id => simulation.families[id] === familyGroup);
+                const familyName = familyGroup.originalName;
+                const familyMembersInCity = simulation.population.filter(p => p.familyId === familyId && p.cityId === cityData.id);
+                const hasLivingMembers = familyMembersInCity.some(p => p.isAlive);
+                
+                const familyHistory = simulation.eventLog.filter(e => e.familyId === familyId);
+                const validEvents = familyHistory.slice().reverse().filter(e => e.message.replace(/<\/?h3>/g, '').trim());
+
+                if (hasLivingMembers) {
+                    cityHtml += `<details open><summary>${familyName} ${familyGroup.isExtinct ? '(Lignée éteinte)' : ''}</summary>`;
+
+                    if (validEvents.length > 0) {
+                        const previewHtml = validEvents.slice(0, 3).map(event => {
+                            const message = event.message.replace(/<\/?h3>/g, '').trim();
+                            return `<li><strong>Année ${event.year}:</strong> ${message}</li>`;
+                        }).join('');
+
+                        const openModalButton = validEvents.length > 3
+                            ? `<button class="open-history-modal-btn" data-family-id="${familyId}" data-family-name="${familyName}">Afficher tout l'historique (${validEvents.length} événements)</button>`
+                            : '';
+
+                        cityHtml += `<div class="family-history">
+                                        <h5>Historique (récent)</h5>
+                                        <div><ul>${previewHtml}</ul></div>
+                                        ${openModalButton}
+                                     </div>`;
+                    }
+
+                    const membersMap = new Map(familyMembersInCity.map(p => [p.id, p]));
+                    const roots = familyMembersInCity.filter(p => p.isAlive && (!p.parents || p.parents.length === 0 || !p.parents.some(parentId => membersMap.has(parentId))));
+                    const renderedIds = new Set();
+                    
+                    cityHtml += `<div class="family-tree"><ul>`;
+                    roots.sort((a, b) => b.age - a.age).forEach(root => {
+                         if (!renderedIds.has(root.id)) {
+                            cityHtml += renderFamilyTree(root, membersMap, renderedIds);
+                         }
+                    });
+                    cityHtml += `</ul></div>`;
+                    cityHtml += `</details>`;
+                }
+            });
+
+            const movedAwayFamilies = [];
+            for (const familyId in simulation.families) {
+                const family = simulation.families[familyId];
+                if (family.location !== cityData.name && !family.isExtinct) {
+                    const hasHistoryInCity = simulation.eventLog.some(e => e.familyId === familyId && e.cityId === cityData.id);
+                    if (hasHistoryInCity) {
+                        movedAwayFamilies.push(family);
+                    }
+                }
+            }
+            
+            movedAwayFamilies.sort((a,b) => a.originalName.localeCompare(b.originalName)).forEach(family => {
+                cityHtml += `<details><summary>${family.originalName} (Parti)</summary>
+                                <div class="family-history family-history-moved">
+                                    <p>La famille ${family.originalName} ne réside plus à ${cityData.name}.<br>
+                                       Elle se trouve actuellement à : <strong>${family.location}</strong>.</p>
+                                </div>
+                             </details>`;
+            });
+
+            return cityHtml;
+        }
+
+        function renderFamilyTree(person, membersMap, renderedIds) {
+            if (!person || renderedIds.has(person.id) || !person.isAlive) return '';
+
+            renderedIds.add(person.id);
+            
+            let html = '<li>';
+            const spouse = person.spouseId ? simulation.population.find(p => p.id === person.spouseId) : null;
+            
+            html += formatPerson(person);
+            
+            if (spouse && spouse.isAlive && spouse.cityId === person.cityId) {
+                renderedIds.add(spouse.id);
+                html += ' & ' + formatPerson(spouse);
+            }
+            
+            const childrenIds = new Set(person.children);
+            if(spouse) {
+                spouse.children.forEach(id => childrenIds.add(id));
+            }
+
+            const children = Array.from(childrenIds)
+                .map(id => membersMap.get(id))
+                .filter(Boolean)
+                .sort((a,b) => b.age - a.age);
+
+            if (children.length > 0) {
+                html += '<ul>';
+                children.forEach(child => {
+                    html += renderFamilyTree(child, membersMap, renderedIds);
+                });
+                html += '</ul>';
+            }
+
+            html += '</li>';
+            return html;
+        }
+
+        function formatPerson(person) {
+            const deadClass = person.isAlive ? '' : 'class="dead"';
+            let nameDisplay = `<span ${deadClass}><b>${person.firstName} ${person.lastName}</b>`;
+            if(person.maidenName) nameDisplay += ` <span class="maiden-name">(née ${person.maidenName})</span>`;
+            nameDisplay += '</span>';
+
+            let originInfo = '';
+            if (person.originCityId && person.originCityId !== person.cityId) {
+                originInfo = ` <span class="origin-info">(originaire de ${person.originCityName})</span>`;
+            }
+
+            const jobInfo = person.job ? ` - <span class="person-job">${person.job.role}</span>` : ' - Sans emploi';
+
+            return `${nameDisplay} (${person.gender}, ${person.age} ans, ${person.race})${originInfo}${jobInfo}`;
+        }
+
+        initializePage();
+    });
+    </script>
+</body>
+</html>

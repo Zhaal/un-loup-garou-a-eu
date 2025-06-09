@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créateur de Région - Carte Hexagonale</title>
+    <style>
+        :root {
+            --primary-color: #5a88ca;
+            --secondary-color: #eef2f7;
+            --border-color: #ddd;
+            --text-dark: #333;
+            --hex-bg: #fff;
+            --hex-border: #ccc;
+            --hex-hover: #e0e8f0;
+            --color-hameau: #a7d08c;
+            --color-village: #f0e68c;
+            --color-ville: #ffbe76;
+            --color-capitale: #f08080;
+            --color-donjon: #b0a8b9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--secondary-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text-dark);
+        }
+
+        #top-band {
+            background: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 20;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+        #top-band h2 {
+            font-size: 1.1em;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        #top-band .control-group {
+            margin-bottom: 5px;
+        }
+        .top-band-section {
+            margin: 0;
+        }
+
+        #main-content {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 500px; 
+            background: #f8f9fa;
+            padding: 20px;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #city-list, #distance-info, .top-band-section {
+            flex-shrink: 0;
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+        
+        #sidebar h2 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .instruction-text {
+            font-style: italic;
+            color: #666;
+            padding: 10px;
+            border-radius: 4px;
+            max-width: 400px;
+            font-size: 0.9em;
+        }
+        .instruction-text ul {
+            margin: 5px 0 0;
+            padding-left: 20px;
+        }
+        
+        .region-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="number"], input[type="text"], select, button {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+        
+        button {
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            border: none;
+            margin-top: 0;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #3d6fa1;
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #city-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #city-list li {
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .city-name-list {
+            font-weight: 500;
+            overflow-wrap: break-word;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .city-name-list:hover {
+            color: var(--primary-color);
+        }
+        
+        .city-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .city-buttons button {
+            width: auto;
+            padding: 4px 10px;
+            font-size: 0.9em;
+        }
+
+        #city-list .delete-btn {
+            background-color: #dc3545;
+        }
+        #city-list .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        #distance-info {
+            margin-top: 0;
+        }
+        #distance-info p {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+        #distance-info strong {
+            color: var(--primary-color);
+        }
+
+        #map-container {
+            flex-grow: 1;
+            overflow: auto; 
+            background-color: var(--secondary-color);
+            position: relative;
+            cursor: grab;
+        }
+        #map-container:active {
+            cursor: grabbing;
+        }
+
+        #hex-map {
+            position: relative;
+            transform-origin: top left;
+            transition: transform 0.2s ease-out;
+        }
+        
+        #zoom-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        #zoom-controls button {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .hex {
+            position: absolute;
+            background-color: var(--hex-bg);
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            border: 1px solid var(--hex-border);
+            cursor: pointer;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .hex:hover {
+            background-color: var(--hex-hover);
+        }
+        
+        .hex-name {
+            font-size: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            pointer-events: none;
+            line-height: 1.1;
+        }
+
+        .hex.city[data-type="Hameau"]   { background-color: var(--color-hameau); }
+        .hex.city[data-type="Village"]  { background-color: var(--color-village); }
+        .hex.city[data-type="Ville"]    { background-color: var(--color-ville); }
+        .hex.city[data-type="Capitale"] { background-color: var(--color-capitale); }
+        .hex.city[data-type="Donjon"]   { background-color: var(--color-donjon); }
+
+        .distance-tooltip {
+            position: absolute;
+            width: 280px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+        .distance-tooltip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        .distance-tooltip-header h3 {
+            margin: 0;
+            font-size: 1.1em;
+            color: var(--primary-color);
+        }
+        .distance-tooltip-close {
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .distance-tooltip-close:hover {
+            color: #333;
+        }
+        .distance-tooltip p {
+            margin: 4px 0;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="top-band">
+        <div class="top-band-section">
+            <h2>Gestion des Régions</h2>
+            <div class="control-group">
+                <label for="region-select">Région Actuelle :</label>
+                <select id="region-select"></select>
+            </div>
+            <div class="control-group">
+                <label for="new-region-name">Créer une nouvelle région :</label>
+                <div class="region-controls">
+                    <input type="text" id="new-region-name" placeholder="Nom de la région">
+                    <button id="create-region-btn" style="width: auto; padding: 8px 12px;">Créer</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="top-band-section">
+             <h2>Configuration</h2>
+             <div class="control-group">
+                <label for="hex-distance">Distance par hexagone (Km)</label>
+                <input type="number" id="hex-distance" value="10" min="1">
+            </div>
+        </div>
+
+        <div class="top-band-section">
+            <h2>Instructions</h2>
+            <div class="instruction-text">
+                <b>Étape 1 :</b>
+                <ul>
+                    <li>Double-cliquez sur un hexagone vide pour créer un lieu.</li>
+                    <li>Cliquez sur un lieu pour calculer les distances.</li>
+                </ul>
+                <b>Remarque :</b> Les distances auront une influence sur la migration de la population.
+            </div>
+        </div>
+
+        <div class="top-band-section">
+             <h2>Étape Suivante</h2>
+             <button id="next-step-btn" onclick="window.location.href='population.html'">Passer à la population &rarr;</button>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div id="sidebar">
+            <h1>Outils de la Région</h1>
+            <div id="city-list">
+                <h2>Lieux créés</h2>
+                <ul id="cities"></ul>
+            </div>
+        </div>
+
+        <div id="map-container">
+            <div id="zoom-controls">
+                <button id="zoom-in" title="Zoomer">+</button>
+                <button id="zoom-out" title="Dézoomer">-</button>
+            </div>
+            <div id="hex-map"></div>
+        </div>
+    </div>
+    
+    <div id="city-modal" class="modal-overlay">
+       <div class="modal">
+            <h2>Créer un lieu</h2>
+            <div class="control-group">
+                <label for="city-name">Nom du lieu</label>
+                <input type="text" id="city-name" placeholder="Ex: Clairval">
+            </div>
+            <div class="control-group">
+                <label for="city-type">Type</label>
+                <select id="city-type">
+                    <option value="Hameau">Hameau</option>
+                    <option value="Village">Village</option>
+                    <option value="Ville">Ville</option>
+                    <option value="Capitale">Capitale</option>
+                    <option value="Donjon">Donjon</option>
+                </select>
+            </div>
+            <input type="hidden" id="modal-hex-q">
+            <input type="hidden" id="modal-hex-r">
+            <button id="save-city">Créer</button>
+            <button id="cancel-city" style="background: #6c757d;">Annuler</button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const mapContainer = document.getElementById('map-container');
+        const hexMap = document.getElementById('hex-map');
+        const modal = document.getElementById('city-modal');
+        const saveCityBtn = document.getElementById('save-city');
+        const cancelCityBtn = document.getElementById('cancel-city');
+        const cityListUl = document.getElementById('cities');
+        const hexDistanceInput = document.getElementById('hex-distance');
+        const zoomInBtn = document.getElementById('zoom-in');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        const regionSelect = document.getElementById('region-select');
+        const newRegionNameInput = document.getElementById('new-region-name');
+        const createRegionBtn = document.getElementById('create-region-btn');
+        const nextStepBtn = document.getElementById('next-step-btn');
+
+        const GRID_WIDTH = 100;
+        const GRID_HEIGHT = 100;
+        const HEX_SIZE = 40;
+        const HEX_WIDTH = HEX_SIZE * 2;
+        const HEX_HEIGHT = Math.sqrt(3) * HEX_SIZE;
+
+        let allRegions = {
+            currentRegionName: 'Ma Première Région',
+            regions: { 'Ma Première Région': { hexDistance: 10, cities: [] } }
+        };
+        let zoomLevel = 1.0;
+        let isPanning = false;
+        let startX, startY, scrollLeftStart, scrollTopStart;
+
+        mapContainer.addEventListener('mousedown', (e) => {
+            if (e.button !== 0 || e.target.closest('#zoom-controls') || e.target.closest('.distance-tooltip')) return;
+            isPanning = true;
+            mapContainer.style.cursor = 'grabbing';
+            startX = e.pageX;
+            startY = e.pageY;
+            scrollLeftStart = mapContainer.scrollLeft;
+            scrollTopStart = mapContainer.scrollTop;
+        });
+        mapContainer.addEventListener('mouseleave', () => { isPanning = false; mapContainer.style.cursor = 'grab'; });
+        mapContainer.addEventListener('mouseup', () => { isPanning = false; mapContainer.style.cursor = 'grab'; });
+        mapContainer.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            e.preventDefault();
+            const dx = e.pageX - startX;
+            const dy = e.pageY - startY;
+            mapContainer.scrollLeft = scrollLeftStart - dx;
+            mapContainer.scrollTop = scrollTopStart - dy;
+        });
+        
+        function saveAllRegions() {
+            const currentRegion = getCurrentRegion();
+            if(currentRegion) {
+                currentRegion.hexDistance = parseFloat(hexDistanceInput.value);
+                localStorage.setItem('allRegionsData', JSON.stringify(allRegions));
+            }
+        }
+        function loadAllRegions() {
+            const savedData = localStorage.getItem('allRegionsData');
+            if (savedData) { allRegions = JSON.parse(savedData); }
+            if(!allRegions.regions[allRegions.currentRegionName]){ allRegions.currentRegionName = Object.keys(allRegions.regions)[0] || 'Ma Première Région'; }
+            updateRegionSelector();
+            switchRegion(allRegions.currentRegionName);
+        }
+        function updateRegionSelector() {
+            regionSelect.innerHTML = '';
+            Object.keys(allRegions.regions).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                if (name === allRegions.currentRegionName) { option.selected = true; }
+                regionSelect.appendChild(option);
+            });
+        }
+        function createNewRegion() {
+            const name = newRegionNameInput.value.trim();
+            if (!name) { alert("Veuillez donner un nom à la nouvelle région."); return; }
+            if (allRegions.regions[name]) { alert("Une région avec ce nom existe déjà."); return; }
+            allRegions.regions[name] = { hexDistance: 10, cities: [] };
+            newRegionNameInput.value = '';
+            switchRegion(name);
+        }
+        function switchRegion(name) {
+            allRegions.currentRegionName = name;
+            const regionData = getCurrentRegion();
+            if (!regionData) return;
+            hexDistanceInput.value = regionData.hexDistance;
+            updateRegionSelector();
+            updateMapAndList();
+            const existingTooltip = document.querySelector('.distance-tooltip');
+            if (existingTooltip) { existingTooltip.remove(); }
+            saveAllRegions();
+        }
+        function getCurrentRegion() { return allRegions.regions[allRegions.currentRegionName]; }
+
+        function offsetToCube(q, r) { const x = q; const z = r - (q + (q & 1)) / 2; const y = -x - z; return { x, y, z }; }
+        function cubeDistance(a, b) { return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z)) / 2; }
+        
+        function displayDistances(selectedCityId) {
+            const existingTooltip = document.querySelector('.distance-tooltip');
+            if (existingTooltip) { existingTooltip.remove(); }
+            const regionData = getCurrentRegion();
+            const selectedCity = regionData.cities.find(c => c.id === selectedCityId);
+            if (!selectedCity) return;
+            const selectedHex = document.querySelector(`.hex[data-q='${selectedCity.q}'][data-r='${selectedCity.r}']`);
+            if (!selectedHex) return;
+            const distancePerHex = parseFloat(hexDistanceInput.value) || 1;
+            const tooltip = document.createElement('div');
+            tooltip.className = 'distance-tooltip';
+            let contentHtml = `<div class="distance-tooltip-header"><h3>Distances depuis ${selectedCity.name}</h3><span class="distance-tooltip-close">&times;</span></div>`;
+            const otherCities = regionData.cities.filter(c => c.id !== selectedCityId);
+            if (otherCities.length === 0) {
+                contentHtml += '<p>Aucun autre lieu n\'a été créé.</p>';
+            } else {
+                const startCube = offsetToCube(selectedCity.q, selectedCity.r);
+                otherCities.forEach(targetCity => {
+                    const endCube = offsetToCube(targetCity.q, targetCity.r);
+                    const hexDist = cubeDistance(startCube, endCube);
+                    const realDist = hexDist * distancePerHex;
+                    contentHtml += `<p>de <strong>${targetCity.name}</strong>: ${realDist.toFixed(1)} Km (${hexDist} hex.)</p>`;
+                });
+            }
+            tooltip.innerHTML = contentHtml;
+            tooltip.style.left = `${selectedHex.offsetLeft + HEX_WIDTH}px`;
+            tooltip.style.top = `${selectedHex.offsetTop}px`;
+            hexMap.appendChild(tooltip);
+            tooltip.querySelector('.distance-tooltip-close').addEventListener('click', () => { tooltip.remove(); });
+        }
+        
+        function applyZoom() { hexMap.style.transform = `scale(${zoomLevel})`; }
+        function drawGrid() {
+            hexMap.innerHTML = '';
+            hexMap.style.width = `${GRID_WIDTH * HEX_WIDTH * 0.75 + HEX_WIDTH * 0.25}px`;
+            hexMap.style.height = `${GRID_HEIGHT * HEX_HEIGHT + HEX_HEIGHT / 2}px`;
+            for (let r = 0; r < GRID_HEIGHT; r++) { for (let q = 0; q < GRID_WIDTH; q++) {
+                const hex = document.createElement('div');
+                hex.className = 'hex'; hex.dataset.q = q; hex.dataset.r = r;
+                const hexName = document.createElement('div');
+                hexName.className = 'hex-name'; hex.appendChild(hexName);
+                const x = q * HEX_WIDTH * 0.75; const y = r * HEX_HEIGHT + (q % 2 === 1 ? HEX_HEIGHT / 2 : 0);
+                hex.style.width = `${HEX_WIDTH}px`; hex.style.height = `${HEX_HEIGHT}px`;
+                hex.style.left = `${x}px`; hex.style.top = `${y}px`;
+                hex.addEventListener('click', () => onHexClick(q, r));
+                hex.addEventListener('dblclick', () => onHexDblClick(q, r));
+                hexMap.appendChild(hex);
+            }}
+        }
+        function onHexClick(q, r) {
+            let panned = (Math.abs(mapContainer.scrollLeft - scrollLeftStart) > 5 || Math.abs(mapContainer.scrollTop - scrollTopStart) > 5);
+            if (isPanning && panned) return; 
+            const existingCity = getCurrentRegion().cities.find(city => city.q === q && city.r === r);
+            if (existingCity) { displayDistances(existingCity.id); }
+        }
+        function onHexDblClick(q, r) {
+            const existingCity = getCurrentRegion().cities.find(city => city.q === q && city.r === r);
+            if (!existingCity) {
+                document.getElementById('modal-hex-q').value = q;
+                document.getElementById('modal-hex-r').value = r;
+                const modal = document.getElementById('city-modal');
+                modal.style.display = 'flex';
+                document.getElementById('city-name').focus();
+            }
+        }
+        function saveCity() {
+            const q = parseInt(document.getElementById('modal-hex-q').value);
+            const r = parseInt(document.getElementById('modal-hex-r').value);
+            const name = document.getElementById('city-name').value;
+            const type = document.getElementById('city-type').value;
+            if (!name) { alert("Veuillez donner un nom au lieu."); return; }
+            const newCity = { id: `city_${Date.now()}`, q, r, name, type };
+            getCurrentRegion().cities.push(newCity);
+            closeModal();
+            updateMapAndList();
+            saveAllRegions();
+        }
+        function closeModal() {
+            const modal = document.getElementById('city-modal');
+            modal.style.display = 'none';
+            document.getElementById('city-name').value = '';
+        }
+        function updateMapAndList() {
+            const regionData = getCurrentRegion();
+            document.querySelectorAll('.hex').forEach(hex => {
+                hex.classList.remove('city');
+                hex.removeAttribute('data-type');
+                hex.title = '';
+                hex.querySelector('.hex-name').textContent = '';
+            });
+            regionData.cities.forEach(city => {
+                const hex = document.querySelector(`.hex[data-q='${city.q}'][data-r='${city.r}']`);
+                if (hex) {
+                    hex.classList.add('city');
+                    hex.dataset.type = city.type;
+                    hex.title = `${city.name} (${city.type})`;
+                    hex.querySelector('.hex-name').textContent = city.name;
+                }
+            });
+            cityListUl.innerHTML = '';
+            regionData.cities.forEach(city => {
+                const li = document.createElement('li');
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'city-name-list';
+                nameDiv.innerHTML = `${city.name} <small>(${city.type})</small>`;
+                nameDiv.addEventListener('click', () => displayDistances(city.id));
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.className = 'city-buttons';
+                buttonsDiv.innerHTML = `<button>Éditer</button><button class="delete-btn">X</button>`;
+                buttonsDiv.querySelector('button').addEventListener('click', () => editCity(city.id));
+                buttonsDiv.querySelector('.delete-btn').addEventListener('click', () => deleteCity(city.id));
+                li.appendChild(nameDiv);
+                li.appendChild(buttonsDiv);
+                cityListUl.appendChild(li);
+            });
+        }
+
+        function editCity(cityId) {
+            const city = getCurrentRegion().cities.find(c => c.id === cityId);
+            if(city) {
+                localStorage.setItem('currentCityId', city.id);
+                localStorage.setItem('currentCityName', city.name);
+                localStorage.setItem('currentCityType', city.type);
+                window.location.href = 'generator.html';
+            }
+        }
+        
+        function deleteCity(cityId) {
+            const cityToDelete = getCurrentRegion().cities.find(c => c.id === cityId);
+            if (confirm(`Êtes-vous sûr de vouloir supprimer "${cityToDelete.name}" ?`)) {
+                let cities = getCurrentRegion().cities;
+                getCurrentRegion().cities = cities.filter(c => c.id !== cityId);
+                updateMapAndList();
+                const existingTooltip = document.querySelector('.distance-tooltip');
+                if (existingTooltip) { existingTooltip.remove(); }
+                saveAllRegions();
+            }
+        }
+
+        createRegionBtn.addEventListener('click', createNewRegion);
+        regionSelect.addEventListener('change', (e) => switchRegion(e.target.value));
+        zoomInBtn.addEventListener('click', () => { zoomLevel = Math.min(3, zoomLevel + 0.2); applyZoom(); });
+        zoomOutBtn.addEventListener('click', () => { zoomLevel = Math.max(0.2, zoomLevel - 0.2); applyZoom(); });
+        mapContainer.addEventListener('wheel', (event) => { if (event.ctrlKey) { event.preventDefault(); if (event.deltaY < 0) { zoomLevel = Math.min(3, zoomLevel + 0.1); } else { zoomLevel = Math.max(0.2, zoomLevel - 0.1); } applyZoom(); }}, { passive: false });
+        saveCityBtn.addEventListener('click', saveCity);
+        cancelCityBtn.addEventListener('click', closeModal);
+        hexDistanceInput.addEventListener('change', saveAllRegions);
+        
+        drawGrid();
+        loadAllRegions();
+    });
+    </script>
+</body>
+</html>

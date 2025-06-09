@@ -1247,6 +1247,9 @@
                     const maxFertilityChance = 0.20; 
                     const fertilityRange = fertilityEndAge - raceInfo.adultAge;
                     const yearsIntoFertility = mother.age - raceInfo.adultAge;
+        // --- LIGNE À AJOUTER ---
+        const fertilityProgress = yearsIntoFertility / fertilityRange;
+        // -------------------------
                     const currentBirthChance = maxFertilityChance * (1 - fertilityProgress);
                     if(Math.random() < currentBirthChance) {
                         const childAge = 0;

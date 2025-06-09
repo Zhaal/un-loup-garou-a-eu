@@ -1704,7 +1704,7 @@
 
             statsBirthsEl.textContent = `Naissances : ${birthCount}`;
             statsDeathsEl.textContent = `Décès : ${deathCount}`;
-            statsMarriagesTotalEl.textContent = `Total : ${marriageCount}`;
+statsMarriagesTotalEl.textContent = `Total : ${totalMarriageCount}`;
             statsMarriages1stEl.textContent = `1ers : ${eventLog.filter(e => e.message.includes('un premier mariage')).length / 2}`;
             statsMarriages2ndEl.textContent = `2nds : ${eventLog.filter(e => e.message.includes('un second mariage')).length / 2}`;
             statsMarriages3rdPlusEl.textContent = `3èmes+ : ${eventLog.filter(e => e.message.includes('un troisième ou plus') || e.message.includes('un énième')).length / 2}`;

@@ -12,15 +12,51 @@
             --border-color: #ddd;
             --text-dark: #333;
             --text-light: #666;
+            --job-color: #c97b0a;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--secondary-color);
             margin: 0;
             padding: 20px;
+            padding-left: 170px; /* AJOUT / MODIFICATION ICI */
             color: var(--text-dark);
             line-height: 1.6;
         }
+
+        /* Floating Menu Styles */
+        .floating-menu {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--primary-color);
+            padding: 10px 0;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .floating-menu a {
+            display: block;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .floating-menu a:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .floating-menu a.active {
+            background-color: #e85d04; /* A distinct color for the active page */
+            font-weight: bold;
+        }
+
+
         .page-header {
             text-align: center;
             margin-bottom: 20px;
@@ -142,15 +178,75 @@
         #resultat h2 {
             margin-top: 0;
         }
+        #resultat details {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            background: #f9f9f9;
+        }
+        #resultat summary {
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #resultat .details-content {
+            padding: 0 15px 15px 35px;
+            border-top: 1px solid #eee;
+            background: white;
+        }
         #resultat ul {
             padding-left: 20px;
-            -webkit-column-count: 2;
-            -moz-column-count: 2;
-            column-count: 2;
+            margin-top: 5px;
+        }
+        #resultat li {
+            margin-bottom: 5px;
+        }
+        #resultat .job-details {
+            font-style: italic;
+            color: var(--text-light);
+            font-size: 0.9em;
+        }
+        #resultat .job-role {
+            font-weight: 500;
+            color: var(--job-color);
+        }
+        /* New styles for the explanation box */
+        #explanation-box {
+            background-color: #eef2f7;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        #explanation-box h3 {
+            margin-top: 0;
+            color: var(--primary-hover);
+            border-bottom: none;
+            font-size: 1.3em;
+        }
+        #explanation-box h4 {
+             margin-top: 15px;
+             margin-bottom: 5px;
+             border-bottom: 1px solid #ccc;
+             padding-bottom: 5px;
+        }
+        #explanation-box ul {
+            list-style-position: inside;
+            padding-left: 5px;
+            margin-top: 5px;
+        }
+        #explanation-box li {
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
+    <div class="floating-menu">
+        <a href="map.html" data-step="1">Étape 1 (Carte)</a>
+        <a href="generator.html" data-step="2">Étape 2 (Configuration)</a>
+        <a href="population.html" data-step="3">Étape 3 (Simulation)</a>
+        <a href="#" data-step="4">Étape 4 (Données)</a>
+    </div>
     <div class="page-header">
         <h1>Générateur de Population pour <span id="city-name-title">...</span></h1>
     </div>
@@ -180,7 +276,7 @@
                     </select>
                 </div>
                 <div class="control-group">
-                    <label for="city-age">Ancienneté</label>
+                    <label for="city-age">Ancienneté (Non actif)</label>
                     <select id="city-age">
                         <option value="recente">Récente (moins de 50 ans)</option>
                         <option value="etablie">Établie (50-200 ans)</option>
@@ -199,29 +295,111 @@
                 </div>
             </div>
             <div class="button-group">
-                <button id="save-config-btn" class="secondary">Sauvegarder la Config</button>
-                <button id="generate-population-btn">Générer Métiers & Population</button>
-            </div>
+                </div>
             <div class="button-group">
                 <a href="map.html" style="text-decoration:none; color:white; flex-grow:1; text-align:center;" class="secondary"><button class="secondary" style="width:100%;">Retour à la carte</button></a>
             </div>
         </div>
         <div id="resultat">
-             <h2>Résultat de la Génération</h2>
-             <p>Cliquez sur "Générer Métiers & Population" après avoir choisi votre configuration.</p>
+            <details id="explanation-details">
+                <summary>
+                    <h3>Comprendre la Simulation <span style="font-size: 0.8em; font-weight: normal; color: #888;">! Cliquez ici !</span></h3>
+                </summary>
+                <div class="details-content">
+                    <h4>Signification des Tiers de Métier</h4>
+                    <p>Les tiers représentent la hiérarchie sociale et la rareté d'un métier :</p>
+                    <ul>
+                        <li><strong>Tier 1 :</strong> Dirigeants de haut rang (Maire de capitale, Général).</li>
+                        <li><strong>Tier 2 :</strong> Notables, experts et maîtres artisans (Maître Forgeron, Magistrat).</li>
+                        <li><strong>Tier 3 :</strong> Professionnels qualifiés et indépendants (Tavernier, Sergent).</li>
+                        <li><strong>Tier 4 :</strong> Main-d'œuvre et apprentis (Soldat, Apprenti, Serveur).</li>
+                        <li><strong>Tier 5 :</strong> Métiers peu qualifiés ou précaires (Domestique, Mendiant).</li>
+                    </ul>
+                    <h4>Construction Dynamique des Bâtiments</h4>
+                    <p>Certains bâtiments sont construits automatiquement lorsque la population atteint certains seuils pour simuler la croissance organique de la ville :</p>
+                    <ul>
+                        <li><strong>Dès 75 habitants :</strong> Boulangerie, Forge, Menuisier / Charpentier.</li>
+                        <li><strong>Dès 150 habitants :</strong> Taverne / Auberge, Herboristerie, Tisserand / Tailleur, Tanneur / Maroquinier.</li>
+                        <li><strong>Dès 300 habitants :</strong> Temple / Église, Brasserie / Distillerie.</li>
+                    </ul>
+                    <h4>Le Système de Migration</h4>
+                    <p>Le système de migration simule les mouvements de population entre les villes d'une région, influencés par les paramètres configurés ici. Il prend en compte plusieurs types de migration :</p>
+                    <h5>Fonctionnement de la Migration Économique :</h5>
+                    <ul>
+                        <li><strong>Calcul des Scores de Ville :</strong> Chaque ville se voit attribuer un "score" basé sur sa prospérité économique et son attractivité. Ce score est influencé par le "Statut Actuel" de la ville (Prospère, Stable, En difficulté, En déclin), l'"Influence du Marché" (Locale, Grande, Régionale), les bâtiments et les emplois. Les villes "Prospères" et avec une influence de marché "Régionale" obtiennent des multiplicateurs de score plus élevés. Les villes "En difficulté" ou "En déclin" ont des multiplicateurs plus faibles. La présence de "postes vacants de haut niveau" (Tier 1 ou 2) dans les bâtiments ou les guildes augmente également le score d'une ville, la rendant plus attractive.</li>
+                        <li><strong>Identification des Migrants Potentiels :</strong> Seuls les individus en vie, adultes (âge supérieur à l'âge adulte de leur race), et qui n'ont pas d'emploi ou qui occupent un emploi de faible niveau (Tier 4 ou 5) sont considérés comme des migrants potentiels.</li>
+                        <li><strong>Décision de Migration :</strong> La probabilité qu'une personne envisage de migrer dépend du "Statut Actuel" de sa ville d'origine et de son emploi. Plus une ville est "En difficulté" ou "En déclin", plus la probabilité qu'un individu cherche à migrer est élevée. Si une personne décide d'évaluer ses options, le système compare le score de sa ville actuelle avec ceux des autres villes de la région. La distance joue un rôle crucial : le score perçu d'une ville distante diminue proportionnellement à sa distance en kilomètres. Une migration est envisagée si l'attrait d'une ville alternative est significativement plus élevé que celui de la ville actuelle de la personne.</li>
+                        <li><strong>Impact de la Migration sur la Ville de Destination :</strong> Un afflux soudain de migrants peut entraîner une dégradation du "Statut Actuel" de la ville de destination. Si la dégradation est sévère, les migrants qui arrivent sans emploi peuvent devenir des mendiants, augmentant ainsi la famine et la criminalité dans la ville, et pouvant provoquer une cascade migratoire.</li>
+                    </ul>
+                    <h5>Migration par Mariage :</h5>
+                    <ul>
+                        <li>En plus de la migration économique, la simulation intègre la migration due au mariage. Lorsqu'un mariage a lieu entre deux personnes de villes différentes, l'un des conjoints déménage dans la ville de l'autre.</li>
+                        <li>La décision de qui déménage est basée sur une hiérarchie : la personne ayant un emploi de niveau inférieur tendra à déménager vers la ville de son conjoint ayant un emploi de niveau supérieur. Si les niveaux d'emploi sont similaires, la personne issue d'une ville de "Tier" (type de ville : Capitale, Ville, Village, Hameau) inférieur déménagera vers une ville de Tier supérieur. Si tous les autres facteurs sont égaux, un choix par défaut est fait (actuellement la première personne parmi les deux époux qui se trouve dans la condition de migration).</li>
+                        <li>Lorsqu'une personne déménage pour se marier, elle perd son emploi précédent.</li>
+                    </ul>
+                    <h5>Effets et Risques de la Migration :</h5>
+                    <ul>
+                        <li><strong>Risques pour les Migrants :</strong> Les personnes ayant récemment migré pour raison économique (depuis moins de 5 ans) et qui sont sans emploi ou mendiantes ont un risque accru de décès prématuré dû à la famine, à la criminalité ou à d'autres causes.</li>
+                    </ul>
+                    <h4>Influence et Statut de la Ville</h4>
+                    <p>Ces paramètres influencent la croissance de la ville et les événements qui s'y déroulent :</p>
+                    <ul>
+                        <li><strong>Influence du Marché :</strong> Détermine la portée des interactions économiques de la ville et la capacité d'attirer des migrants :
+                            <ul>
+                                <li><strong>Local (faible) :</strong> Interactions limitées aux environs immédiats.</li>
+                                <li><strong>Grand (moyenne) :</strong> Attire des commerçants et migrants de régions proches.</li>
+                                <li><strong>Régional (forte) :</strong> Devient un centre majeur, attirant une population et des ressources importantes.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Ancienneté :</strong> Reflète l'âge de la ville et son développement potentiel :
+                            <ul>
+                                <li><strong>Récente (moins de 50 ans) :</strong> Jeune et en développement, potentiel de croissance rapide.</li>
+                                <li><strong>Établie (50-200 ans) :</strong> Bien ancrée, croissance plus modérée.</li>
+                                <li><strong>Ancienne (200-500 ans) :</strong> Histoire riche, pouvoir d'attraction naturel.</li>
+                                <li><strong>Antique (plus de 500 ans) :</strong> Très ancienne, mais stagnant.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Statut Actuel :</strong> Indique la prospérité et la stabilité de la ville, affectant le bien-être de la population et les risques d'événements négatifs :
+                            <ul>
+                                <li><strong>Prospère :</strong> Abondance, sécurité, faible criminalité et famine.</li>
+                                <li><strong>Stable :</strong> Équilibre, conditions de vie normales, risques modérés.</li>
+                                <li><strong>En difficulté :</strong> Pénuries possibles, augmentation de la criminalité, risque de famine accru.</li>
+                                <li><strong>En déclin :</strong> Forte criminalité, famine probable, conditions de vie difficiles, risque d'extinction des familles.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </details>
+            <hr/>
+             <h2>Effets des Bâtiments Actifs</h2>
+             <div id="building-details-content">
+                <p>Cochez des bâtiments ou augmentez leur nombre pour voir leurs effets détaillés ici.</p>
+             </div>
         </div>
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Highlight active step in floating menu
+        const currentPath = window.location.pathname.split('/').pop();
+        const menuLinks = document.querySelectorAll('.floating-menu a');
+        menuLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+
         const cityNameTitle = document.getElementById('city-name-title');
         const g0FamiliesInput = document.getElementById('g0-families');
         const buildingsListDiv = document.getElementById('buildings-list');
         const marketInfluenceSelect = document.getElementById('market-influence');
         const cityAgeSelect = document.getElementById('city-age');
         const cityStatusSelect = document.getElementById('city-status');
-        const saveConfigBtn = document.getElementById('save-config-btn');
-        const generateBtn = document.getElementById('generate-population-btn');
+        // const saveConfigBtn = document.getElementById('save-config-btn'); // Supprimé
+        // const generateBtn = document.getElementById('generate-population-btn'); // Supprimé
         const resultatDiv = document.getElementById('resultat');
+        const buildingDetailsContent = document.getElementById('building-details-content');
+        const explanationDetails = document.getElementById('explanation-details');
+
 
         const cityId = localStorage.getItem('currentCityId');
         const cityName = localStorage.getItem('currentCityName');
@@ -251,8 +429,32 @@
         };
         
         const jobData = {
-            base_jobs: { /* ... */ },
-            building_jobs: { /* ... */ },
+            base_jobs: {
+                'Hameau': [{ role: 'Chef(fe) de hameau', tier: 2, unique: true, quantity: 1 }],
+                'Village': [{ role: 'Maire du village', tier: 2, unique: true, quantity: 1, promotes_from: ['Garde champêtre'] }, { role: 'Garde champêtre', tier: 3, quantity: 2 }],
+                'Ville': [{ role: 'Maire', tier: 1, unique: true, quantity: 1, promotes_from: ['Capitaine de la garde', 'Magistrat'] }, { role: 'Capitaine de la garde', tier: 2, unique: true, quantity: 1, promotes_from: ['Sergent'], guild_affiliation: 'Guilde des Combattants' }, { role: 'Magistrat', tier: 2, unique: true, quantity: 1, promotes_from: ['Greffier'] }, { role: 'Greffier', tier: 3, quantity: 1 }],
+                'Capitale': [{ role: 'Dirigeant(e)', tier: 1, unique: true, scope: 'region', quantity: 1 }, { role: 'Général(e) de la garde', tier: 1, unique: true, quantity: 1, promotes_from: ['Capitaine de la garde'] }, { role: 'Archiviste royal', tier: 2, unique: true, quantity: 1, promotes_from: ['Maître Bibliothécaire'], guild_affiliation: 'Guilde des Érudits' }, { role: 'Maître espion', tier: 2, unique: true, quantity: 1 }]
+            },
+            building_jobs: {
+                'Taverne / Auberge': [ { role: 'Tavernier/ère', tier: 3, unique: true, quantity: 1 }, { role: 'Serveur/euse', tier: 4, dynamic_quantity_per_pop: 40 }, { role: 'Videur', tier: 4, dynamic_quantity_per_pop: 150 } ],
+                'Forge': [ { role: 'Maître Forgeron', tier: 2, unique: true, quantity: 1, promotes_from: ['Apprenti(e) Forgeron'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Apprenti(e) Forgeron', tier: 4, master: 'Maître Forgeron', quantity: 2, guild_source: 'Guilde des Artisans' } ],
+                'Marché central': [ { role: 'Maître du marché', tier: 3, unique: true, quantity: 1 }, { role: 'Vendeur de stand', tier: 4, dynamic_quantity_per_pop: 30 } ],
+                'Écuries': [ { role: 'Maître d\'écurie', tier: 3, unique: true, quantity: 1, promotes_from: ['Palefrenier'] }, { role: 'Palefrenier', tier: 4, quantity: 4 } ],
+                'Boulangerie': [ { role: 'Maître Boulanger', tier: 3, unique: true, quantity: 1, promotes_from: ['Mitron'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Mitron', tier: 4, master: 'Maître Boulanger', quantity: 2, guild_source: 'Guilde des Artisans' } ],
+                'Menuisier / Charpentier': [ { role: 'Maître Artisan', tier: 3, unique: true, quantity: 1, promotes_from: ['Compagnon'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Compagnon', tier: 4, master: 'Maître Artisan', dynamic_quantity_per_pop: 80, guild_source: 'Guilde des Artisans' } ],
+                'Tanneur / Maroquinier': [ { role: 'Maître Tanneur', tier: 3, unique: true, quantity: 1, promotes_from: ['Ouvrier du cuir'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Ouvrier du cuir', tier: 4, master: 'Maître Tanneur', dynamic_quantity_per_pop: 100, guild_source: 'Guilde des Artisans' } ],
+                'Herboristerie': [ { role: 'Herboriste', tier: 3, unique: true, quantity: 1 }, { role: 'Cueilleur', tier: 4, quantity: 2 } ],
+                'Brasserie / Distillerie': [ { role: 'Maître Brasseur', tier: 3, unique: true, quantity: 1, promotes_from: ['Goûteur'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Goûteur', tier: 4, master: 'Maître Brasseur', quantity: 2, guild_source: 'Guilde des Artisans' } ],
+                'Tisserand / Tailleur': [ { role: 'Maître Tisserand', tier: 3, unique: true, quantity: 1, promotes_from: ['Couturier/ère'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Couturier/ère', tier: 4, master: 'Maître Tisserand', dynamic_quantity_per_pop: 80, guild_source: 'Guilde des Artisans' } ],
+                'Temple / Église': [ { role: 'Grand(e) Prêtre/Prêtresse', tier: 2, unique: true, quantity: 1, promotes_from: ['Acolyte', 'Soigneur du Temple'] }, { role: 'Gardien du Temple', tier: 3, dynamic_quantity_per_pop: 200 }, { role: 'Soigneur du Temple', tier: 3, dynamic_quantity_per_pop: 180 }, { role: 'Moine / Scribe du Temple', tier: 3, dynamic_quantity_per_pop: 250 }, { role: 'Acolyte', tier: 4, master: 'Grand(e) Prêtre/Prêtresse', dynamic_quantity_per_pop: 120 } ],
+                'Caserne / Garde': [ { role: 'Sergent', tier: 3, dynamic_quantity_per_pop: 200, promotes_from: ['Soldat de la garde'], guild_affiliation: 'Guilde des Combattants' }, { role: 'Armurier de la garde', tier: 3, quantity: 1, guild_affiliation: 'Guilde des Artisans' }, { role: 'Soldat de la garde', tier: 4, master: 'Sergent', dynamic_quantity_per_pop: 50, guild_source: 'Guilde des Combattants' } ],
+                'Château / Manoir': [ { role: 'Intendant(e)', tier: 2, unique: true, quantity: 1 }, { role: 'Chef Cuisinier', tier: 3, quantity: 1 }, { role: 'Garde du corps personnel', tier: 3, quantity: 4, guild_affiliation: 'Guilde des Combattants' }, { role: 'Maître des chasses', tier: 3, quantity: 1 }, { role: 'Domestique', tier: 5, dynamic_quantity_per_pop: 40 } ],
+                'Bibliothèque / Scriptorium': [ { role: 'Maître Bibliothécaire', tier: 2, unique: true, quantity: 1, promotes_from: ['Archiviste', 'Copiste / Scribe'], guild_affiliation: 'Guilde des Érudits' }, { role: 'Copiste / Scribe', tier: 3, master: 'Maître Bibliothécaire', quantity: 3, guild_source: 'Guilde des Érudits' }, { role: 'Archiviste', tier: 3, quantity: 1, guild_source: 'Guilde des Érudits' } ],
+                "Échoppe d'alchimiste": [ { role: 'Maître Alchimiste', tier: 2, unique: true, quantity: 1, promotes_from: ["Assistant(e) Alchimiste"], guild_affiliation: 'Guilde des Érudits' }, { role: 'Assistant(e) Alchimiste', tier: 4, master: 'Maître Alchimiste', quantity: 1, guild_source: 'Guilde des Érudits' } ],
+                'Atelier de mage': [ { role: 'Mage résident', tier: 2, unique: true, quantity: 1, promotes_from: ["Apprenti(e) mage"], guild_affiliation: 'Guilde des Érudits' }, { role: 'Apprenti(e) mage', tier: 4, master: 'Mage résident', quantity: 1, guild_source: 'Guilde des Érudits' } ],
+                'Observatoire': [ { role: 'Astronome', tier: 2, unique: true, quantity: 1, guild_affiliation: 'Guilde des Érudits' } ],
+                'Arène / Colisée': [ { role: 'Maître des jeux', tier: 2, unique: true, quantity: 1, promotes_from: ['Gladiateur'], guild_affiliation: 'Guilde des Combattants' }, { role: 'Gladiateur', tier: 3, quantity: 5, guild_source: 'Guilde des Combattants' }, { role: 'Soigneur de l\'arène', tier: 3, quantity: 1 } ]
+            },
             autonomous_jobs: [ /* ... */ ]
         };
 
@@ -265,22 +467,106 @@
                     
                     if (data.numeric) {
                         group.className = 'building-control-group';
+                        const defaultValue = 1;
                         group.innerHTML = `<label for="${id}">${buildingName}</label>
-                                           <input type="number" id="${id}" data-building-name="${buildingName}" value="0" min="0">`;
+                                           <input type="number" id="${id}" data-building-name="${buildingName}" value="${defaultValue}" min="0">`;
                     } else {
                         group.className = 'checkbox-group';
-                        group.innerHTML = `<input type="checkbox" id="${id}" data-building-name="${buildingName}"><label for="${id}">${buildingName}</label>`;
+                        group.innerHTML = `<input type="checkbox" id="${id}" data-building-name="${buildingName}" checked><label for="${id}">${buildingName}</label>`;
                     }
                     
                     buildingsListDiv.appendChild(group);
-                    group.querySelector('input').addEventListener('input', updateFamilyCount);
+                    const inputElement = group.querySelector('input'); 
+                    inputElement.addEventListener('input', () => { // Pour les inputs numériques (change en temps réel)
+                        updateFamilyCount();
+                        displayBuildingDetails();
+                        saveConfig(); // Sauvegarde automatique
+                    });
+                    if (inputElement.type === 'checkbox') {
+                         inputElement.addEventListener('change', () => { // Pour les checkboxes
+                            updateFamilyCount();
+                            displayBuildingDetails();
+                            saveConfig(); // Sauvegarde automatique
+                         });
+                    }
                 }
             });
             const marketCheckbox = document.getElementById('building-marchecentral');
             if (marketCheckbox) {
                 marketCheckbox.addEventListener('change', () => {
                     marketInfluenceSelect.disabled = !marketCheckbox.checked;
+                    displayBuildingDetails();
+                    saveConfig(); // Sauvegarde automatique
                 });
+            }
+        }
+
+        function displayBuildingDetails() {
+            buildingDetailsContent.innerHTML = '';
+            const buildingInputs = document.querySelectorAll('#buildings-list input');
+
+            let activeBuildingFound = false;
+
+            buildingInputs.forEach(input => {
+                const isCheckedOrHasValue = (input.type === 'checkbox' && input.checked) || (input.type === 'number' && parseInt(input.value, 10) > 0);
+                
+                if (isCheckedOrHasValue) {
+                    activeBuildingFound = true;
+                    const buildingName = input.dataset.buildingName;
+                    const jobs = jobData.building_jobs[buildingName];
+                    const count = (input.type === 'number') ? parseInt(input.value, 10) : 1;
+
+                    const detailsElement = document.createElement('details');
+                    detailsElement.open = true; 
+                    
+                    let summaryText = `${buildingName}`;
+                    if (count > 1) {
+                        summaryText += ` (x${count})`;
+                    }
+                    const summaryElement = document.createElement('summary');
+                    summaryElement.textContent = summaryText;
+
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'details-content';
+
+                    if (jobs && jobs.length > 0) {
+                        const jobList = document.createElement('ul');
+                        jobs.forEach(job => {
+                            const li = document.createElement('li');
+                            let jobText = `<span class="job-role">${job.role}</span> (Tier ${job.tier})`;
+                            
+                            let details = [];
+                            if (job.unique) details.push("unique par bâtiment");
+                            if (job.quantity) details.push(`quantité: ${job.quantity}`);
+                            if (job.dynamic_quantity_per_pop) details.push(`dynamique (1 par ~${job.dynamic_quantity_per_pop} hab.)`);
+                            if (job.promotes_from) details.push(`promotion de: ${job.promotes_from.join(', ')}`);
+                            if (job.master) details.push(`supervisé par: ${job.master}`);
+                            if (job.guild_affiliation) details.push(`affilié à: <strong>${job.guild_affiliation}</strong>`);
+                            if (job.guild_source) details.push(`recruté via: <strong>${job.guild_source}</strong>`);
+                            
+                            if (details.length > 0) {
+                                jobText += `<div class="job-details">${details.join('; ')}</div>`;
+                            }
+                            li.innerHTML = jobText;
+                            jobList.appendChild(li);
+                        });
+                        contentDiv.appendChild(jobList);
+                    } else {
+                        contentDiv.innerHTML = '<p><em>Pas d\'emplois directs définis. Peut avoir d\'autres effets sur la simulation.</em></p>';
+                    }
+
+                    if (buildingName === 'Marché central') {
+                        contentDiv.innerHTML += `<p><strong>Influence :</strong> Débloque la sélection de l'influence du marché pour la ville (locale, grande, régionale).</p>`;
+                    }
+
+                    detailsElement.appendChild(summaryElement);
+                    detailsElement.appendChild(contentDiv);
+                    buildingDetailsContent.appendChild(detailsElement);
+                }
+            });
+
+            if (!activeBuildingFound) {
+                 buildingDetailsContent.innerHTML = '<p>Cochez des bâtiments ou augmentez leur nombre pour voir leurs effets détaillés ici.</p>';
             }
         }
 
@@ -321,12 +607,15 @@
                    }
                 });
                 if(cityData.config.generatedJobsHtml) {
-                    resultatDiv.innerHTML = cityData.config.generatedJobsHtml;
+                    buildingDetailsContent.innerHTML = cityData.config.generatedJobsHtml;
                 }
             }
             if (cityName) { cityNameTitle.textContent = cityName; } 
             else { window.location.href = 'map.html'; }
+            
             updateFamilyCount();
+            displayBuildingDetails();
+
             const marketCheckbox = document.getElementById('building-marchecentral');
             if (marketCheckbox) { marketInfluenceSelect.disabled = !marketCheckbox.checked; }
         }
@@ -353,17 +642,26 @@
             cityData.config.market_influence = marketInfluenceSelect.value;
             cityData.config.city_age = cityAgeSelect.value;
             cityData.config.city_status = cityStatusSelect.value;
+            
+            cityData.config.generatedJobsHtml = buildingDetailsContent.innerHTML;
+            
             saveAllRegions();
+            // alert("Configuration sauvegardée !"); // Supprimé, car la sauvegarde est automatique
         }
         
-        function generatePopulation() { /* ... unchanged ... */ }
+        // La fonction generatePopulation n'est plus appelée par un bouton
+        // function generatePopulation() { 
+        //      alert("La fonction de génération de population est gérée dans l'étape suivante (population.html). Cette page sert à configurer les bâtiments de la ville. Sauvegardez votre configuration puis revenez à la carte pour passer à l'étape suivante.");
+        // }
+
         function saveAllRegions() {
              localStorage.setItem('allRegionsData', JSON.stringify(allRegions));
         }
-        function markCityAsEdited() { /* ... unchanged ... */ }
 
-        saveConfigBtn.addEventListener('click', saveConfig);
-        generateBtn.addEventListener('click', generatePopulation);
+        // Ajout des écouteurs d'événements pour la sauvegarde automatique
+        marketInfluenceSelect.addEventListener('change', saveConfig);
+        cityAgeSelect.addEventListener('change', saveConfig);
+        cityStatusSelect.addEventListener('change', saveConfig);
 
         populateBuildings();
         loadData();

@@ -21,9 +21,43 @@
             background-color: var(--secondary-color);
             margin: 0;
             padding: 20px;
+            padding-left: 200px; /* AJOUT / MODIFICATION ICI */
             color: var(--text-dark);
             line-height: 1.6;
         }
+
+        /* Floating Menu Styles */
+        .floating-menu {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--primary-color);
+            padding: 10px 0;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .floating-menu a {
+            display: block;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .floating-menu a:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .floating-menu a.active {
+            background-color: #e85d04; /* A distinct color for the active page */
+            font-weight: bold;
+        }
+
         .container {
             display: grid;
             grid-template-columns: 500px 1fr;
@@ -324,6 +358,12 @@
     </style>
 </head>
 <body>
+    <div class="floating-menu">
+        <a href="map.html" data-step="1">Étape 1 (Carte)</a>
+        <a href="generator.html" data-step="2">Étape 2 (Configuration)</a>
+        <a href="population.html" data-step="3">Étape 3 (Simulation)</a>
+        <a href="#" data-step="4">Étape 4 (Données)</a>
+    </div>
     <div class="container">
        <div id="config-panel">
             <h2>Configuration de la Simulation</h2>
@@ -416,6 +456,15 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Highlight active step in floating menu
+        const currentPath = window.location.pathname.split('/').pop();
+        const menuLinks = document.querySelectorAll('.floating-menu a');
+        menuLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+
         // --- MISE EN CACHE DES ÉLÉMENTS DU DOM ---
         const totalFamiliesInput = document.getElementById('total-families');
         const addRaceBtn = document.getElementById('add-race-btn');
@@ -483,7 +532,7 @@
                 'Taverne / Auberge': [ { role: 'Tavernier/ère', tier: 3, unique: true, quantity: 1 }, { role: 'Serveur/euse', tier: 4, dynamic_quantity_per_pop: 40 }, { role: 'Videur', tier: 4, dynamic_quantity_per_pop: 150 } ],
                 'Forge': [ { role: 'Maître Forgeron', tier: 2, unique: true, quantity: 1, promotes_from: ['Apprenti(e) Forgeron'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Apprenti(e) Forgeron', tier: 4, master: 'Maître Forgeron', quantity: 2, guild_source: 'Guilde des Artisans' } ],
                 'Marché central': [ { role: 'Maître du marché', tier: 3, unique: true, quantity: 1 }, { role: 'Vendeur de stand', tier: 4, dynamic_quantity_per_pop: 30 } ],
-                'Écuries': [ { role: 'Maître d\'écurie', tier: 3, unique: true, quantity: 1, promotes_from: ['Palefrenier'] }, { role: 'Palefrenier', tier: 4, quantity: 4 } ],
+                'Écuries': [ { role: 'Maître d\'écurie', tier: 3, unique: true, quantity: 1, promotes_from: ['Palefrenier'] }, { role: 'Palefenier', tier: 4, quantity: 4 } ],
                 'Boulangerie': [ { role: 'Maître Boulanger', tier: 3, unique: true, quantity: 1, promotes_from: ['Mitron'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Mitron', tier: 4, master: 'Maître Boulanger', quantity: 2, guild_source: 'Guilde des Artisans' } ],
                 'Menuisier / Charpentier': [ { role: 'Maître Artisan', tier: 3, unique: true, quantity: 1, promotes_from: ['Compagnon'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Compagnon', tier: 4, master: 'Maître Artisan', dynamic_quantity_per_pop: 80, guild_source: 'Guilde des Artisans' } ],
                 'Tanneur / Maroquinier': [ { role: 'Maître Tanneur', tier: 3, unique: true, quantity: 1, promotes_from: ['Ouvrier du cuir'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Ouvrier du cuir', tier: 4, master: 'Maître Tanneur', dynamic_quantity_per_pop: 100, guild_source: 'Guilde des Artisans' } ],
@@ -1247,9 +1296,7 @@
                     const maxFertilityChance = 0.20; 
                     const fertilityRange = fertilityEndAge - raceInfo.adultAge;
                     const yearsIntoFertility = mother.age - raceInfo.adultAge;
-        // --- LIGNE À AJOUTER ---
-        const fertilityProgress = yearsIntoFertility / fertilityRange;
-        // -------------------------
+                    const fertilityProgress = yearsIntoFertility / fertilityRange;
                     const currentBirthChance = maxFertilityChance * (1 - fertilityProgress);
                     if(Math.random() < currentBirthChance) {
                         const childAge = 0;

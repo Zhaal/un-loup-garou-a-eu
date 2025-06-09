@@ -15,6 +15,7 @@
             --success-color: #28a745;
             --job-color: #c97b0a;
             --save-color: #1e6e0f;
+            --retired-color: #2a9d8f; /* AJOUT */
         }
         body {
             font-size: 16px;
@@ -50,7 +51,7 @@
             padding: 10px 15px;
             text-decoration: none;
             font-weight: 500;
-            transition: background-color 0.3s ease;
+            transition: background-color: 0.3s ease;
             white-space: nowrap;
         }
 
@@ -208,6 +209,58 @@
             border-bottom: 1px dashed #eee;
             padding-bottom: 8px;
         }
+        
+        /* =============================================================== */
+        /* == DEBUT DES CORRECTIONS POUR LA BARRE DE RECHERCHE DE PERSONNAGE == */
+        /* =============================================================== */
+
+        /* Le conteneur de la recherche doit être 'relatif' 
+           pour que la liste de résultats se positionne par rapport à lui */
+        #person-search-container {
+            position: relative;
+        }
+
+        /* La liste de résultats est maintenant positionnée de manière 'absolue'
+           pour flotter par-dessus le reste du contenu */
+        #person-search-results {
+            position: absolute;
+            top: 100%; /* Se positionne juste en dessous de son parent (le conteneur de recherche) */
+            left: 0;
+            right: 0; /* Prend toute la largeur */
+            z-index: 100; /* On s'assure qu'elle est bien au-dessus de tout */
+            
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none; /* Esthétique : pas de double bordure */
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Joli effet d'ombre */
+
+            max-height: 250px; /* Hauteur maximale avant d'afficher une barre de défilement */
+            overflow-y: auto;
+            
+            /* On retire les styles de liste par défaut */
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        #person-search-results li {
+            padding: 5px 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        #person-search-results li:hover {
+            background-color: #f0f8ff;
+        }
+        #person-search-results li:last-child {
+            border-bottom: none;
+        }
+        
+        /* =============================================================== */
+        /* == FIN DES CORRECTIONS POUR LA BARRE DE RECHERCHE DE PERSONNAGE === */
+        /* =============================================================== */
+
+
         #real-time-stats {
             margin-top: 15px;
             padding-top: 15px;
@@ -297,6 +350,10 @@
             font-style: italic;
             color: var(--job-color);
         }
+        /* AJOUT */
+        .person-job.retired {
+            color: var(--retired-color);
+        }
         .dead {
             text-decoration: line-through;
             opacity: 0.6;
@@ -305,16 +362,6 @@
             font-style: italic;
             color: #666;
             font-size: 0.9em;
-        }
-        .job-history {
-            margin-top: 5px;
-            font-size: 0.85em;
-            color: #777;
-            padding-left: 10px;
-            border-left: 2px solid #eee;
-        }
-        .job-history span {
-            display: block;
         }
         .family-history {
             background-color: #f0f3f5;
@@ -439,36 +486,44 @@
                     <div class="tab-nav"></div>
                     <div class="tab-panels"></div>
                 </div>
-                <div id="history-log">
-                    <h3>Historique des Événements</h3>
-                    <div id="history-log-content"></div>
-                    <div id="real-time-stats">
-                        <h4>Statistiques</h4>
-                        <ul>
-                            <li id="stats-births">Naissances : 0</li>
-                            <li id="stats-deaths">Décès : 0</li>
-                            <li id="stats-marriages">Mariages : 0
-                                <ul>
-                                    <li id="stats-marriages-total">Total : 0</li>
-                                    <li id="stats-marriages-1st">1ers : 0</li>
-                                    <li id="stats-marriages-2nd">2nds : 0</li>
-                                    <li id="stats-marriages-3rdplus">3èmes+ : 0</li>
-                                </ul>
-                            </li>
-                            <li id="stats-migrations">Migrations : 0
-                                <ul>
-                                    <li id="stats-mig-marriage">↳ par mariage : 0</li>
-                                    <li id="stats-mig-opportunity">↳ par opportunité : 0</li>
-                                </ul>
-                            </li>
-                        </ul>
+
+                <div id="right-panel-container" style="display: flex; flex-direction: column; overflow: hidden;">
+
+                    <div id="person-search-container">
+                        <h3>Recherche de Personnage</h3>
+                        <div class="control-group" style="margin-bottom: 10px;">
+                            <input type="text" id="person-search-input" placeholder="Rechercher par nom...">
+                        </div>
+                        <ul id="person-search-results"></ul>
                     </div>
+
+                    <div id="history-log">
+                        <hr style="margin-bottom: 15px;">
+                        <h3>Historique des Événements</h3>
+                        <div id="history-log-content"></div>
+                        <div id="real-time-stats">
+                            <h4>Statistiques</h4>
+                            <ul>
+                                <li id="stats-births">Naissances : 0</li>
+                                <li id="stats-deaths">Décès : 0</li>
+                                <li id="stats-marriages">Mariages : 0</li>
+                                <li id="stats-migrations">Migrations : 0
+                                    <ul>
+                                        <li id="stats-mig-marriage">↳ par mariage : 0</li>
+                                        <li id="stats-mig-opportunity">↳ par opportunité : 0</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
                 </div>
-            </div>
+                
+                </div>
         </div>
     </div>
 
-    <div id="history-modal" class="modal-overlay">
+    <div id="history-modal" class="modal-overlay" style="z-index: 1001;">
         <div class="modal-content" style="max-width: 800px; height: 80vh;">
             <div class="modal-header">
                 <h2 id="history-modal-title">Historique de la famille</h2>
@@ -510,13 +565,11 @@
         const statsBirthsEl = document.getElementById('stats-births');
         const statsDeathsEl = document.getElementById('stats-deaths');
         const statsMarriagesEl = document.getElementById('stats-marriages');
-        const statsMarriagesTotalEl = document.getElementById('stats-marriages-total');
-        const statsMarriages1stEl = document.getElementById('stats-marriages-1st');
-        const statsMarriages2ndEl = document.getElementById('stats-marriages-2nd');
-        const statsMarriages3rdPlusEl = document.getElementById('stats-marriages-3rdplus');
         const statsMigrationsEl = document.getElementById('stats-migrations');
         const statsMigMarriageEl = document.getElementById('stats-mig-marriage');
         const statsMigOpportunityEl = document.getElementById('stats-mig-opportunity');
+        const personSearchInput = document.getElementById('person-search-input'); // AJOUT
+        const personSearchResultsUl = document.getElementById('person-search-results'); // AJOUT
 
         // --- VARIABLES DE SIMULATION ---
         let allRegions = {};
@@ -555,7 +608,7 @@
                 'Hameau': [{ role: 'Chef(fe) de hameau', tier: 2, unique: true, quantity: 1 }],
                 'Village': [{ role: 'Maire du village', tier: 2, unique: true, quantity: 1, promotes_from: ['Garde champêtre'] }, { role: 'Garde champêtre', tier: 3, quantity: 2 }],
                 'Ville': [{ role: 'Maire', tier: 1, unique: true, quantity: 1, promotes_from: ['Capitaine de la garde', 'Magistrat'] }, { role: 'Capitaine de la garde', tier: 2, unique: true, quantity: 1, promotes_from: ['Sergent'], guild_affiliation: 'Guilde des Combattants' }, { role: 'Magistrat', tier: 2, unique: true, quantity: 1, promotes_from: ['Greffier'] }, { role: 'Greffier', tier: 3, quantity: 1 }],
-                'Capitale': [{ role: 'Dirigeant(e)', tier: 1, unique: true, scope: 'region', quantity: 1 }, { role: 'Général(e) de la garde', tier: 1, unique: true, quantity: 1, promotes_from: ['Capitaine de la garde'] }, { role: 'Archiviste royal', tier: 2, unique: true, quantity: 1, promotes_from: ['Maître Bibliothécaire'], guild_affiliation: 'Guilde des Érudits' }, { role: 'Maître espion', tier: 2, unique: true, quantity: 1 }]
+                'Capitale': [{ role: 'Dirigeant(e)', tier: 1, unique: true, scope: 'region', quantity: 1, retires: false }, { role: 'Général(e) de la garde', tier: 1, unique: true, quantity: 1, promotes_from: ['Capitaine de la garde'] }, { role: 'Archiviste royal', tier: 2, unique: true, quantity: 1, promotes_from: ['Maître Bibliothécaire'], guild_affiliation: 'Guilde des Érudits' }, { role: 'Maître espion', tier: 2, unique: true, quantity: 1 }]
             },
             building_jobs: {
                 'Taverne / Auberge': [ { role: 'Tavernier/ère', tier: 3, unique: true, quantity: 1 }, { role: 'Serveur/euse', tier: 4, dynamic_quantity_per_pop: 40 }, { role: 'Videur', tier: 4, dynamic_quantity_per_pop: 150 } ],
@@ -577,7 +630,18 @@
                 'Observatoire': [ { role: 'Astronome', tier: 2, unique: true, quantity: 1, guild_affiliation: 'Guilde des Érudits' } ],
                 'Arène / Colisée': [ { role: 'Maître des jeux', tier: 2, unique: true, quantity: 1, promotes_from: ['Gladiateur'], guild_affiliation: 'Guilde des Combattants' }, { role: 'Gladiateur', tier: 3, quantity: 5, guild_source: 'Guilde des Combattants' }, { role: 'Soigneur de l\'arène', tier: 3, quantity: 1 } ]
             },
-            autonomous_jobs: [ { role: 'Chasseur / Piégeur', tier: 4 }, { role: 'Pêcheur', tier: 4 }, { role: 'Bûcheron / Charbonnier', tier: 4 }, { role: 'Mineur / Carrier', tier: 4 }, { role: 'Fermier / Éleveur', tier: 4 }, { role: 'Messager', tier: 4 }, { role: 'Barde / Ménestrel', tier: 3 }, { role: 'Mercenaire', tier: 3 }, { role: 'Éclaireur', tier: 3 }, { role: 'Mendiant', tier: 5, isBeggar: true } ]
+            autonomous_jobs: [ 
+                { role: 'Chasseur / Piégeur', tier: 4 }, { role: 'Pêcheur', tier: 4 }, { role: 'Bûcheron / Charbonnier', tier: 4 }, 
+                { role: 'Mineur / Carrier', tier: 4 }, { role: 'Fermier / Éleveur', tier: 4 }, { role: 'Messager', tier: 4 }, 
+                { role: 'Barde / Ménestrel', tier: 3 }, { role: 'Mercenaire', tier: 3 }, { role: 'Éclaireur', tier: 3 }, 
+                { role: 'Mendiant', tier: 5, isBeggar: true },
+                // --- NOUVEAU TIERS 6 : PÈGRE ---
+                { role: 'Voleur', tier: 6, isUnderworld: true },
+                { role: 'Assassin', tier: 6, isUnderworld: true },
+                { role: 'Charlatan', tier: 6, isUnderworld: true },
+                { role: 'Bandit de grand chemin', tier: 6, isUnderworld: true },
+                { role: 'Contrebandier', tier: 6, isUnderworld: true }
+            ]
         };
         const DYNAMIC_BUILDING_TIERS = {
             TIER1: { threshold: 75, types: ["Boulangerie", "Forge", "Menuisier / Charpentier"] },
@@ -588,6 +652,14 @@
         // --- FONCTIONS ---
         function offsetToCube(q, r) { const x = q; const z = r - (q + (q & 1)) / 2; const y = -x - z; return { x, y, z }; }
         function cubeDistance(a, b) { return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z)) / 2; }
+        
+        function getOrdinal(n) {
+            if (n === 1) return 'premier';
+            if (n === 2) return 'second';
+            const ordinals = ['premier', 'second', 'troisième', 'quatrième', 'cinquième', 'sixième'];
+            if (n > 0 && n <= ordinals.length) return ordinals[n - 1];
+            return `${n}ème`;
+        }
         
         async function loadPresetRaces() {
             try {
@@ -635,6 +707,36 @@
                     openHistoryModal(familyId, familyName);
                 }
             });
+            
+            // AJOUT: Event listeners for search
+            personSearchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                personSearchResultsUl.innerHTML = '';
+
+                if (query.length < 2) {
+                    return;
+                }
+
+                const matches = simulation.population.filter(p => {
+                    const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+                    return fullName.includes(query);
+                });
+
+                matches.forEach(person => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `${person.firstName} ${person.lastName} <i>(${person.isAlive ? person.age + ' ans' : 'Décédé(e)'}, ${person.cityName})</i>`;
+                    li.dataset.personId = person.id;
+                    personSearchResultsUl.appendChild(li);
+                });
+            });
+
+            personSearchResultsUl.addEventListener('click', (e) => {
+                const li = e.target.closest('li');
+                if (li && li.dataset.personId) {
+                    const personId = parseInt(li.dataset.personId, 10);
+                    openPersonHistoryModal(personId);
+                }
+            });
         }
         
         function populatePresetRacesDropdown() {
@@ -659,6 +761,106 @@
             }
             presetRaceSelect.value = "";
         }
+        
+        // AJOUT/MODIFICATION: Ouvre l'historique d'une personne spécifique avec beaucoup plus de détails.
+        function openPersonHistoryModal(personId) {
+            const person = simulation.population.find(p => p.id === personId);
+            if (!person) return;
+
+            const title = document.getElementById('history-modal-title');
+            const body = document.getElementById('history-modal-body');
+
+            title.textContent = `Historique de ${person.firstName} ${person.lastName}`;
+            
+            // --- Build Bio Section ---
+            let bioHtml = '<h3>Biographie</h3><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">';
+            
+            // Column 1
+            bioHtml += '<div>';
+            bioHtml += `<p><strong>Nom:</strong> ${person.firstName} ${person.lastName} ${person.maidenName ? `(née ${person.maidenName})` : ''}</p>`;
+            bioHtml += `<p><strong>Statut:</strong> ${person.isAlive ? 'En vie' : `Décédé(e) à l'âge de ${person.age} ans`}</p>`;
+            bioHtml += `<p><strong>Race:</strong> ${person.race}</p>`;
+            bioHtml += `<p><strong>Âge actuel:</strong> ${person.isAlive ? person.age + ' ans' : 'N/A'}</p>`;
+            bioHtml += `<p><strong>Résidence:</strong> ${person.cityName} ${person.originCityId !== person.cityId ? `(originaire de ${person.originCityName})` : ''}</p>`;
+            bioHtml += '</div>';
+
+            // Column 2
+            bioHtml += '<div>';
+            // Parents
+            if (person.parents && person.parents.length > 0) {
+                const parentNames = person.parents.map(id => {
+                    const p = simulation.population.find(parent => parent.id === id);
+                    return p ? `${p.firstName} ${p.lastName}` : 'Inconnu';
+                }).join(' et ');
+                bioHtml += `<p><strong>Parents:</strong> ${parentNames}</p>`;
+            }
+            // Spouse
+            if (person.spouseId) {
+                 const spouse = simulation.population.find(p => p.id === person.spouseId);
+                 bioHtml += `<p><strong>Conjoint(e):</strong> ${spouse ? `${spouse.firstName} ${spouse.lastName}` : 'Inconnu'}</p>`;
+            } else {
+                 bioHtml += `<p><strong>Conjoint(e):</strong> Aucun(e)</p>`;
+            }
+            // Children
+            if (person.children && person.children.length > 0) {
+                const childrenNames = person.children.map(id => {
+                    const c = simulation.population.find(child => child.id === id);
+                    return c ? c.firstName : '';
+                }).filter(Boolean).join(', ');
+                 bioHtml += `<p><strong>Enfants:</strong> ${childrenNames || 'Aucun'}</p>`;
+            } else {
+                 bioHtml += `<p><strong>Enfants:</strong> Aucun</p>`;
+            }
+            bioHtml += '</div></div>';
+
+            // --- Build Job History Section ---
+            let jobsHtml = '<hr><h3>Carrière professionnelle</h3>';
+            if (person.job || person.jobHistory.length > 0) {
+                jobsHtml += '<ul>';
+                // Current Job
+                if (person.job) {
+                    jobsHtml += `<li><strong>Actuel:</strong> ${formatPersonJob(person)}</li>`;
+                }
+                // Past Jobs
+                if (person.jobHistory && person.jobHistory.length > 0) {
+                    [...person.jobHistory].reverse().forEach(j => {
+                        const duration = Math.max(1, j.endDate - j.startDate);
+                        const yearText = duration > 1 ? 'ans' : 'an';
+                        jobsHtml += `<li>${j.role} (de l'an ${j.startDate} à ${j.endDate}, pendant ${duration} ${yearText})</li>`;
+                    });
+                }
+                jobsHtml += '</ul>';
+            } else {
+                jobsHtml += '<p>N\'a jamais eu d\'emploi formel.</p>';
+            }
+
+            // --- Build Life Events Section ---
+            const personHistory = simulation.eventLog.filter(e => {
+                if (!e.meta) return false;
+                return e.meta.personId === person.id ||
+                       (e.meta.person1Id && e.meta.person1Id === person.id) ||
+                       (e.meta.person2Id && e.meta.person2Id === person.id) ||
+                       (e.meta.affectedPersonIds && e.meta.affectedPersonIds.includes(person.id));
+            }).slice().reverse();
+
+            let eventsHtml = '<hr><h3>Événements marquants</h3>';
+            if (personHistory.length > 0) {
+                eventsHtml += `<ul class="family-history" style="list-style-type: none; padding-left: 0;">`;
+                personHistory.forEach(event => {
+                    const message = event.message.replace(/<\/?h3>/g, '').trim();
+                    if (message) {
+                        eventsHtml += `<li style="margin-bottom: 5px;"><strong>Année ${event.year}:</strong> ${message}</li>`;
+                    }
+                });
+                eventsHtml += `</ul>`;
+            } else {
+                eventsHtml += `<p>Aucun événement spécifique enregistré pour cette personne.</p>`;
+            }
+
+            body.innerHTML = bioHtml + jobsHtml + eventsHtml;
+            historyModal.style.display = 'flex';
+        }
+
 
         function openHistoryModal(familyId, familyName) {
             const title = document.getElementById('history-modal-title');
@@ -675,20 +877,7 @@
                 }
                 return '';
             }).join('');
-
-            const personHistory = simulation.population.filter(p => p.familyId === familyId).map(p => {
-                let jobHistoryHtml = '';
-                if (p.jobHistory && p.jobHistory.length > 0) {
-                    jobHistoryHtml = `<h5>Historique des métiers de ${p.firstName} ${p.lastName}</h5><ul class="job-history-list">` + 
-                                     p.jobHistory.map(jobEntry => `<li>Année ${jobEntry.year}: ${jobEntry.role}</li>`).join('') + 
-                                     `</ul>`;
-                }
-                return `<h4>${p.firstName} ${p.lastName}</h4>` + jobHistoryHtml;
-            }).join('');
-
-
-            body.innerHTML = `<details open><summary>Événements familiaux</summary><div class="family-history"><ul>${listHtml}</ul></div></details>` + 
-                             `<details><summary>Historique des métiers des membres</summary><div class="family-history">${personHistory}</div></details>`;
+            body.innerHTML = `<ul class="family-history">${listHtml}</ul>`;
             historyModal.style.display = 'flex';
         }
 
@@ -846,17 +1035,39 @@
             const nameList = (gender === 'M') ? raceInfo.firstNamesM : raceInfo.firstNamesF;
             if (nameList.length === 0) return null;
             const personAge = age !== null ? age : Math.floor(Math.random() * 21) + 20;
+            
+            const baseRetirementAge = Math.floor(raceInfo.lifespan * 0.80);
+            const variation = baseRetirementAge * 0.05; // 5% variation
+            const personalRetirementAge = Math.floor(baseRetirementAge - variation + (Math.random() * variation * 2));
+
             return {
-                id: nextPersonId++, firstName: nameList[Math.floor(Math.random() * nameList.length)],
-                lastName: familyName, maidenName: null,
-                age: personAge, gender: gender,
-                race: raceName, isAlive: true, familyId: familyId,
-                cityId: cityId, cityName: cityName, 
-                originCityId: cityId, originCityName: cityName,
-                marriageCount: 0, // New: Track marriage count
+                id: nextPersonId++,
+                firstName: nameList[Math.floor(Math.random() * nameList.length)],
+                lastName: familyName,
+                maidenName: null,
+                age: personAge,
+                gender: gender,
+                race: raceName,
+                isAlive: true,
+                familyId: familyId,
+                cityId: cityId,
+                cityName: cityName,
+                originCityId: cityId,
+                originCityName: cityName,
+                marriages: 0,
                 job: null,
-                jobHistory: [], // New: Track job history
-                parents: parents, spouseId: null, children: []
+                jobHistory: [],
+                parents: parents,
+                spouseId: null,
+                children: [],
+                personalRetirementAge: personalRetirementAge,
+                // --- AJOUTS POUR LE REMARIAGE ---
+                widowedInYear: null,
+                lastMarriageDuration: null,
+                marriageStartDate: null,
+                // --- NOUVEAU : SUIVI DE LA PRÉCARITÉ ---
+                yearsUnemployed: 0,
+                yearsAsBeggar: 0
             };
         }
         
@@ -911,8 +1122,10 @@
                 if (person1 && person2) {
                     person1.spouseId = person2.id;
                     person2.spouseId = person1.id;
-                    person1.marriageCount = 1; // First marriage
-                    person2.marriageCount = 1; // First marriage
+                    person1.marriages = 1;
+                    person2.marriages = 1;
+                    person1.marriageStartDate = 0; // Mariage à l'année 0
+                    person2.marriageStartDate = 0;
                     simulation.population.push(person1, person2);
                     simulation.families[familyId] = { 
                         originalName: familyName, 
@@ -922,6 +1135,11 @@
                 }
             });
             assignJobs();
+            simulation.population.forEach(p => { 
+                if (p.job) {
+                    p.job.startDate = 0;
+                }
+            });
             logEvent(`<strong>Année 0 :</strong> Fondation de la région avec ${simulation.population.length} personnes. Les premiers métiers ont été assignés.`, null, null);
             viewResultsBtn.disabled = false;
             displayPopulation();
@@ -931,35 +1149,178 @@
         function advanceTime() {
             simulation.year += 1;
             logEvent(`<h3>--- Année ${simulation.year} ---</h3>`, null, null);
+            
             const currentRegion = getCurrentRegion();
             if (currentRegion) {
                 currentRegion.cities.forEach(city => {
                     updateCityInfrastructure(city);
                     updateGuilds(city);
+                    updateCityStatus(city); // NOUVEAU : Mise à jour du statut de la ville
                 });
             }
-            simulation.population.forEach(p => { 
-                if(p.isAlive) p.age += 1; 
-                // Update job history for active jobs
-                if (p.isAlive && p.job && (p.jobHistory.length === 0 || p.jobHistory[p.jobHistory.length - 1].role !== p.job.role)) {
-                    p.jobHistory.push({ year: simulation.year, role: p.job.role });
-                } else if (p.isAlive && !p.job && p.jobHistory.length > 0 && p.jobHistory[p.jobHistory.length - 1].role !== 'Sans emploi') {
-                     p.jobHistory.push({ year: simulation.year, role: 'Sans emploi' });
-                }
-            });
+            
+            simulation.population.forEach(p => { if(p.isAlive) p.age += 1; });
+            
+            updatePrecarityAndUnderworld(); // NOUVEAU : Gère la mendicité et l'entrée dans la pègre
+            
             simulation.population.forEach(p => {
                 if (p.isAlive && p.yearsSinceMigration !== undefined) {
                     p.yearsSinceMigration++;
                 }
             });
+            
             handleDeaths();
             checkForFamilyExtinction();
+            handleRetirement(); 
             handleMarriages();
             handleEconomicMigration();
             processMigrationImpact();
             handleBirths();
             assignJobs();
             currentYearInput.value = `Année ${simulation.year}`;
+        }
+        
+        // --- NOUVELLES FONCTIONNALITÉS ---
+
+        function updateCityStatus(city) {
+            if (!city.config) return;
+
+            const cityPopulation = simulation.population.filter(p => p.isAlive && p.cityId === city.id);
+            if (cityPopulation.length === 0) return;
+
+            // --- Facteurs de Dégradation ---
+            const beggarCount = cityPopulation.filter(p => p.job?.isBeggar).length;
+            const beggarPercentage = beggarCount / cityPopulation.length;
+            let degradationChance = 0;
+            // Si plus de 5% de la population est mendiante, le statut risque de se dégrader
+            if (beggarPercentage > 0.05) {
+                degradationChance = (beggarPercentage - 0.05) * 0.5; // La chance augmente avec le % de mendiants
+            }
+
+            // --- Facteurs d'Amélioration ---
+            const guardJobs = ['Soldat de la garde', 'Sergent', 'Capitaine de la garde', 'Général(e) de la garde', 'Garde champêtre'];
+            const guardCount = cityPopulation.filter(p => p.job && guardJobs.includes(p.job.role)).length;
+            const tavernCount = cityPopulation.filter(p => p.job?.role === 'Tavernier/ère').length;
+            
+            const marketBuilding = city.config.buildings && city.config.buildings['Marché central'];
+            let marketBonus = 0;
+            if (marketBuilding) {
+                const marketInfluence = city.config.market_influence || 'local';
+                if (marketInfluence === 'local') marketBonus = 0.01;
+                if (marketInfluence === 'grand') marketBonus = 0.03;
+                if (marketInfluence === 'regional') marketBonus = 0.06;
+            }
+
+            let improvementChance = (guardCount * 0.005) + (tavernCount * 0.002) + marketBonus;
+
+            // --- Application des changements ---
+            const progression = ['prospere', 'stable', 'difficulte', 'declin'];
+            const currentStatus = city.config.city_status || 'stable';
+            const currentIndex = progression.indexOf(currentStatus);
+            
+            if (currentIndex === -1) return; // Statut invalide
+            
+            let newIndex = currentIndex;
+
+            // On teste d'abord la dégradation, puis l'amélioration
+            if (Math.random() < degradationChance) {
+                newIndex = Math.min(progression.length - 1, currentIndex + 1);
+            } else if (Math.random() < improvementChance) {
+                newIndex = Math.max(0, currentIndex - 1);
+            }
+
+            if (newIndex !== currentIndex) {
+                const newStatus = progression[newIndex];
+                city.config.city_status = newStatus;
+                logEvent(`⚖️ Le statut de <strong>${city.name}</strong> a changé de '${currentStatus}' à '${newStatus}'.`, city.id, null);
+            }
+        }
+
+        function updatePrecarityAndUnderworld() {
+            const currentRegion = getCurrentRegion();
+            if (!currentRegion) return;
+
+            const guardCounts = {};
+            currentRegion.cities.forEach(city => {
+                const cityPopulation = simulation.population.filter(p => p.isAlive && p.cityId === city.id);
+                const guardJobs = ['Soldat de la garde', 'Sergent', 'Capitaine de la garde', 'Général(e) de la garde', 'Garde champêtre'];
+                guardCounts[city.id] = cityPopulation.filter(p => p.job && guardJobs.includes(p.job.role)).length;
+            });
+
+            simulation.population.forEach(person => {
+                if (!person.isAlive) return;
+
+                // --- 1. Mise à jour des compteurs de précarité ---
+                if (!person.job) {
+                    person.yearsUnemployed = (person.yearsUnemployed || 0) + 1;
+                    person.yearsAsBeggar = 0;
+                } else if (person.job.isBeggar) {
+                    person.yearsUnemployed = (person.yearsUnemployed || 0) + 1;
+                    person.yearsAsBeggar = (person.yearsAsBeggar || 0) + 1;
+                } else if (!person.job.isUnderworld) { // On ne réinitialise pas pour la pègre
+                    person.yearsUnemployed = 0;
+                    person.yearsAsBeggar = 0;
+                }
+
+                // --- 2. Chance de cesser d'être Mendiant ---
+                if (person.job?.isBeggar) {
+                    // La probabilité diminue avec le temps passé à mendier. Forcé après 5 ans.
+                    const chanceToLeave = (0.3 / (person.yearsAsBeggar || 1));
+                    if (Math.random() < chanceToLeave || person.yearsAsBeggar > 5) {
+                        logEvent(`💪 ${person.firstName} ${person.lastName} a cessé de mendier.`, person.cityId, person.familyId, { personId: person.id });
+                        person.job = null; // Devient 'sans emploi'
+                        person.yearsAsBeggar = 0; // Réinitialisation
+                    }
+                }
+                
+                // --- 3. Chance de rejoindre la Pègre (Tiers 6) ---
+                const canJoinUnderworld = (person.yearsAsBeggar >= 2 || person.yearsUnemployed >= 5) && !person.job?.isUnderworld;
+                if (canJoinUnderworld) {
+                    const city = currentRegion.cities.find(c => c.id === person.cityId);
+                    if (!city || !city.config) return;
+
+                    const cityStatus = city.config.city_status || 'stable';
+                    const statusChanceMultipliers = { 'prospere': 0, 'stable': 0.01, 'difficulte': 0.1, 'declin': 0.25 };
+                    let baseChance = statusChanceMultipliers[cityStatus] || 0;
+
+                    // La chance est réduite par le nombre de gardes
+                    const guardCount = guardCounts[city.id] || 0;
+                    const securityFactor = 1 / (1 + (guardCount * 0.2)); // Chaque garde réduit la chance
+                    const finalChance = baseChance * securityFactor;
+
+                    if (Math.random() < finalChance) {
+                        const underworldJobs = jobData.autonomous_jobs.filter(j => j.isUnderworld);
+                        if (underworldJobs.length > 0) {
+                            const newJob = underworldJobs[Math.floor(Math.random() * underworldJobs.length)];
+                            person.job = {...newJob, startDate: simulation.year};
+                            person.yearsUnemployed = 0; // Réinitialisation des compteurs
+                            person.yearsAsBeggar = 0;
+                            logEvent(`☠️ Poussé(e) par la précarité, ${person.firstName} ${person.lastName} a rejoint la pègre en tant que ${newJob.role}.`, city.id, person.familyId, { personId: person.id });
+                        }
+                    }
+                }
+            });
+        }
+        
+        // --- FIN DES NOUVELLES FONCTIONNALITÉS ---
+
+        // AJOUT: Nouvelle fonction pour gérer la retraite
+        function handleRetirement() {
+            simulation.population.forEach(person => {
+                // Ne s'applique pas si mort, déjà retraité ou sans emploi.
+                // Ne s'applique pas si le poste est un poste à vie.
+                if (!person.isAlive || !person.job || person.job.isRetired || person.job.retires === false) return;
+
+                // La condition utilise maintenant l'âge de retraite personnel
+                if (person.age >= person.personalRetirementAge) {
+                    const oldJob = person.job;
+                    logEvent(`🧘 ${person.firstName} ${person.lastName} a pris sa retraite de son poste de ${oldJob.role} à ${person.age} ans.`, person.cityId, person.familyId, { personId: person.id });
+                    
+                    oldJob.endDate = simulation.year;
+                    person.jobHistory.push(oldJob);
+                    person.job = { role: 'Retraité(e)', tier: 99, isRetired: true, startDate: simulation.year };
+                }
+            });
         }
 
         function updateGuilds(city) {
@@ -1000,8 +1361,15 @@
                     const employees = simulation.population.filter(p => p.job?.buildingInstanceId === buildingToRemove.id);
                     if (employees.length > 0) {
                         const employeeNames = employees.map(e => `${e.firstName} ${e.lastName} (${e.job.role})`).join(', ');
-                        logEvent(`📉 La ${buildingToRemove.name} de ${city.name} a fermé. Employés licenciés : ${employeeNames}.`, city.id, null);
-                        employees.forEach(e => { e.job = null; });
+                        const employeeIds = employees.map(e => e.id); // MODIFICATION
+                        logEvent(`📉 La ${buildingToRemove.name} de ${city.name} a fermé. Employés licenciés : ${employeeNames}.`, city.id, null, { affectedPersonIds: employeeIds }); // MODIFICATION
+                        employees.forEach(e => { 
+                            if(e.job) {
+                                e.job.endDate = simulation.year;
+                                e.jobHistory.push(e.job);
+                                e.job = null;
+                            }
+                        });
                     } else {
                         logEvent(`📉 Une ${buildingToRemove.name} superflue a fermé à ${city.name}.`, city.id, null);
                     }
@@ -1162,21 +1530,22 @@
                     }
                     if(candidate) {
                         if(isPromotion) {
-                            logEvent(`⬆️ ${candidate.firstName} ${candidate.lastName} a été promu(e) au poste de ${vacantJob.role} depuis ${promotionSource} à ${city.name}.`, city.id, candidate.familyId);
+                            logEvent(`⬆️ ${candidate.firstName} ${candidate.lastName} a été promu(e) au poste de ${vacantJob.role} depuis ${promotionSource} à ${city.name}.`, city.id, candidate.familyId, { personId: candidate.id }); // MODIFICATION
                         } else {
-                            logEvent(`💼 ${candidate.firstName} ${candidate.lastName} a été embauché(e) comme ${vacantJob.role} à ${city.name}.`, city.id, candidate.familyId);
+                            logEvent(`💼 ${candidate.firstName} ${candidate.lastName} a été embauché(e) comme ${vacantJob.role} à ${city.name}.`, city.id, candidate.familyId, { personId: candidate.id }); // MODIFICATION
                         }
-                        candidate.job = { ...vacantJob }; 
-                        // Add to job history
-                        if (!candidate.jobHistory.some(entry => entry.role === candidate.job.role && entry.year === simulation.year)) {
-                            candidate.jobHistory.push({ year: simulation.year, role: candidate.job.role });
+                        const oldJob = candidate.job;
+                        if(oldJob) {
+                            oldJob.endDate = simulation.year;
+                            candidate.jobHistory.push(oldJob);
                         }
+                        candidate.job = { ...vacantJob, startDate: simulation.year }; 
                         if(!isPromotion) {
                            availableCandidates = availableCandidates.filter(p => p.id !== candidate.id);
                         }
                     }
                 });
-                let unemployedAdults = populationInCity.filter(p => !p.job && p.isAlive && p.age >= (simulation.races[p.race]?.adultAge || 18));
+                let unemployedAdults = availableCandidates.filter(p => p.age >= (simulation.races[p.race]?.adultAge || 18));
                 const cityStatus = city.config.city_status;
                 const beggarJob = jobData.autonomous_jobs.find(j => j.isBeggar);
                 if (beggarJob && (cityStatus === 'difficulte' || cityStatus === 'declin')) {
@@ -1185,24 +1554,19 @@
                     if (chance > 0) {
                         unemployedAdults.forEach(person => {
                             if(!person.job && Math.random() < chance) {
-                                person.job = {...beggarJob};
-                                if (!person.jobHistory.some(entry => entry.role === beggarJob.role && entry.year === simulation.year)) {
-                                    person.jobHistory.push({ year: simulation.year, role: beggarJob.role });
-                                }
+                                person.job = {...beggarJob, startDate: simulation.year};
+                                logEvent(`🙏 ${person.firstName} ${person.lastName} est devenu mendiant à ${city.name}.`, city.id, person.familyId, { personId: person.id }); // MODIFICATION
                             }
                         });
                         unemployedAdults = unemployedAdults.filter(p => !p.job);
                     }
                 }
-                const autonomousJobs = jobData.autonomous_jobs.filter(j => !j.isBeggar);
+                const autonomousJobs = jobData.autonomous_jobs.filter(j => !j.isBeggar && !j.isUnderworld);
                 unemployedAdults.forEach(person => {
                     if (Math.random() < 0.25) {
                         const jobPool = Math.random() < 0.8 ? autonomousJobs.filter(j => j.tier === 4) : autonomousJobs.filter(j => j.tier === 3);
                         if (jobPool.length > 0) {
-                            person.job = jobPool[Math.floor(Math.random() * jobPool.length)];
-                            if (!person.jobHistory.some(entry => entry.role === person.job.role && entry.year === simulation.year)) {
-                                person.jobHistory.push({ year: simulation.year, role: person.job.role });
-                            }
+                            person.job = {...jobPool[Math.floor(Math.random() * jobPool.length)], startDate: simulation.year};
                         }
                     }
                 });
@@ -1231,7 +1595,7 @@
             currentRegion.cities.forEach(city => {
                 const cityPopulation = simulation.population.filter(p => p.isAlive && p.cityId === city.id).length;
                 if (cityPopulation === 0) return;
-                const opportunityMigrantsEvents = simulation.eventLog.filter(e => e.year === simulation.year && e.cityId === city.id && e.message.startsWith('✨') && e.meta && e.meta.personId);
+                const opportunityMigrantsEvents = simulation.eventLog.filter(e => e.year === simulation.year && e.cityId === city.id && e.message.includes("En quête d'opportunités") && e.meta && e.meta.personId);
                 const migrantCount = opportunityMigrantsEvents.length;
                 if (migrantCount === 0) return;
                 const migrationPercentage = (migrantCount / (cityPopulation - migrantCount)) * 100;
@@ -1245,11 +1609,8 @@
                         opportunityMigrantsEvents.forEach(event => {
                             const migrant = simulation.population.find(p => p.id === event.meta.personId);
                             if (migrant && migrant.isAlive && !migrant.job) {
-                                migrant.job = { ...beggarJob };
-                                if (!migrant.jobHistory.some(entry => entry.role === beggarJob.role && entry.year === simulation.year)) {
-                                    migrant.jobHistory.push({ year: simulation.year, role: beggarJob.role });
-                                }
-                                logEvent(`🙏 Arrivé sans ressources, ${migrant.firstName} ${migrant.lastName} est devenu mendiant à ${city.name}.`, city.id, migrant.familyId);
+                                migrant.job = { ...beggarJob, startDate: simulation.year };
+                                logEvent(`🙏 Arrivé sans ressources, ${migrant.firstName} ${migrant.lastName} est devenu mendiant à ${city.name}.`, city.id, migrant.familyId, { personId: migrant.id });
                             }
                         });
                     }
@@ -1272,7 +1633,7 @@
                     deathChance = 0.005;
                 }
                 if (Math.random() < deathChance) {
-                    logEvent(`🕊️ ${person.firstName} ${person.lastName} (${person.job?.role || 'Sans emploi'}) est décédé(e) de vieillesse à ${person.age} ans à ${person.cityName}.`, person.cityId, person.familyId);
+                    logEvent(`🕊️ ${person.firstName} ${person.lastName} (${person.job?.role || 'Sans emploi'}) est décédé(e) de vieillesse à ${person.age} ans à ${person.cityName}.`, person.cityId, person.familyId, { personId: person.id });
                     died = true;
                 }
                 if (!died && person.age > 16 && person.age < (raceInfo.lifespan * 0.85)) {
@@ -1309,17 +1670,27 @@
                         causeOfDeathMessage = `💀 ${person.firstName} ${person.lastName} est décédé(e) prématurément à ${person.age} ans ${cause} à ${person.cityName}.`;
                     }
                     if (diedPrematurely) {
-                        logEvent(causeOfDeathMessage, person.cityId, person.familyId);
+                        logEvent(causeOfDeathMessage, person.cityId, person.familyId, { personId: person.id });
                         died = true;
                     }
                 }
                 if (died) {
+                    if (person.job) {
+                        person.job.endDate = simulation.year;
+                        person.jobHistory.push(person.job);
+                    }
                     person.isAlive = false;
                     person.job = null;
                     if (person.spouseId !== null) {
                         const spouse = simulation.population.find(p => p.id === person.spouseId);
-                        if (spouse) {
+                        if (spouse && spouse.isAlive) {
                             spouse.spouseId = null;
+                            // --- MODIFICATION POUR LE REMARIAGE ---
+                            spouse.widowedInYear = simulation.year;
+                            if (spouse.marriageStartDate !== null) {
+                                spouse.lastMarriageDuration = simulation.year - spouse.marriageStartDate;
+                            }
+                            spouse.marriageStartDate = null;
                         }
                     }
                 }
@@ -1375,28 +1746,77 @@
                                 simulation.families[child.familyId].members.push(child.id);
                             }
                             newChildren.push(child);
-                            logEvent(`👶 Un enfant, ${child.firstName}, est né dans la famille ${father.lastName}.`, father.cityId, father.familyId);
+                            logEvent(`👶 Un enfant, ${child.firstName}, est né dans la famille ${father.lastName}.`, father.cityId, father.familyId, { personId: child.id });
                         }
                     }
                 }
             });
             simulation.population.push(...newChildren);
         }
+
+        function isSeekingMarriage(person) {
+            // S'il n'est pas veuf, il est toujours prêt (s'il est célibataire)
+            if (person.widowedInYear === null) {
+                return true;
+            }
+
+            const yearsSinceWidowed = simulation.year - person.widowedInYear;
+
+            // Période de deuil stricte de 2 ans
+            if (yearsSinceWidowed < 2) {
+                return false;
+            }
+
+            const raceInfo = simulation.races[person.race];
+            if (!raceInfo) return false;
+
+            // Facteur lié à l'âge : les chances diminuent avec l'âge
+            const ageFactor = Math.max(0, 1 - (person.age / (raceInfo.lifespan * 0.9)));
+
+            // Facteur lié à la durée du mariage précédent : un mariage long rend plus difficile de passer à autre chose
+            const durationFactor = person.lastMarriageDuration ? Math.max(0.1, 1 - (person.lastMarriageDuration / 40)) : 1;
+
+            // Facteur lié temps : plus le temps passe, plus on est susceptible de chercher à nouveau
+            const timeFactor = Math.min(1, (yearsSinceWidowed - 1) / 5); // Atteint 100% après 5 ans post-deuil
+
+            // Chance de base de chercher un partenaire cette année
+            const chanceToSeekPartner = 0.8 * ageFactor * durationFactor * timeFactor;
+
+            return Math.random() < chanceToSeekPartner;
+        }
         
         function handleMarriages() {
-            const MARRIAGE_SEARCH_CHANCE = 0.6; 
             const FOREIGN_MARRIAGE_CHANCE = 0.25; 
             const currentRegion = getCurrentRegion();
             if (!currentRegion) return;
-            const singleMen = simulation.population.filter(p => p.isAlive && p.spouseId === null && p.gender === 'M' && p.age >= (simulation.races[p.race]?.adultAge || 18));
-            let singleWomen = simulation.population.filter(p => p.isAlive && p.spouseId === null && p.gender === 'F' && p.age >= (simulation.races[p.race]?.adultAge || 18));
+
+            // Filtre les célibataires qui sont activement à la recherche d'un partenaire cette année
+            const singleMen = simulation.population.filter(p => 
+                p.isAlive && 
+                p.spouseId === null && 
+                p.gender === 'M' && 
+                p.age >= (simulation.races[p.race]?.adultAge || 18) &&
+                isSeekingMarriage(p)
+            );
+            
+            let singleWomen = simulation.population.filter(p => 
+                p.isAlive && 
+                p.spouseId === null && 
+                p.gender === 'F' && 
+                p.age >= (simulation.races[p.race]?.adultAge || 18)
+            );
+
             singleMen.forEach(man => {
-                if (man.spouseId || Math.random() > MARRIAGE_SEARCH_CHANCE) return;
+                if (man.spouseId) return; // Vérification double, au cas où il se marie dans la même boucle
+
                 const filterConditions = woman => {
                     if (woman.spouseId || woman.familyId === man.familyId) return false;
+                    if (!isSeekingMarriage(woman)) return false; // La femme doit aussi être en recherche
                     return Math.abs(man.age - woman.age) <= 5;
                 };
+
                 let suitableWives = singleWomen.filter(woman => woman.cityId === man.cityId && filterConditions(woman));
+                
                 if (suitableWives.length === 0 && Math.random() < FOREIGN_MARRIAGE_CHANCE) {
                     const manCity = currentRegion.cities.find(c => c.id === man.cityId);
                     if (!manCity) return;
@@ -1411,42 +1831,56 @@
                         return distInHexes <= manInfluence || distInHexes <= womanInfluence;
                     });
                 }
+
                 if (suitableWives.length > 0) {
                     const woman = suitableWives[Math.floor(Math.random() * suitableWives.length)];
-                    const originalWomanLastName = woman.lastName;
-                    const oldFamilyId = woman.familyId;
-                    man.spouseId = woman.id;
-                    woman.spouseId = man.id;
-
-                    // Set maidenName only if it's the first marriage for the woman
-                    if (woman.marriageCount === 0) {
+                    
+                    if (!woman.maidenName) {
                         woman.maidenName = woman.lastName;
                     }
-                    woman.lastName = man.lastName;
-
-                    man.marriageCount = (man.marriageCount || 0) + 1;
-                    woman.marriageCount = (woman.marriageCount || 0) + 1;
-
-                    let marriageRank = '';
-                    if (man.marriageCount === 1) marriageRank = 'un premier';
-                    else if (man.marriageCount === 2) marriageRank = 'un second';
-                    else marriageRank = 'un troisième ou plus'; // For 3rd and subsequent marriages
-
-
-                    let marriageLog = `⚭ ${man.firstName} ${man.lastName} et ${woman.firstName} ${woman.lastName} (née ${originalWomanLastName}) se sont mariés.`;
+                    const oldFamilyId = woman.familyId;
                     
-                    if (man.marriageCount > 1 || woman.marriageCount > 1) {
-                        const manRank = getMarriageRankText(man.marriageCount);
-                        const womanRank = getMarriageRankText(woman.marriageCount);
-                        if (manRank === womanRank) {
-                            marriageLog += ` (Il s'agit de ${manRank} mariage pour les deux conjoints).`;
-                        } else {
-                            marriageLog += ` (Il s'agit de ${manRank} mariage pour l'époux et ${womanRank} pour l'épouse).`;
-                        }
+                    man.spouseId = woman.id;
+                    woman.spouseId = man.id;
+                    man.marriages = (man.marriages || 0) + 1;
+                    woman.marriages = (woman.marriages || 0) + 1;
+                    woman.lastName = man.lastName;
+                    
+                    // --- MODIFICATION POUR LE REMARIAGE ---
+                    man.marriageStartDate = simulation.year;
+                    woman.marriageStartDate = simulation.year;
+                    man.widowedInYear = null;
+                    woman.widowedInYear = null;
+
+                    // NOUVEAU : Si l'un des deux est mendiant et l'autre non, il/elle est "sauvé(e)" par le mariage.
+                    if (woman.job?.isBeggar && man.job && !man.job.isBeggar && !man.job.isUnderworld) {
+                        logEvent(`💖 Grâce à son mariage, ${woman.firstName} ${woman.lastName} n'est plus mendiante.`, woman.cityId, woman.familyId, { personId: woman.id });
+                        woman.job = null;
+                        woman.yearsAsBeggar = 0;
+                        woman.yearsUnemployed = 0;
+                    } else if (man.job?.isBeggar && woman.job && !woman.job.isBeggar && !woman.job.isUnderworld) {
+                        logEvent(`💖 Grâce à son mariage, ${man.firstName} ${man.lastName} n'est plus mendiant.`, man.cityId, man.familyId, { personId: man.id });
+                        man.job = null;
+                        man.yearsAsBeggar = 0;
+                        man.yearsUnemployed = 0;
                     }
 
-                    logEvent(marriageLog, woman.cityId, man.familyId);
-                    logEvent(marriageLog, woman.cityId, oldFamilyId);
+                    let marriageLog = `⚭ ${man.firstName} ${man.lastName} et ${woman.firstName} ${woman.lastName} (née ${woman.maidenName}) se sont mariés.`;
+                    
+                    const manMarriageRank = getOrdinal(man.marriages);
+                    const womanMarriageRank = getOrdinal(woman.marriages);
+
+                    if (man.marriages > 1 || woman.marriages > 1) {
+                         const remarks = [];
+                         if (man.marriages > 1) remarks.push(`il s'agit du ${manMarriageRank} mariage pour l'époux`);
+                         if (woman.marriages > 1) remarks.push(`il s'agit du ${womanMarriageRank} mariage pour l'épouse`);
+                         marriageLog += ` (${remarks.join(' et ')}).`;
+                    }
+                    
+                    const eventMeta = { person1Id: man.id, person2Id: woman.id };
+                    logEvent(marriageLog, woman.cityId, man.familyId, eventMeta);
+                    logEvent(marriageLog, woman.cityId, oldFamilyId, eventMeta);
+                    
                     const newFamilyId = man.familyId;
                     if (oldFamilyId !== newFamilyId) {
                         woman.familyId = newFamilyId;
@@ -1465,16 +1899,12 @@
             });
         }
         
-        function getMarriageRankText(count) {
-            if (count === 1) return 'un premier';
-            if (count === 2) return 'un second';
-            if (count === 3) return 'un troisième';
-            return 'un énième'; // For 4th and subsequent
-        }
-
-
         function handleRelocation(person1, person2, reason) {
-            let personToMove, targetCity;
+            let personToMove, targetCity, logMessage;
+            
+            const oldCityName = (reason.type === 'marriage' ? person1.cityName : person1.cityName); // Temporaire
+            const personToMoveRef = (reason.type === 'marriage') ? person1 : person1; // Juste pour get le nom
+            
             if (reason.type === 'marriage') {
                 const cityTiers = { 'Capitale': 1, 'Ville': 2, 'Village': 3, 'Hameau': 4, 'Donjon': 5 };
                 const person1JobTier = person1.job?.tier || 99;
@@ -1488,35 +1918,50 @@
                 else if (person2JobTier < person1JobTier - 1) { personToMove = person1; targetCity = person2City; } 
                 else if (person1CityTier < person2CityTier) { personToMove = person2; targetCity = person1City; } 
                 else { personToMove = person1; targetCity = person2City; }
+
+                const oldJob = personToMove.job;
+                if (oldJob) {
+                    oldJob.endDate = simulation.year;
+                    personToMove.jobHistory.push(oldJob);
+                }
+                personToMove.job = null; // Devient sans emploi
+                const oldJobText = oldJob ? `quittant son poste de ${oldJob.role}` : 'qui était sans emploi';
+                const spouse = (personToMove.id === person1.id) ? person2 : person1;
+                logMessage = `✈️ Pour rejoindre son/sa conjoint(e) ${spouse.firstName} ${spouse.lastName}, ${personToMove.firstName} ${personToMove.lastName} a déménagé de ${personToMove.cityName} à ${targetCity.name}, ${oldJobText}.`;
+
             } else if (reason.type === 'opportunity') {
                 personToMove = person1;
                 targetCity = reason.destinationCity;
                 personToMove.yearsSinceMigration = 0;
+                
+                const oldJob = personToMove.job;
+                if (oldJob) {
+                    oldJob.endDate = simulation.year;
+                    personToMove.jobHistory.push(oldJob);
+                    personToMove.job = null; // Devient sans emploi
+                    logMessage = `✨ En quête d'opportunités, ${personToMove.firstName} ${personToMove.lastName} a déménagé de ${personToMove.cityName} à ${targetCity.name}, quittant son poste de ${oldJob.role} et arrivant sans emploi.`;
+                } else {
+                    const beggarJob = jobData.autonomous_jobs.find(j => j.isBeggar);
+                    if (beggarJob) {
+                        personToMove.job = { ...beggarJob, startDate: simulation.year }; // Devient mendiant
+                        logMessage = `✨ En quête d'opportunités, ${personToMove.firstName} ${personToMove.lastName} a déménagé de ${personToMove.cityName} à ${targetCity.name}, arrivant sans ressources et devenant mendiant(e).`;
+                    } else {
+                        personToMove.job = null; // Failsafe
+                        logMessage = `✨ En quête d'opportunités, ${personToMove.firstName} ${personToMove.lastName} a déménagé de ${personToMove.cityName} à ${targetCity.name} et est maintenant sans emploi.`;
+                    }
+                }
             } else {
                 return;
             }
-            const oldCityName = personToMove.cityName;
-            const oldJob = personToMove.job;
-            const oldJobText = oldJob ? `quittant son poste de ${oldJob.role}` : 'qui était sans emploi';
-            let logMessage = '';
-            if (reason.type === 'marriage') {
-                const spouse = (personToMove.id === person1.id) ? person2 : person1;
-                logMessage = `✈️ Pour rejoindre son/sa conjoint(e) ${spouse.firstName} ${spouse.lastName}, ${personToMove.firstName} ${personToMove.lastName} a déménagé de ${oldCityName} à ${targetCity.name}, ${oldJobText}.`;
-            } else if (reason.type === 'opportunity') {
-                logMessage = `✨ En quête d'opportunités, ${personToMove.firstName} ${personToMove.lastName} a déménagé de ${oldCityName} à ${targetCity.name}, ${oldJobText}.`;
-            }
+
             personToMove.cityId = targetCity.id;
             personToMove.cityName = targetCity.name;
-            personToMove.job = null; // Person loses job on migration
-            // Add 'Sans emploi' to job history upon migration
-            if (!personToMove.jobHistory.some(entry => entry.role === 'Sans emploi' && entry.year === simulation.year)) {
-                personToMove.jobHistory.push({ year: simulation.year, role: 'Sans emploi' });
-            }
 
             if (personToMove.gender === 'M' && simulation.families[personToMove.familyId]) {
                 simulation.families[personToMove.familyId].location = targetCity.name;
             }
-            const eventMeta = reason.type === 'opportunity' ? { personId: personToMove.id } : {};
+            
+            const eventMeta = { personId: personToMove.id };
             logEvent(logMessage, targetCity.id, personToMove.familyId, eventMeta);
         }
 
@@ -1694,24 +2139,13 @@
             const eventLog = simulation.eventLog;
             const birthCount = eventLog.filter(e => e.message.startsWith('👶')).length;
             const deathCount = eventLog.filter(e => e.message.startsWith('🕊️') || e.message.startsWith('💀')).length;
-            
-            const marriages = simulation.population.filter(p => p.marriageCount > 0);
-            const totalMarriageCount = marriages.reduce((sum, p) => sum + p.marriageCount, 0) / 2; // Each marriage counted twice (once per spouse)
-
-            const firstMarriages = simulation.population.filter(p => p.marriageCount === 1);
-            const secondMarriages = simulation.population.filter(p => p.marriageCount === 2);
-            const thirdPlusMarriages = simulation.population.filter(p => p.marriageCount >= 3);
-
+            const marriageCount = eventLog.filter(e => e.message.startsWith('⚭')).length;
+            const marriageMigrationCount = eventLog.filter(e => e.message.startsWith('✈️')).length;
+            const opportunityMigrationCount = eventLog.filter(e => e.message.includes("En quête d'opportunités")).length;
+            const totalMigrationCount = marriageMigrationCount + opportunityMigrationCount;
             statsBirthsEl.textContent = `Naissances : ${birthCount}`;
             statsDeathsEl.textContent = `Décès : ${deathCount}`;
-statsMarriagesTotalEl.textContent = `Total : ${totalMarriageCount}`;
-            statsMarriages1stEl.textContent = `1ers : ${eventLog.filter(e => e.message.includes('un premier mariage')).length / 2}`;
-            statsMarriages2ndEl.textContent = `2nds : ${eventLog.filter(e => e.message.includes('un second mariage')).length / 2}`;
-            statsMarriages3rdPlusEl.textContent = `3èmes+ : ${eventLog.filter(e => e.message.includes('un troisième ou plus') || e.message.includes('un énième')).length / 2}`;
-
-            const marriageMigrationCount = eventLog.filter(e => e.message.startsWith('✈️')).length;
-            const opportunityMigrationCount = eventLog.filter(e => e.message.startsWith('✨')).length;
-            const totalMigrationCount = marriageMigrationCount + opportunityMigrationCount;
+            statsMarriagesEl.textContent = `Mariages : ${marriageCount}`;
             statsMigrationsEl.textContent = `Migrations : ${totalMigrationCount}`;
             statsMigMarriageEl.textContent = `↳ par mariage : ${marriageMigrationCount}`;
             statsMigOpportunityEl.textContent = `↳ par opportunité : ${opportunityMigrationCount}`;
@@ -1720,11 +2154,16 @@ statsMarriagesTotalEl.textContent = `Total : ${totalMarriageCount}`;
         function generateCityEvolutionHtml(cityData) {
             let html = '';
             const cityHistoryEvents = simulation.eventLog
-                .filter(e => e.cityId === cityData.id && (e.message.startsWith('📈') || e.message.startsWith('📉') || e.message.startsWith('🏛️')))
+                .filter(e => e.cityId === cityData.id && (e.message.startsWith('📈') || e.message.startsWith('📉') || e.message.startsWith('🏛️') || e.message.startsWith('⚖️')))
                 .slice()
                 .reverse();
+
+            const cityConf = cityData.config || {};
+            html += `<p><strong>Statut Actuel :</strong> ${cityConf.city_status || 'N/A'}</p>`;
+            html += `<p><strong>Influence du Marché :</strong> ${cityConf.market_influence || 'N/A'}</p>`;
+
             if (cityHistoryEvents.length > 0) {
-                html += `<details open><summary>Historique des infrastructures</summary><div class="family-history"><ul>`;
+                html += `<details open><summary>Historique des infrastructures et du statut</summary><div class="family-history"><ul>`;
                 cityHistoryEvents.forEach(event => {
                     html += `<li><strong>Année ${event.year}:</strong> ${event.message}</li>`;
                 });
@@ -1761,16 +2200,16 @@ statsMarriagesTotalEl.textContent = `Total : ${totalMarriageCount}`;
             let cityHtml = '';
             const familiesInCity = Object.values(simulation.families).filter(family => {
                 const familyId = Object.keys(simulation.families).find(id => simulation.families[id] === family);
-                return simulation.population.some(p => (p.isAlive || !p.isAlive) && p.cityId === cityData.id && p.familyId === familyId); // Include dead members
+                return simulation.population.some(p => p.familyId === familyId && p.cityId === cityData.id);
             });
             familiesInCity.sort((a,b) => a.originalName.localeCompare(b.originalName)).forEach(familyGroup => {
                 const familyId = Object.keys(simulation.families).find(id => simulation.families[id] === familyGroup);
                 const familyName = familyGroup.originalName;
                 const familyMembersInCity = simulation.population.filter(p => p.familyId === familyId && p.cityId === cityData.id);
-                const hasLivingOrDeadMembers = familyMembersInCity.length > 0; // Check for any members, living or dead
+                const hasLivingMembers = familyMembersInCity.some(p => p.isAlive);
                 const familyHistory = simulation.eventLog.filter(e => e.familyId === familyId);
                 const validEvents = familyHistory.slice().reverse().filter(e => e.message.replace(/<\/?h3>/g, '').trim());
-                if (hasLivingOrDeadMembers) { // If there are any members associated with the family in this city
+                if (hasLivingMembers) {
                     cityHtml += `<details open><summary>${familyName} ${familyGroup.isExtinct ? '(Lignée éteinte)' : ''}</summary>`;
                     if (validEvents.length > 0) {
                         const previewHtml = validEvents.slice(0, 3).map(event => {
@@ -1781,7 +2220,7 @@ statsMarriagesTotalEl.textContent = `Total : ${totalMarriageCount}`;
                         cityHtml += `<div class="family-history"><h5>Historique (récent)</h5><div><ul>${previewHtml}</ul></div>${openModalButton}</div>`;
                     }
                     const membersMap = new Map(familyMembersInCity.map(p => [p.id, p]));
-                    const roots = familyMembersInCity.filter(p => !p.parents || p.parents.length === 0 || !p.parents.some(parentId => membersMap.has(parentId))); // Roots include living or dead
+                    const roots = familyMembersInCity.filter(p => (!p.parents || p.parents.length === 0 || !p.parents.some(parentId => membersMap.has(parentId))));
                     const renderedIds = new Set();
                     cityHtml += `<div class="family-tree"><ul>`;
                     roots.sort((a, b) => b.age - a.age).forEach(root => {
@@ -1809,27 +2248,20 @@ statsMarriagesTotalEl.textContent = `Total : ${totalMarriageCount}`;
         }
 
         function renderFamilyTree(person, membersMap, renderedIds) {
-            if (!person || renderedIds.has(person.id)) return ''; // Render all members, living or dead
+            if (!person || renderedIds.has(person.id)) return '';
             renderedIds.add(person.id);
             let html = '<li>';
             const spouse = person.spouseId ? simulation.population.find(p => p.id === person.spouseId) : null;
             html += formatPerson(person);
-            if (spouse && !renderedIds.has(spouse.id) && spouse.cityId === person.cityId) { // Only add spouse if not already rendered and in the same city
+            if (spouse && spouse.cityId === person.cityId) {
                 renderedIds.add(spouse.id);
                 html += ' & ' + formatPerson(spouse);
             }
-
             const childrenIds = new Set(person.children);
             if(spouse) {
                 spouse.children.forEach(id => childrenIds.add(id));
             }
-
-            // Filter children to include only those who are part of this family and in the current city for rendering
-            const children = Array.from(childrenIds)
-                                .map(id => membersMap.get(id))
-                                .filter(child => child && child.cityId === person.cityId) // Only children in the same city
-                                .sort((a,b) => b.age - a.age);
-
+            const children = Array.from(childrenIds).map(id => membersMap.get(id)).filter(Boolean).sort((a,b) => b.age - a.age);
             if (children.length > 0) {
                 html += '<ul>';
                 children.forEach(child => {
@@ -1840,34 +2272,49 @@ statsMarriagesTotalEl.textContent = `Total : ${totalMarriageCount}`;
             html += '</li>';
             return html;
         }
+        
+        // MODIFICATION: Fonction séparée pour le formatage du travail qui calcule et inclut la durée.
+        function formatPersonJob(person) {
+             if (person.job) {
+                if (person.job.isRetired) {
+                    return `<span class="person-job retired">${person.job.role}</span>`;
+                }
+                const duration = Math.max(0, simulation.year - person.job.startDate);
+                const yearText = duration > 1 ? 'ans' : 'an';
+                return `<span class="person-job">${person.job.role} (depuis an ${person.job.startDate}, ${duration} ${yearText})</span>`;
+            } else {
+                return person.isAlive ? 'Sans emploi' : '';
+            }
+        }
 
-
+        // MODIFICATION: Met à jour l'affichage de l'historique des postes pour inclure la durée.
         function formatPerson(person) {
             const deadClass = person.isAlive ? '' : 'class="dead"';
             let nameDisplay = `<span ${deadClass}><b>${person.firstName} ${person.lastName}</b>`;
-            
-            // Maiden name should only be displayed if it exists and is different from current lastName
-            if(person.maidenName && person.maidenName !== person.lastName) {
-                nameDisplay += ` <span class="maiden-name">(née ${person.maidenName})</span>`;
-            }
+            if(person.maidenName) nameDisplay += ` <span class="maiden-name">(née ${person.maidenName})</span>`;
             nameDisplay += '</span>';
-
+            
             let originInfo = '';
             if (person.originCityId && person.originCityId !== person.cityId) {
                 originInfo = ` <span class="origin-info">(originaire de ${person.originCityName})</span>`;
             }
-            const jobInfo = person.job ? ` - <span class="person-job">${person.job.role}</span>` : ' - Sans emploi';
-
-            let jobHistoryHtml = '';
+            
+            const jobInfo = formatPersonJob(person);
+            
+            let historyInfo = '';
             if (person.jobHistory && person.jobHistory.length > 0) {
-                jobHistoryHtml = `<div class="job-history">`;
-                person.jobHistory.forEach(jobEntry => {
-                    jobHistoryHtml += `<span>(${jobEntry.year}) ${jobEntry.role}</span>`;
-                });
-                jobHistoryHtml += `</div>`;
+                historyInfo += ' <span class="origin-info">(Anciens postes: ';
+                historyInfo += person.jobHistory.map(j => {
+                    const duration = Math.max(1, j.endDate - j.startDate);
+                    const yearText = duration > 1 ? 'ans' : 'an';
+                    return `${j.role} [an ${j.startDate} - an ${j.endDate}] (${duration} ${yearText})`;
+                }).join(', ');
+                historyInfo += ')</span>';
             }
+            
+            const ageDisplay = person.isAlive ? `${person.age} ans` : `décédé(e) à ${person.age} ans`;
 
-            return `${nameDisplay} (${person.gender}, ${person.age} ans, ${person.race})${originInfo}${jobInfo}${jobHistoryHtml}`;
+            return `${nameDisplay} (${person.gender}, ${ageDisplay}, ${person.race})${originInfo}${jobInfo ? ' - ' + jobInfo : ''}${historyInfo}`;
         }
         
         initializePage();

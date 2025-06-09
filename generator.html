@@ -325,6 +325,7 @@
                         <li><strong>Tier 3 :</strong> Professionnels qualifiés et indépendants (Tavernier, Sergent).</li>
                         <li><strong>Tier 4 :</strong> Main-d'œuvre et apprentis (Soldat, Apprenti, Serveur).</li>
                         <li><strong>Tier 5 :</strong> Métiers peu qualifiés ou précaires (Domestique, Mendiant).</li>
+                        <li><strong>Tier 6 – Pègre :</strong> Individus vivant en marge de la loi (Voleur, Assassin, Contrebandier). L'accès à ce tiers est rare et lié à des conditions de vie difficiles.</li>
                     </ul>
                     <h4>Construction Dynamique des Bâtiments</h4>
                     <p>Certains bâtiments sont construits automatiquement lorsque la population atteint certains seuils pour simuler la croissance organique de la ville :</p>
@@ -351,6 +352,29 @@
                     <h5>Effets et Risques de la Migration :</h5>
                     <ul>
                         <li><strong>Risques pour les Migrants :</strong> Les personnes ayant récemment migré pour raison économique (depuis moins de 5 ans) et qui sont sans emploi ou mendiantes ont un risque accru de décès prématuré dû à la famine, à la criminalité ou à d'autres causes.</li>
+                    </ul>
+                    <h4>Dynamique de la Précarité et de la Pègre</h4>
+                    <p>La simulation intègre des mécaniques de précarité pour rendre le monde plus vivant :</p>
+                    <ul>
+                        <li><strong>Le Mendiant :</strong> Un personnage sans emploi peut devenir mendiant, surtout dans une ville en difficulté. Ce statut n'est pas permanent :
+                            <ul>
+                                <li>Un mendiant a une chance chaque année de quitter cet état (la probabilité diminue avec le temps).</li>
+                                <li>Le mariage avec une personne ayant un emploi met fin immédiatement à la mendicité.</li>
+                                <li>Après 2 ans de mendicité, un personnage peut être tenté de rejoindre la pègre.</li>
+                            </ul>
+                        </li>
+                        <li><strong>La Pègre (Tiers 6) :</strong> Un personnage sans emploi depuis plus de 5 ans ou un mendiant depuis plus de 2 ans peut basculer dans la criminalité. La probabilité dépend de plusieurs facteurs :
+                            <ul>
+                                <li><strong>Statut de la ville :</strong> Une ville 'En déclin' ou 'En difficulté' favorise l'émergence de la pègre.</li>
+                                <li><strong>Sécurité :</strong> Moins il y a de gardes en ville, plus la pègre peut prospérer.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h4>Évolution du Statut de la Ville</h4>
+                    <p>Le "Statut Actuel" d'une ville n'est pas fixe et peut évoluer chaque année en fonction des conditions :</p>
+                    <ul>
+                        <li><strong>Facteurs d'Amélioration :</strong> La présence de gardes pour assurer la sécurité, de tavernes pour le moral et d'un marché actif (surtout s'il est grand ou régional) augmente les chances que le statut de la ville s'améliore (ex: passer de 'Stable' à 'Prospère').</li>
+                        <li><strong>Facteurs de Dégradation :</strong> Un nombre élevé de mendiants par rapport à la population totale augmente les chances que le statut de la ville se dégrade (ex: passer de 'Stable' à 'En difficulté').</li>
                     </ul>
                     <h4>Influence et Statut de la Ville</h4>
                     <p>Ces paramètres influencent la croissance de la ville et les événements qui s'y déroulent :</p>

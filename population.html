@@ -209,27 +209,25 @@
             margin-bottom: -2px;
         }
         
-        /* --- SCROLL FIX STARTS HERE --- */
         .tab-panels {
-            flex-grow: 1; /* Allows the panel container to take up available vertical space */
-            display: flex; /* Makes it a flex container for its single active child panel */
-            overflow: hidden; /* Clips any overflow, the scrolling will be handled by a deeper child */
+            flex-grow: 1;
+            display: flex;
+            overflow: hidden;
         }
         .tab-panel {
-            display: none; /* Inactive panels are hidden */
-            flex-direction: column; /* All panels are now flex columns */
-            flex-grow: 1; /* The active panel will grow to fill its container (.tab-panels) */
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
             padding-top: 15px;
         }
         .tab-panel.active {
-            display: flex; /* Active panels are shown as flex containers */
+            display: flex;
         }
         .tab-panel-content {
-            flex-grow: 1; /* The content div itself grows to fill the remaining space */
-            overflow-y: auto; /* This element is the one that will scroll if content overflows */
-            padding-right: 10px; /* Add some padding to avoid scrollbar overlapping content */
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
         }
-        /* --- SCROLL FIX ENDS HERE --- */
 
         details { border: 1px solid #eee; border-radius: 4px; margin-bottom: 8px; }
         summary { padding: 10px; cursor: pointer; font-weight: bold; background: #f8f9fa; }
@@ -323,7 +321,6 @@
          .job-count {
             font-weight: bold;
         }
-
     </style>
 </head>
 <body>
@@ -417,7 +414,7 @@
         </div>
     </div>
 
-<script>
+    <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- MISE EN CACHE DES ÉLÉMENTS DU DOM ---
         const totalFamiliesInput = document.getElementById('total-families');
@@ -436,7 +433,6 @@
         const currentYearInput = document.getElementById('current-year');
         const presetRaceSelect = document.getElementById('preset-race-select');
         const loadPresetRaceBtn = document.getElementById('load-preset-race-btn');
-
         const statsBirthsEl = document.getElementById('stats-births');
         const statsDeathsEl = document.getElementById('stats-deaths');
         const statsMarriagesEl = document.getElementById('stats-marriages');
@@ -452,10 +448,7 @@
         };
         
         // --- DONNÉES DE CONFIGURATION ---
-
-        // MODIFICATION 1: On initialise un objet vide. Il sera rempli avec les données chargées.
         let PRESET_RACES = {};
-
         const guildData = {
             'Guilde des Artisans': {
                 required_buildings: ['Forge', 'Menuisier / Charpentier', 'Tanneur / Maroquinier', 'Tisserand / Tailleur'],
@@ -479,7 +472,6 @@
                 member_role: 'Érudit de Guilde',
             }
         };
-
         const jobData = {
             base_jobs: {
                 'Hameau': [{ role: 'Chef(fe) de hameau', tier: 2, unique: true, quantity: 1 }],
@@ -488,156 +480,66 @@
                 'Capitale': [{ role: 'Dirigeant(e)', tier: 1, unique: true, scope: 'region', quantity: 1 }, { role: 'Général(e) de la garde', tier: 1, unique: true, quantity: 1, promotes_from: ['Capitaine de la garde'] }, { role: 'Archiviste royal', tier: 2, unique: true, quantity: 1, promotes_from: ['Maître Bibliothécaire'], guild_affiliation: 'Guilde des Érudits' }, { role: 'Maître espion', tier: 2, unique: true, quantity: 1 }]
             },
             building_jobs: {
-                'Taverne / Auberge': [
-                    { role: 'Tavernier/ère', tier: 3, unique: true, quantity: 1 }, 
-                    { role: 'Serveur/euse', tier: 4, dynamic_quantity_per_pop: 40 },
-                    { role: 'Videur', tier: 4, dynamic_quantity_per_pop: 150 }
-                ],
-                'Forge': [
-                    { role: 'Maître Forgeron', tier: 2, unique: true, quantity: 1, promotes_from: ['Apprenti(e) Forgeron'], guild_affiliation: 'Guilde des Artisans' }, 
-                    { role: 'Apprenti(e) Forgeron', tier: 4, master: 'Maître Forgeron', quantity: 2, guild_source: 'Guilde des Artisans' }
-                ],
-                'Marché central': [
-                    { role: 'Maître du marché', tier: 3, unique: true, quantity: 1 }, 
-                    { role: 'Vendeur de stand', tier: 4, dynamic_quantity_per_pop: 30 }
-                ],
-                'Écuries': [
-                    { role: 'Maître d\'écurie', tier: 3, unique: true, quantity: 1, promotes_from: ['Palefrenier'] }, 
-                    { role: 'Palefrenier', tier: 4, quantity: 4 }
-                ],
-                'Boulangerie': [
-                    { role: 'Maître Boulanger', tier: 3, unique: true, quantity: 1, promotes_from: ['Mitron'], guild_affiliation: 'Guilde des Artisans' }, 
-                    { role: 'Mitron', tier: 4, master: 'Maître Boulanger', quantity: 2, guild_source: 'Guilde des Artisans' }
-                ],
-                'Menuisier / Charpentier': [
-                    { role: 'Maître Artisan', tier: 3, unique: true, quantity: 1, promotes_from: ['Compagnon'], guild_affiliation: 'Guilde des Artisans' }, 
-                    { role: 'Compagnon', tier: 4, master: 'Maître Artisan', dynamic_quantity_per_pop: 80, guild_source: 'Guilde des Artisans' }
-                ],
-                'Tanneur / Maroquinier': [
-                    { role: 'Maître Tanneur', tier: 3, unique: true, quantity: 1, promotes_from: ['Ouvrier du cuir'], guild_affiliation: 'Guilde des Artisans' }, 
-                    { role: 'Ouvrier du cuir', tier: 4, master: 'Maître Tanneur', dynamic_quantity_per_pop: 100, guild_source: 'Guilde des Artisans' }
-                ],
-                'Herboristerie': [
-                    { role: 'Herboriste', tier: 3, unique: true, quantity: 1 }, 
-                    { role: 'Cueilleur', tier: 4, quantity: 2 }
-                ],
-                'Brasserie / Distillerie': [
-                    { role: 'Maître Brasseur', tier: 3, unique: true, quantity: 1, promotes_from: ['Goûteur'], guild_affiliation: 'Guilde des Artisans' }, 
-                    { role: 'Goûteur', tier: 4, master: 'Maître Brasseur', quantity: 2, guild_source: 'Guilde des Artisans' }
-                ],
-                'Tisserand / Tailleur': [
-                    { role: 'Maître Tisserand', tier: 3, unique: true, quantity: 1, promotes_from: ['Couturier/ère'], guild_affiliation: 'Guilde des Artisans' }, 
-                    { role: 'Couturier/ère', tier: 4, master: 'Maître Tisserand', dynamic_quantity_per_pop: 80, guild_source: 'Guilde des Artisans' }
-                ],
-                'Temple / Église': [
-                    { role: 'Grand(e) Prêtre/Prêtresse', tier: 2, unique: true, quantity: 1, promotes_from: ['Acolyte', 'Soigneur du Temple'] },
-                    { role: 'Gardien du Temple', tier: 3, dynamic_quantity_per_pop: 200 },
-                    { role: 'Soigneur du Temple', tier: 3, dynamic_quantity_per_pop: 180 },
-                    { role: 'Moine / Scribe du Temple', tier: 3, dynamic_quantity_per_pop: 250 },
-                    { role: 'Acolyte', tier: 4, master: 'Grand(e) Prêtre/Prêtresse', dynamic_quantity_per_pop: 120 }
-                ],
-                'Caserne / Garde': [
-                    { role: 'Sergent', tier: 3, dynamic_quantity_per_pop: 200, promotes_from: ['Soldat de la garde'], guild_affiliation: 'Guilde des Combattants' },
-                    { role: 'Armurier de la garde', tier: 3, quantity: 1, guild_affiliation: 'Guilde des Artisans' },
-                    { role: 'Soldat de la garde', tier: 4, master: 'Sergent', dynamic_quantity_per_pop: 50, guild_source: 'Guilde des Combattants' }
-                ],
-                'Château / Manoir': [
-                    { role: 'Intendant(e)', tier: 2, unique: true, quantity: 1 },
-                    { role: 'Chef Cuisinier', tier: 3, quantity: 1 },
-                    { role: 'Garde du corps personnel', tier: 3, quantity: 4, guild_affiliation: 'Guilde des Combattants' },
-                    { role: 'Maître des chasses', tier: 3, quantity: 1 },
-                    { role: 'Domestique', tier: 5, dynamic_quantity_per_pop: 40 }
-                ],
-                'Bibliothèque / Scriptorium': [
-                    { role: 'Maître Bibliothécaire', tier: 2, unique: true, quantity: 1, promotes_from: ['Archiviste', 'Copiste / Scribe'], guild_affiliation: 'Guilde des Érudits' }, 
-                    { role: 'Copiste / Scribe', tier: 3, master: 'Maître Bibliothécaire', quantity: 3, guild_source: 'Guilde des Érudits' }, 
-                    { role: 'Archiviste', tier: 3, quantity: 1, guild_source: 'Guilde des Érudits' }
-                ],
-                "Échoppe d'alchimiste": [
-                    { role: 'Maître Alchimiste', tier: 2, unique: true, quantity: 1, promotes_from: ["Assistant(e) Alchimiste"], guild_affiliation: 'Guilde des Érudits' }, 
-                    { role: 'Assistant(e) Alchimiste', tier: 4, master: 'Maître Alchimiste', quantity: 1, guild_source: 'Guilde des Érudits' }
-                ],
-                'Atelier de mage': [
-                    { role: 'Mage résident', tier: 2, unique: true, quantity: 1, promotes_from: ["Apprenti(e) mage"], guild_affiliation: 'Guilde des Érudits' }, 
-                    { role: 'Apprenti(e) mage', tier: 4, master: 'Mage résident', quantity: 1, guild_source: 'Guilde des Érudits' }
-                ],
-                'Observatoire': [
-                    { role: 'Astronome', tier: 2, unique: true, quantity: 1, guild_affiliation: 'Guilde des Érudits' }
-                ],
-                'Arène / Colisée': [
-                    { role: 'Maître des jeux', tier: 2, unique: true, quantity: 1, promotes_from: ['Gladiateur'], guild_affiliation: 'Guilde des Combattants' }, 
-                    { role: 'Gladiateur', tier: 3, quantity: 5, guild_source: 'Guilde des Combattants' },
-                    { role: 'Soigneur de l\'arène', tier: 3, quantity: 1 }
-                ]
+                'Taverne / Auberge': [ { role: 'Tavernier/ère', tier: 3, unique: true, quantity: 1 }, { role: 'Serveur/euse', tier: 4, dynamic_quantity_per_pop: 40 }, { role: 'Videur', tier: 4, dynamic_quantity_per_pop: 150 } ],
+                'Forge': [ { role: 'Maître Forgeron', tier: 2, unique: true, quantity: 1, promotes_from: ['Apprenti(e) Forgeron'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Apprenti(e) Forgeron', tier: 4, master: 'Maître Forgeron', quantity: 2, guild_source: 'Guilde des Artisans' } ],
+                'Marché central': [ { role: 'Maître du marché', tier: 3, unique: true, quantity: 1 }, { role: 'Vendeur de stand', tier: 4, dynamic_quantity_per_pop: 30 } ],
+                'Écuries': [ { role: 'Maître d\'écurie', tier: 3, unique: true, quantity: 1, promotes_from: ['Palefrenier'] }, { role: 'Palefrenier', tier: 4, quantity: 4 } ],
+                'Boulangerie': [ { role: 'Maître Boulanger', tier: 3, unique: true, quantity: 1, promotes_from: ['Mitron'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Mitron', tier: 4, master: 'Maître Boulanger', quantity: 2, guild_source: 'Guilde des Artisans' } ],
+                'Menuisier / Charpentier': [ { role: 'Maître Artisan', tier: 3, unique: true, quantity: 1, promotes_from: ['Compagnon'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Compagnon', tier: 4, master: 'Maître Artisan', dynamic_quantity_per_pop: 80, guild_source: 'Guilde des Artisans' } ],
+                'Tanneur / Maroquinier': [ { role: 'Maître Tanneur', tier: 3, unique: true, quantity: 1, promotes_from: ['Ouvrier du cuir'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Ouvrier du cuir', tier: 4, master: 'Maître Tanneur', dynamic_quantity_per_pop: 100, guild_source: 'Guilde des Artisans' } ],
+                'Herboristerie': [ { role: 'Herboriste', tier: 3, unique: true, quantity: 1 }, { role: 'Cueilleur', tier: 4, quantity: 2 } ],
+                'Brasserie / Distillerie': [ { role: 'Maître Brasseur', tier: 3, unique: true, quantity: 1, promotes_from: ['Goûteur'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Goûteur', tier: 4, master: 'Maître Brasseur', quantity: 2, guild_source: 'Guilde des Artisans' } ],
+                'Tisserand / Tailleur': [ { role: 'Maître Tisserand', tier: 3, unique: true, quantity: 1, promotes_from: ['Couturier/ère'], guild_affiliation: 'Guilde des Artisans' }, { role: 'Couturier/ère', tier: 4, master: 'Maître Tisserand', dynamic_quantity_per_pop: 80, guild_source: 'Guilde des Artisans' } ],
+                'Temple / Église': [ { role: 'Grand(e) Prêtre/Prêtresse', tier: 2, unique: true, quantity: 1, promotes_from: ['Acolyte', 'Soigneur du Temple'] }, { role: 'Gardien du Temple', tier: 3, dynamic_quantity_per_pop: 200 }, { role: 'Soigneur du Temple', tier: 3, dynamic_quantity_per_pop: 180 }, { role: 'Moine / Scribe du Temple', tier: 3, dynamic_quantity_per_pop: 250 }, { role: 'Acolyte', tier: 4, master: 'Grand(e) Prêtre/Prêtresse', dynamic_quantity_per_pop: 120 } ],
+                'Caserne / Garde': [ { role: 'Sergent', tier: 3, dynamic_quantity_per_pop: 200, promotes_from: ['Soldat de la garde'], guild_affiliation: 'Guilde des Combattants' }, { role: 'Armurier de la garde', tier: 3, quantity: 1, guild_affiliation: 'Guilde des Artisans' }, { role: 'Soldat de la garde', tier: 4, master: 'Sergent', dynamic_quantity_per_pop: 50, guild_source: 'Guilde des Combattants' } ],
+                'Château / Manoir': [ { role: 'Intendant(e)', tier: 2, unique: true, quantity: 1 }, { role: 'Chef Cuisinier', tier: 3, quantity: 1 }, { role: 'Garde du corps personnel', tier: 3, quantity: 4, guild_affiliation: 'Guilde des Combattants' }, { role: 'Maître des chasses', tier: 3, quantity: 1 }, { role: 'Domestique', tier: 5, dynamic_quantity_per_pop: 40 } ],
+                'Bibliothèque / Scriptorium': [ { role: 'Maître Bibliothécaire', tier: 2, unique: true, quantity: 1, promotes_from: ['Archiviste', 'Copiste / Scribe'], guild_affiliation: 'Guilde des Érudits' }, { role: 'Copiste / Scribe', tier: 3, master: 'Maître Bibliothécaire', quantity: 3, guild_source: 'Guilde des Érudits' }, { role: 'Archiviste', tier: 3, quantity: 1, guild_source: 'Guilde des Érudits' } ],
+                "Échoppe d'alchimiste": [ { role: 'Maître Alchimiste', tier: 2, unique: true, quantity: 1, promotes_from: ["Assistant(e) Alchimiste"], guild_affiliation: 'Guilde des Érudits' }, { role: 'Assistant(e) Alchimiste', tier: 4, master: 'Maître Alchimiste', quantity: 1, guild_source: 'Guilde des Érudits' } ],
+                'Atelier de mage': [ { role: 'Mage résident', tier: 2, unique: true, quantity: 1, promotes_from: ["Apprenti(e) mage"], guild_affiliation: 'Guilde des Érudits' }, { role: 'Apprenti(e) mage', tier: 4, master: 'Mage résident', quantity: 1, guild_source: 'Guilde des Érudits' } ],
+                'Observatoire': [ { role: 'Astronome', tier: 2, unique: true, quantity: 1, guild_affiliation: 'Guilde des Érudits' } ],
+                'Arène / Colisée': [ { role: 'Maître des jeux', tier: 2, unique: true, quantity: 1, promotes_from: ['Gladiateur'], guild_affiliation: 'Guilde des Combattants' }, { role: 'Gladiateur', tier: 3, quantity: 5, guild_source: 'Guilde des Combattants' }, { role: 'Soigneur de l\'arène', tier: 3, quantity: 1 } ]
             },
-            autonomous_jobs: [
-                { role: 'Chasseur / Piégeur', tier: 4 }, { role: 'Pêcheur', tier: 4 }, { role: 'Bûcheron / Charbonnier', tier: 4 }, 
-                { role: 'Mineur / Carrier', tier: 4 }, { role: 'Fermier / Éleveur', tier: 4 }, { role: 'Messager', tier: 4 }, 
-                { role: 'Barde / Ménestrel', tier: 3 }, { role: 'Mercenaire', tier: 3 }, { role: 'Éclaireur', tier: 3 },
-                { role: 'Mendiant', tier: 5, isBeggar: true }
-            ]
+            autonomous_jobs: [ { role: 'Chasseur / Piégeur', tier: 4 }, { role: 'Pêcheur', tier: 4 }, { role: 'Bûcheron / Charbonnier', tier: 4 }, { role: 'Mineur / Carrier', tier: 4 }, { role: 'Fermier / Éleveur', tier: 4 }, { role: 'Messager', tier: 4 }, { role: 'Barde / Ménestrel', tier: 3 }, { role: 'Mercenaire', tier: 3 }, { role: 'Éclaireur', tier: 3 }, { role: 'Mendiant', tier: 5, isBeggar: true } ]
         };
-
         const DYNAMIC_BUILDING_TIERS = {
             TIER1: { threshold: 75, types: ["Boulangerie", "Forge", "Menuisier / Charpentier"] },
             TIER2: { threshold: 150, types: ["Taverne / Auberge", "Herboristerie", "Tisserand / Tailleur", "Tanneur / Maroquinier"] },
             TIER3: { threshold: 300, types: ["Temple / Église", "Brasserie / Distillerie"] }
         };
 
-        // --- FONCTIONS UTILITAIRES ---
+        // --- FONCTIONS ---
         function offsetToCube(q, r) { const x = q; const z = r - (q + (q & 1)) / 2; const y = -x - z; return { x, y, z }; }
         function cubeDistance(a, b) { return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z)) / 2; }
         
-        // --- FONCTIONS PRINCIPALES DE L'APPLICATION ---
-        
-        // MODIFICATION 2: Crée une fonction pour charger les données de manière asynchrone.
-        // "async" signifie que cette fonction peut faire une pause en attendant une réponse (comme un fichier).
         async function loadPresetRaces() {
             try {
-                // "fetch" est la commande standard pour demander un fichier au serveur.
-                const response = await fetch('races.json'); // On attend la réponse du serveur.
-                
-                // Si le serveur répond qu'il n'a pas trouvé le fichier ou qu'il y a eu un problème.
+                const response = await fetch('race.json');
                 if (!response.ok) {
                     throw new Error(`Erreur HTTP! Statut: ${response.status}`);
                 }
-                
-                // On transforme la réponse (qui est du texte) en un véritable objet JavaScript.
-                const data = await response.json();
-                
-                // On stocke les données chargées dans notre variable.
-                PRESET_RACES = data;
-                console.log("Les races pré-définies ont été chargées avec succès !");
-
+                PRESET_RACES = await response.json();
+                console.log("Races pré-définies chargées avec succès !");
             } catch (error) {
-                console.error("Impossible de charger le fichier races.json:", error);
-                alert("ERREUR : Impossible de charger les données des races. Assurez-vous que le fichier 'races.json' existe bien et que vous avez lancé le serveur web local (voir instructions).");
+                console.error("Impossible de charger le fichier race.json:", error);
+                alert("ERREUR : Impossible de charger les données des races. Assurez-vous que le fichier 'race.json' est bien dans le dépôt GitHub.");
             }
         }
 
-        // MODIFICATION 3: La fonction principale d'initialisation devient "async"
-        // pour qu'elle puisse attendre le chargement des races avant de continuer.
         async function initializePage() {
-            // On lance le chargement et on ATTEND ("await") qu'il soit terminé.
             await loadPresetRaces();
-
-            // Le reste du code ne s'exécute que lorsque les races sont chargées.
             loadAllRegions();
             totalFamiliesInput.value = calculateTotalFamilies();
             loadRacesFromDB();
-            populatePresetRacesDropdown(); // Maintenant, cette fonction peut utiliser PRESET_RACES qui est rempli.
+            populatePresetRacesDropdown();
             updateUiState();
-            
             addRaceBtn.addEventListener('click', () => createAndPopulateRaceCard());
             saveRacesBtn.addEventListener('click', saveRacesToDB);
             loadPresetRaceBtn.addEventListener('click', handleLoadPresetRace);
             startSimBtn.addEventListener('click', generateG0);
             viewResultsBtn.addEventListener('click', displayPopulation);
-            
             populationModal.querySelector('.modal-close').addEventListener('click', () => {
                 populationModal.style.display = 'none';
             });
-
             const historyModalClose = document.getElementById('history-modal-close');
             historyModalClose.addEventListener('click', () => {
                 historyModal.style.display = 'none';
@@ -647,7 +549,6 @@
                     historyModal.style.display = 'none';
                 }
             });
-
             document.body.addEventListener('click', function(event) {
                 if (event.target && event.target.classList.contains('open-history-modal-btn')) {
                     const button = event.target;
@@ -659,8 +560,6 @@
         }
         
         function populatePresetRacesDropdown() {
-            // Cette fonction n'a pas besoin de changer ! Elle fonctionne parfaitement
-            // avec l'objet PRESET_RACES une fois qu'il est rempli.
             for (const raceName in PRESET_RACES) {
                 const option = document.createElement('option');
                 option.value = raceName;
@@ -668,9 +567,6 @@
                 presetRaceSelect.appendChild(option);
             }
         }
-
-        // ... Le reste de votre code JavaScript (de handleLoadPresetRace à la fin) reste INCHANGÉ ...
-        // Je le remets ici pour que vous ayez le bloc complet à copier/coller.
 
         function handleLoadPresetRace() {
             const selectedRaceName = presetRaceSelect.value;
@@ -683,20 +579,17 @@
                 createAndPopulateRaceCard(PRESET_RACES[selectedRaceName]);
                 updateUiState();
             }
-            presetRaceSelect.value = ""; // Reset dropdown
+            presetRaceSelect.value = "";
         }
 
         function openHistoryModal(familyId, familyName) {
             const title = document.getElementById('history-modal-title');
             const body = document.getElementById('history-modal-body');
-
             title.textContent = `Historique de la famille ${familyName}`;
-
             const fullHistory = simulation.eventLog
                 .filter(e => e.familyId === familyId)
                 .slice()
                 .reverse();
-
             const listHtml = fullHistory.map(event => {
                 const message = event.message.replace(/<\/?h3>/g, '').trim();
                 if (message) {
@@ -704,7 +597,6 @@
                 }
                 return '';
             }).join('');
-
             body.innerHTML = `<ul class="family-history">${listHtml}</ul>`;
             historyModal.style.display = 'flex';
         }
@@ -879,13 +771,11 @@
         async function runFullSimulation() {
             startSimBtn.disabled = true;
             startSimBtn.textContent = 'Simulation en cours...';
-
             for (let i = 0; i < 100; i++) {
                 advanceTime();
                 displayPopulation();
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-
             logEvent(`<strong>FIN:</strong> La simulation s'est terminée après 100 ans.`, null, null);
             displayPopulation();
             startSimBtn.textContent = 'Simulation terminée';
@@ -900,16 +790,13 @@
             nextBuildingId = 0;
             simulation.year = 0;
             currentYearInput.value = 'Année 0';
-
             const currentRegion = getCurrentRegion();
             if(!currentRegion) return;
-            
             currentRegion.cities.forEach(city => {
                 if(!city.config) city.config = {};
                 city.config.dynamic_buildings = [];
                 city.config.guilds = [];
             });
-
             const familySlots = [];
             currentRegion.cities.forEach(city => {
                 const numFamilies = city.config?.g0_families || 0;
@@ -923,15 +810,12 @@
                 if (!raceName) return;
                 const raceInfo = simulation.races[raceName];
                 const familyName = raceInfo.lastNames[Math.floor(Math.random() * raceInfo.lastNames.length)] || `Famille ${index}`;
-                
                 const age1 = Math.floor(Math.random() * 7) + 18;
                 const minAge2 = Math.max(18, age1 - 5);
                 const maxAge2 = Math.min(24, age1 + 5);
                 const age2 = Math.floor(Math.random() * (maxAge2 - minAge2 + 1)) + minAge2;
-
                 const person1 = createPerson(raceName, familyName, familyId, 'M', age1, slot.cityId, slot.cityName);
                 const person2 = createPerson(raceName, familyName, familyId, 'F', age2, slot.cityId, slot.cityName);
-                
                 if (person1 && person2) {
                     person1.spouseId = person2.id;
                     person2.spouseId = person1.id;
@@ -945,7 +829,6 @@
             });
             assignJobs();
             logEvent(`<strong>Année 0 :</strong> Fondation de la région avec ${simulation.population.length} personnes. Les premiers métiers ont été assignés.`, null, null);
-            
             viewResultsBtn.disabled = false;
             displayPopulation();
             runFullSimulation();
@@ -979,15 +862,11 @@
 
         function updateGuilds(city) {
             if (!city.config) return;
-
             const cityBuildings = new Set(Object.keys(city.config.buildings || {}).filter(b => city.config.buildings[b]));
             const cityPopulation = simulation.population.filter(p => p.isAlive && p.cityId === city.id).length;
-
             for (const [guildName, data] of Object.entries(guildData)) {
                 const existingGuild = city.config.guilds.find(g => g.name === guildName);
-                
                 const buildingsOwned = [...cityBuildings].filter(b => data.required_buildings.includes(b)).length;
-
                 if (!existingGuild && cityPopulation >= data.min_pop && buildingsOwned >= data.min_buildings) {
                     city.config.guilds.push({ name: guildName });
                     logEvent(`🏛️ La <strong>${guildName}</strong> a été fondée à ${city.name} !`, city.id, null);
@@ -998,12 +877,10 @@
         function updateCityInfrastructure(city) {
             if (!city.config) return;
             const populationInCity = simulation.population.filter(p => p.isAlive && p.cityId === city.id).length;
-
             for (const tierInfo of Object.values(DYNAMIC_BUILDING_TIERS)) {
                 if (populationInCity > tierInfo.threshold) {
                     const targetCount = Math.floor(populationInCity / tierInfo.threshold);
                     const currentCount = city.config.dynamic_buildings.filter(b => tierInfo.types.includes(b.name)).length;
-
                     if (targetCount > currentCount && Math.random() < 0.20) {
                         const newBuildingType = tierInfo.types[Math.floor(Math.random() * tierInfo.types.length)];
                         city.config.dynamic_buildings.push({ id: `bld_${nextBuildingId++}`, name: newBuildingType });
@@ -1012,15 +889,12 @@
                     }
                 }
             }
-
-             for (const tierInfo of Object.values(DYNAMIC_BUILDING_TIERS)) {
+            for (const tierInfo of Object.values(DYNAMIC_BUILDING_TIERS)) {
                 const targetCount = Math.floor(populationInCity / tierInfo.threshold);
                 const buildingsOfType = city.config.dynamic_buildings.filter(b => tierInfo.types.includes(b.name));
                 const currentCount = buildingsOfType.length;
-                
                 if (currentCount > targetCount && Math.random() < 0.15) {
                     const buildingToRemove = buildingsOfType[Math.floor(Math.random() * buildingsOfType.length)];
-                    
                     const employees = simulation.population.filter(p => p.job?.buildingInstanceId === buildingToRemove.id);
                     if (employees.length > 0) {
                         const employeeNames = employees.map(e => `${e.firstName} ${e.lastName} (${e.job.role})`).join(', ');
@@ -1029,7 +903,6 @@
                     } else {
                         logEvent(`📉 Une ${buildingToRemove.name} superflue a fermé à ${city.name}.`, city.id, null);
                     }
-                    
                     city.config.dynamic_buildings = city.config.dynamic_buildings.filter(b => b.id !== buildingToRemove.id);
                     break;
                 }
@@ -1040,24 +913,19 @@
             const cityPopulation = simulation.population.filter(p => p.isAlive && p.cityId === city.id);
             const popCount = cityPopulation.length;
             const jobStatus = { buildings: [], guilds: [], autonomous: [] };
-
             const allBuildings = [
                 ...Object.entries(city.config?.buildings || {}).filter(([, exists]) => exists).map(([name]) => ({ id: `static_${name.replace(/[^a-z]/gi, '')}`, name })), 
                 ...(city.config?.dynamic_buildings || [])
             ];
-
             const filledJobs = cityPopulation.map(p => p.job).filter(Boolean);
-
             allBuildings.forEach(building => {
                 const buildingInfo = { name: building.name, jobs: [] };
                 const jobDefs = jobData.building_jobs[building.name] || [];
-
                 jobDefs.forEach(def => {
                     let required = def.quantity || 0;
                     if (def.dynamic_quantity_per_pop) {
                         required += Math.floor(popCount / def.dynamic_quantity_per_pop);
                     }
-
                     if (required > 0) {
                         let filled;
                          if (building.id.startsWith('static')) {
@@ -1072,14 +940,12 @@
                    jobStatus.buildings.push(buildingInfo);
                 }
             });
-
             (city.config.guilds || []).forEach(guild => {
                 const guildDef = guildData[guild.name];
                 if(guildDef) {
                     const masterFilled = filledJobs.filter(j => j.role === guildDef.master_role).length;
                     const membersFilled = filledJobs.filter(j => j.role === guildDef.member_role).length;
                     const memberRequired = Math.floor(popCount / 50);
-                    
                     jobStatus.guilds.push({
                         name: guild.name,
                         jobs: [
@@ -1089,29 +955,24 @@
                     });
                 }
             });
-            
             jobData.autonomous_jobs.forEach(def => {
                 const filled = filledJobs.filter(j => j.role === def.role).length;
                 if (filled > 0 || !def.isBeggar) {
                     jobStatus.autonomous.push({ role: def.role, required: 'N/A', filled });
                 }
             });
-
             return jobStatus;
         }
 
         function assignJobs() {
             const currentRegion = getCurrentRegion();
             if (!currentRegion) return;
-
             currentRegion.cities.forEach(city => {
                 const populationInCity = simulation.population.filter(p => p.isAlive && p.cityId === city.id);
                 const cityPopulationCount = populationInCity.length;
                 if(cityPopulationCount === 0) return;
-
                 let vacantJobs = [];
                 let requiredJobsList = [];
-
                 (jobData.base_jobs[city.type] || []).forEach(j => requiredJobsList.push({...j}));
                 const allBuildings = [
                     ...Object.entries(city.config?.buildings || {}).filter(([, exists]) => exists).map(([name]) => ({ id: `static_${name.replace(/[^a-z]/gi, '')}`, name })), 
@@ -1134,7 +995,6 @@
                         }
                     }
                 });
-
                 const filledJobCounts = {};
                 populationInCity.forEach(p => {
                     if (p.job) {
@@ -1155,24 +1015,18 @@
                     }
                 }
                 vacantJobs.sort((a, b) => (a.tier || 99) - (b.tier || 99));
-                
                 let availableCandidates = populationInCity.filter(p => !p.job);
                 vacantJobs.forEach(vacantJob => {
                     if (availableCandidates.length === 0 && !vacantJob.promotes_from && !vacantJob.guild_affiliation) return;
-                    
                     let candidate = null, isPromotion = false, promotionSource = '';
-
                     if (vacantJob.promotes_from) {
-                        const promotionCandidates = populationInCity
-                            .filter(p => p.job && vacantJob.promotes_from.includes(p.job.role))
-                            .sort((a,b) => b.age - a.age); 
+                        const promotionCandidates = populationInCity.filter(p => p.job && vacantJob.promotes_from.includes(p.job.role)).sort((a,b) => b.age - a.age); 
                         if(promotionCandidates.length > 0) {
                             candidate = promotionCandidates[0];
                             isPromotion = true;
                             promotionSource = `son poste de ${candidate.job.role}`;
                         }
                     }
-
                     if (!candidate && vacantJob.guild_affiliation) {
                         const guildDef = guildData[vacantJob.guild_affiliation];
                         if (guildDef) {
@@ -1185,12 +1039,9 @@
                             }
                         }
                     }
-
                     if (!candidate) {
                         if(availableCandidates.length === 0) return;
-                        
                         let hirePool = availableCandidates.filter(p => p.age >= (simulation.races[p.race]?.adultAge || 18));
-                        
                         if (vacantJob.guild_source) {
                             const guildDef = guildData[vacantJob.guild_source];
                             if(guildDef) {
@@ -1198,7 +1049,6 @@
                                 if(guildPool.length > 0) hirePool = guildPool;
                             }
                         }
-
                         if (vacantJob.tier <= 3) {
                              const qualifiedPool = hirePool.filter(p => p.age > 25);
                              if (qualifiedPool.length > 0) hirePool = qualifiedPool;
@@ -1208,7 +1058,6 @@
                             candidate = hirePool[0];
                         }
                     }
-                    
                     if(candidate) {
                         if(isPromotion) {
                             logEvent(`⬆️ ${candidate.firstName} ${candidate.lastName} a été promu(e) au poste de ${vacantJob.role} depuis ${promotionSource} à ${city.name}.`, city.id, candidate.familyId);
@@ -1221,19 +1070,12 @@
                         }
                     }
                 });
-                
                 let unemployedAdults = availableCandidates.filter(p => p.age >= (simulation.races[p.race]?.adultAge || 18));
-
                 const cityStatus = city.config.city_status;
                 const beggarJob = jobData.autonomous_jobs.find(j => j.isBeggar);
-
                 if (beggarJob && (cityStatus === 'difficulte' || cityStatus === 'declin')) {
-                    const BEGGAR_CHANCES = {
-                        'difficulte': 0.03,
-                        'declin': 0.07
-                    };
+                    const BEGGAR_CHANCES = { 'difficulte': 0.03, 'declin': 0.07 };
                     const chance = BEGGAR_CHANCES[cityStatus] || 0;
-
                     if (chance > 0) {
                         unemployedAdults.forEach(person => {
                             if(!person.job && Math.random() < chance) {
@@ -1243,14 +1085,10 @@
                         unemployedAdults = unemployedAdults.filter(p => !p.job);
                     }
                 }
-                
                 const autonomousJobs = jobData.autonomous_jobs.filter(j => !j.isBeggar);
                 unemployedAdults.forEach(person => {
                     if (Math.random() < 0.25) {
-                        const jobPool = Math.random() < 0.8 
-                            ? autonomousJobs.filter(j => j.tier === 4) 
-                            : autonomousJobs.filter(j => j.tier === 3);
-                            
+                        const jobPool = Math.random() < 0.8 ? autonomousJobs.filter(j => j.tier === 4) : autonomousJobs.filter(j => j.tier === 3);
                         if (jobPool.length > 0) {
                             person.job = jobPool[Math.floor(Math.random() * jobPool.length)];
                         }
@@ -1261,20 +1099,12 @@
 
         function degradeCityStatus(city, severity = 1) {
             const progressionArray = ['prospere', 'stable', 'difficulte', 'declin'];
-            const progressionMap = {
-                'prospere': 0,
-                'stable': 1,
-                'difficulte': 2,
-                'declin': 3
-            };
-
+            const progressionMap = { 'prospere': 0, 'stable': 1, 'difficulte': 2, 'declin': 3 };
             const oldStatus = city.config.city_status || 'stable';
             const currentIndex = progressionMap[oldStatus];
             if(currentIndex === undefined) return;
-
             const newIndex = Math.min(progressionArray.length - 1, currentIndex + severity);
             const newStatus = progressionArray[newIndex];
-            
             if (oldStatus !== newStatus) {
                 city.config.city_status = newStatus;
                 logEvent(`📉 À cause d'un afflux soudain de population, le statut de <strong>${city.name}</strong> s'est ${severity > 1 ? 'sévèrement ' : ''}dégradé de '${oldStatus}' à '${newStatus}'.`, city.id, null);
@@ -1284,34 +1114,21 @@
         function processMigrationImpact() {
             const currentRegion = getCurrentRegion();
             if (!currentRegion) return;
-
             const MIGRATION_IMPACT_THRESHOLD = 1;
             const beggarJob = jobData.autonomous_jobs.find(j => j.isBeggar);
-
             currentRegion.cities.forEach(city => {
                 const cityPopulation = simulation.population.filter(p => p.isAlive && p.cityId === city.id).length;
                 if (cityPopulation === 0) return;
-
-                const opportunityMigrantsEvents = simulation.eventLog.filter(e =>
-                    e.year === simulation.year &&
-                    e.cityId === city.id &&
-                    e.message.startsWith('✨') &&
-                    e.meta && e.meta.personId
-                );
-
+                const opportunityMigrantsEvents = simulation.eventLog.filter(e => e.year === simulation.year && e.cityId === city.id && e.message.startsWith('✨') && e.meta && e.meta.personId);
                 const migrantCount = opportunityMigrantsEvents.length;
-                
                 if (migrantCount === 0) return;
-
                 const migrationPercentage = (migrantCount / (cityPopulation - migrantCount)) * 100;
-
                 if (migrationPercentage > MIGRATION_IMPACT_THRESHOLD) {
                     let severity = 1;
                     if (migrationPercentage > 3) {
                         severity = 2;
                     }
                     degradeCityStatus(city, severity);
-
                     if (beggarJob) {
                         opportunityMigrantsEvents.forEach(event => {
                             const migrant = simulation.population.find(p => p.id === event.meta.personId);
@@ -1328,12 +1145,10 @@
         function handleDeaths() {
             const currentRegion = getCurrentRegion();
             if (!currentRegion) return;
-
             simulation.population.forEach(person => {
                 if (!person.isAlive) return;
                 const raceInfo = simulation.races[person.race];
                 if (!raceInfo) return;
-
                 let died = false;
                 let deathChance = 0;
                 if (person.age > raceInfo.lifespan) {
@@ -1345,38 +1160,26 @@
                     logEvent(`🕊️ ${person.firstName} ${person.lastName} (${person.job?.role || 'Sans emploi'}) est décédé(e) de vieillesse à ${person.age} ans à ${person.cityName}.`, person.cityId, person.familyId);
                     died = true;
                 }
-
                 if (!died && person.age > 16 && person.age < (raceInfo.lifespan * 0.85)) {
                     const city = currentRegion.cities.find(c => c.id === person.cityId);
                     const cityStatus = city?.config?.city_status || 'stable';
                     let diedPrematurely = false;
                     let causeOfDeathMessage = '';
-
                     const crimeDeathCauses = ["tué(e) lors d'un vol", "victime d'une agression de rue", "assassiné(e) par un rival", "pris(e) dans un règlement de comptes"];
                     const famineDeathCauses = ["mort(e) de faim", "mort(e) de malnutrition due à la famine", "décédé(e) des suites de la disette"];
                     const genericPrematureDeathCauses = ["d'une maladie soudaine", "d'un accident de travail", "d'une rixe qui a mal tourné", "en protégeant un proche", "d'une chute malencontreuse", "des mauvaises conditions de vie", "d'une épidémie locale"];
-
-                    const statusDeathRates = {
-                        'prospere':   { generic: 0.0010, crime: 0.0000, famine: 0.0000 },
-                        'stable':     { generic: 0.0015, crime: 0.0001, famine: 0.0000 },
-                        'difficulte': { generic: 0.0020, crime: 0.0015, famine: 0.0005 },
-                        'declin':     { generic: 0.0025, crime: 0.0035, famine: 0.0025 }
-                    };
-                    
+                    const statusDeathRates = { 'prospere': { generic: 0.0010, crime: 0.0000, famine: 0.0000 }, 'stable': { generic: 0.0015, crime: 0.0001, famine: 0.0000 }, 'difficulte': { generic: 0.0020, crime: 0.0015, famine: 0.0005 }, 'declin': { generic: 0.0025, crime: 0.0035, famine: 0.0025 } };
                     const rates = statusDeathRates[cityStatus] || statusDeathRates['stable'];
                     let finalRates = { ...rates };
-
                     let riskMultiplier = 1.0;
                     if (person.yearsSinceMigration !== undefined && person.yearsSinceMigration < 5) {
                         riskMultiplier = 2.5; 
                     } else if (!person.job || person.job.isBeggar) {
                         riskMultiplier = 2.0; 
                     }
-
                     finalRates.crime *= riskMultiplier;
                     finalRates.famine *= riskMultiplier;
                     finalRates.generic *= (riskMultiplier > 1.0 ? 1.2 : 1.0);
-
                     if (Math.random() < finalRates.famine) {
                         diedPrematurely = true;
                         const cause = famineDeathCauses[Math.floor(Math.random() * famineDeathCauses.length)];
@@ -1390,13 +1193,11 @@
                         const cause = genericPrematureDeathCauses[Math.floor(Math.random() * genericPrematureDeathCauses.length)];
                         causeOfDeathMessage = `💀 ${person.firstName} ${person.lastName} est décédé(e) prématurément à ${person.age} ans ${cause} à ${person.cityName}.`;
                     }
-
                     if (diedPrematurely) {
                         logEvent(causeOfDeathMessage, person.cityId, person.familyId);
                         died = true;
                     }
                 }
-
                 if (died) {
                     person.isAlive = false;
                     person.job = null;
@@ -1415,21 +1216,15 @@
             for (const familyId in simulation.families) {
                 const family = simulation.families[familyId];
                 if (!family || !family.members || family.isExtinct) continue;
-
                 const members = family.members.map(id => simulation.population.find(p => p.id === id)).filter(Boolean);
                 const hasLivingMaleHeir = members.some(p => p.isAlive && p.gender === 'M' && p.lastName === family.originalName);
-
                 if (!hasLivingMaleHeir) {
                     const region = getCurrentRegion();
                     const city = region.cities.find(c => c.name === family.location);
                     const cityId = city ? city.id : null;
-
                     let message = `☠️ La lignée des <strong>${family.originalName}</strong> dans <strong>${family.location}</strong> s'est éteinte, n'ayant plus d'héritier mâle.`;
-                    
-                    const allPeopleWithFamilyName = simulation.population.filter(p => 
-                        p.isAlive && (p.lastName === family.originalName || p.maidenName === family.originalName));
+                    const allPeopleWithFamilyName = simulation.population.filter(p => p.isAlive && (p.lastName === family.originalName || p.maidenName === family.originalName));
                     const otherCities = [...new Set(allPeopleWithFamilyName.map(p => p.cityName).filter(cityName => cityName !== family.location))];
-
                     if (otherCities.length > 0) {
                         message += ` Mais reste de la famille dans le ou les lieux "${otherCities.join('", "')}".`;
                     }
@@ -1452,9 +1247,7 @@
                     const maxFertilityChance = 0.20; 
                     const fertilityRange = fertilityEndAge - raceInfo.adultAge;
                     const yearsIntoFertility = mother.age - raceInfo.adultAge;
-                    const fertilityProgress = yearsIntoFertility / fertilityRange;
                     const currentBirthChance = maxFertilityChance * (1 - fertilityProgress);
-                    
                     if(Math.random() < currentBirthChance) {
                         const childAge = 0;
                         const childRace = Math.random() < 0.5 ? father.race : mother.race;
@@ -1478,50 +1271,39 @@
         function handleMarriages() {
             const MARRIAGE_SEARCH_CHANCE = 0.6; 
             const FOREIGN_MARRIAGE_CHANCE = 0.25; 
-
             const currentRegion = getCurrentRegion();
             if (!currentRegion) return;
             const singleMen = simulation.population.filter(p => p.isAlive && p.spouseId === null && p.gender === 'M' && p.age >= (simulation.races[p.race]?.adultAge || 18));
             let singleWomen = simulation.population.filter(p => p.isAlive && p.spouseId === null && p.gender === 'F' && p.age >= (simulation.races[p.race]?.adultAge || 18));
-            
             singleMen.forEach(man => {
                 if (man.spouseId || Math.random() > MARRIAGE_SEARCH_CHANCE) return;
-
                 const filterConditions = woman => {
                     if (woman.spouseId || woman.familyId === man.familyId) return false;
                     return Math.abs(man.age - woman.age) <= 5;
                 };
-
                 let suitableWives = singleWomen.filter(woman => woman.cityId === man.cityId && filterConditions(woman));
-                
                 if (suitableWives.length === 0 && Math.random() < FOREIGN_MARRIAGE_CHANCE) {
                     const manCity = currentRegion.cities.find(c => c.id === man.cityId);
                     if (!manCity) return;
                     const influenceToRadius = { 'local': 1, 'grand': 3, 'regional': 100 };
                     const manInfluence = influenceToRadius[manCity.config?.market_influence] || 1;
-
                     suitableWives = singleWomen.filter(woman => {
                         if (woman.cityId === man.cityId || !filterConditions(woman)) return false;
-                        
                         const womanCity = currentRegion.cities.find(c => c.id === woman.cityId);
                         if (!womanCity) return false;
-
                         const womanInfluence = influenceToRadius[womanCity.config?.market_influence] || 1;
                         const distInHexes = cubeDistance(offsetToCube(manCity.q, manCity.r), offsetToCube(womanCity.q, womanCity.r));
                         return distInHexes <= manInfluence || distInHexes <= womanInfluence;
                     });
                 }
-                
                 if (suitableWives.length > 0) {
                     const woman = suitableWives[Math.floor(Math.random() * suitableWives.length)];
-                    
                     const originalWomanLastName = woman.lastName;
                     const oldFamilyId = woman.familyId;
                     man.spouseId = woman.id;
                     woman.spouseId = man.id;
                     woman.maidenName = woman.lastName;
                     woman.lastName = man.lastName;
-                    
                     let marriageLog = `⚭ ${man.firstName} ${man.lastName} et ${woman.firstName} ${woman.lastName} (née ${originalWomanLastName}) se sont mariés.`;
                     if (man.wasMarried || woman.wasMarried) {
                         const secondTimers = [];
@@ -1531,7 +1313,6 @@
                     }
                     logEvent(marriageLog, woman.cityId, man.familyId);
                     logEvent(marriageLog, woman.cityId, oldFamilyId);
-
                     const newFamilyId = man.familyId;
                     if (oldFamilyId !== newFamilyId) {
                         woman.familyId = newFamilyId;
@@ -1542,11 +1323,9 @@
                             simulation.families[newFamilyId].members.push(woman.id);
                         }
                     }
-
                     if (man.cityId !== woman.cityId) {
                         handleRelocation(man, woman, { type: 'marriage' });
                     }
-
                     singleWomen = singleWomen.filter(w => w.id !== woman.id);
                 }
             });
@@ -1554,7 +1333,6 @@
         
         function handleRelocation(person1, person2, reason) {
             let personToMove, targetCity;
-
             if (reason.type === 'marriage') {
                 const cityTiers = { 'Capitale': 1, 'Ville': 2, 'Village': 3, 'Hameau': 4, 'Donjon': 5 };
                 const person1JobTier = person1.job?.tier || 99;
@@ -1564,7 +1342,6 @@
                 if (!person1City || !person2City) return;
                 const person1CityTier = cityTiers[person1City.type] || 99;
                 const person2CityTier = cityTiers[person2City.type] || 99;
-
                 if (person1JobTier < person2JobTier - 1) { personToMove = person2; targetCity = person1City; } 
                 else if (person2JobTier < person1JobTier - 1) { personToMove = person1; targetCity = person2City; } 
                 else if (person1CityTier < person2CityTier) { personToMove = person2; targetCity = person1City; } 
@@ -1576,27 +1353,22 @@
             } else {
                 return;
             }
-            
             const oldCityName = personToMove.cityName;
             const oldJob = personToMove.job;
             const oldJobText = oldJob ? `quittant son poste de ${oldJob.role}` : 'qui était sans emploi';
             let logMessage = '';
-
             if (reason.type === 'marriage') {
                 const spouse = (personToMove.id === person1.id) ? person2 : person1;
                 logMessage = `✈️ Pour rejoindre son/sa conjoint(e) ${spouse.firstName} ${spouse.lastName}, ${personToMove.firstName} ${personToMove.lastName} a déménagé de ${oldCityName} à ${targetCity.name}, ${oldJobText}.`;
             } else if (reason.type === 'opportunity') {
                 logMessage = `✨ En quête d'opportunités, ${personToMove.firstName} ${personToMove.lastName} a déménagé de ${oldCityName} à ${targetCity.name}, ${oldJobText}.`;
             }
-
             personToMove.cityId = targetCity.id;
             personToMove.cityName = targetCity.name;
             personToMove.job = null;
-            
             if (personToMove.gender === 'M' && simulation.families[personToMove.familyId]) {
                 simulation.families[personToMove.familyId].location = targetCity.name;
             }
-
             const eventMeta = reason.type === 'opportunity' ? { personId: personToMove.id } : {};
             logEvent(logMessage, targetCity.id, personToMove.familyId, eventMeta);
         }
@@ -1604,23 +1376,19 @@
         function handleEconomicMigration() {
             const currentRegion = getCurrentRegion();
             if (!currentRegion) return;
-
             const cityScores = {};
-
             currentRegion.cities.forEach(city => {
                 const statusMultipliers = { 'prospere': 1.5, 'stable': 1.0, 'difficulte': 0.7, 'declin': 0.4 };
                 const marketMultipliers = { 'regional': 1.3, 'grand': 1.1, 'local': 1.0 };
                 let score = 1.0;
                 score *= statusMultipliers[city.config?.city_status] || 1.0;
                 score *= marketMultipliers[city.config?.market_influence] || 1.0;
-
                 const filledJobs = {};
                 simulation.population.forEach(p => {
                     if (p.isAlive && p.job && p.cityId === city.id) {
                         filledJobs[p.job.role] = (filledJobs[p.job.role] || 0) + 1;
                     }
                 });
-
                 let vacantHighTierJobs = 0;
                 const requiredJobs = [...(jobData.base_jobs[city.type] || []), ...(Object.values(jobData.building_jobs).flat())];
                 requiredJobs.forEach(jobInfo => {
@@ -1632,37 +1400,25 @@
                 score += vacantHighTierJobs * 0.25;
                 cityScores[city.id] = { score: score, city: city };
             });
-
             const potentialMigrants = simulation.population.filter(p => {
                 const raceInfo = simulation.races[p.race];
                 return p.isAlive && raceInfo && p.age > raceInfo.adultAge && (!p.job || (p.job.tier && p.job.tier >= 4));
             });
-            
             potentialMigrants.forEach(person => {
                 const personCity = currentRegion.cities.find(c => c.id === person.cityId);
                 if (!personCity) return;
                 const personCityStatus = personCity.config?.city_status || 'stable';
-                
-                const MIGRATION_CHECK_CHANCES = {
-                    'prospere': 0.005,
-                    'stable':   0.01,
-                    'difficulte': 0.04,
-                    'declin':   0.08
-                };
-                
+                const MIGRATION_CHECK_CHANCES = { 'prospere': 0.005, 'stable':   0.01, 'difficulte': 0.04, 'declin':   0.08 };
                 if (Math.random() < (MIGRATION_CHECK_CHANCES[personCityStatus] || 0.01)) {
                     const currentCityScore = cityScores[person.cityId]?.score || 0;
                     let bestAlternative = null;
-
                     for (const cityId in cityScores) {
                         if (cityId !== person.cityId) {
                             const destinationCity = cityScores[cityId].city;
                             const kmPerHex = getCurrentRegion()?.hexDistance || 10;
                             const distInHexes = cubeDistance(offsetToCube(personCity.q, personCity.r), offsetToCube(destinationCity.q, destinationCity.r));
                             const distInKm = distInHexes * kmPerHex;
-                            
                             const perceivedScore = cityScores[cityId].score * (1 - (distInKm * 0.02));
-
                             if (perceivedScore > currentCityScore * 1.2) { 
                                 if (!bestAlternative || perceivedScore > bestAlternative.score) {
                                     bestAlternative = {score: perceivedScore, city: destinationCity};
@@ -1683,10 +1439,8 @@
         function displayPopulation() {
             const popDisplay = document.getElementById('population-display');
             if (!popDisplay) return;
-
             const activeMainTab = popDisplay.querySelector(':scope > .tab-nav > .tab-button.active');
             const activeMainTabId = activeMainTab ? activeMainTab.dataset.tabId : 'population';
-
             let activeSubTabCityId = null;
             if (activeMainTab) {
                 const activeMainPanelId = `tab-panel-${activeMainTabId}`;
@@ -1698,28 +1452,21 @@
                     }
                 }
             }
-
             const modalTitle = document.getElementById('population-modal-title');
             const historyContent = document.getElementById('history-log-content');
             const tabNav = popDisplay.querySelector(':scope > .tab-nav');
             const tabPanels = popDisplay.querySelector(':scope > .tab-panels');
-            
             if (!modalTitle || !historyContent || !tabNav || !tabPanels) return;
-            
             tabNav.innerHTML = '';
             tabPanels.innerHTML = '';
-            
             const totalPopulation = simulation.population.filter(p => p.isAlive).length;
             modalTitle.textContent = `Population de la Région (Année ${simulation.year}) - ${totalPopulation} habitants`;
-            
             historyContent.innerHTML = simulation.eventLog
                 .slice().reverse().map(entry => `<p>${entry.message}</p>`).join('');
             historyContent.scrollTop = 0;
-            
             const currentRegion = getCurrentRegion();
             if (!currentRegion || !currentRegion.cities) return;
             const citiesData = [...currentRegion.cities];
-
             const mainTabs = [{id: 'population', text: 'Population'}, {id: 'evolution', text: 'Évolution du Lieu'}];
             mainTabs.forEach(mainTab => {
                  const tabButton = document.createElement('button');
@@ -1727,13 +1474,11 @@
                  tabButton.dataset.tabId = mainTab.id;
                  tabButton.textContent = mainTab.text;
                  tabNav.appendChild(tabButton);
-
                  const tabPanel = document.createElement('div');
                  tabPanel.className = 'tab-panel';
                  tabPanel.id = `tab-panel-${mainTab.id}`;
                  tabPanel.innerHTML = `<div class="tab-nav"></div><div class="tab-panels"></div>`;
                  tabPanels.appendChild(tabPanel);
-                 
                  tabButton.addEventListener('click', () => {
                     popDisplay.querySelectorAll(':scope > .tab-nav > .tab-button').forEach(btn => btn.classList.remove('active'));
                     popDisplay.querySelectorAll(':scope > .tab-panels > .tab-panel').forEach(panel => panel.classList.remove('active'));
@@ -1741,10 +1486,8 @@
                     tabPanel.classList.add('active');
                  });
             });
-
             citiesData.sort((a, b) => a.name.localeCompare(b.name)).forEach(cityData => {
                 const cityPopulationCount = simulation.population.filter(p => p.isAlive && p.cityId === cityData.id).length;
-                
                 const popTabPanel = document.getElementById('tab-panel-population');
                 const popSubTabNav = popTabPanel.querySelector('.tab-nav');
                 const popSubTabPanels = popTabPanel.querySelector('.tab-panels');
@@ -1764,7 +1507,6 @@
                     popSubTabBtn.classList.add('active');
                     popSubTabPanel.classList.add('active');
                 });
-
                 const evoTabPanel = document.getElementById('tab-panel-evolution');
                 const evoSubTabNav = evoTabPanel.querySelector('.tab-nav');
                 const evoSubTabPanels = evoTabPanel.querySelector('.tab-panels');
@@ -1785,14 +1527,11 @@
                     evoSubTabPanel.classList.add('active');
                 });
             });
-            
             const mainTabToActivate = tabNav.querySelector(`[data-tab-id="${activeMainTabId}"]`) || tabNav.firstChild;
             if (mainTabToActivate) {
                 mainTabToActivate.click();
-
                 const mainPanelId = `tab-panel-${mainTabToActivate.dataset.tabId}`;
                 const subTabContainer = document.getElementById(mainPanelId);
-
                 if (subTabContainer) {
                     const subTabNav = subTabContainer.querySelector('.tab-nav');
                     if (subTabNav) {
@@ -1804,10 +1543,7 @@
                     }
                 }
             }
-
-
             populationModal.style.display = 'flex';
-
             const eventLog = simulation.eventLog;
             const birthCount = eventLog.filter(e => e.message.startsWith('👶')).length;
             const deathCount = eventLog.filter(e => e.message.startsWith('🕊️') || e.message.startsWith('💀')).length;
@@ -1815,7 +1551,6 @@
             const marriageMigrationCount = eventLog.filter(e => e.message.startsWith('✈️')).length;
             const opportunityMigrationCount = eventLog.filter(e => e.message.startsWith('✨')).length;
             const totalMigrationCount = marriageMigrationCount + opportunityMigrationCount;
-
             statsBirthsEl.textContent = `Naissances : ${birthCount}`;
             statsDeathsEl.textContent = `Décès : ${deathCount}`;
             statsMarriagesEl.textContent = `Mariages : ${marriageCount}`;
@@ -1826,116 +1561,79 @@
 
         function generateCityEvolutionHtml(cityData) {
             let html = '';
-
             const cityHistoryEvents = simulation.eventLog
                 .filter(e => e.cityId === cityData.id && (e.message.startsWith('📈') || e.message.startsWith('📉') || e.message.startsWith('🏛️')))
                 .slice()
                 .reverse();
-
             if (cityHistoryEvents.length > 0) {
-                html += `<details open>`;
-                html += `<summary>Historique des infrastructures</summary>`;
-                html += `<div class="family-history">`;
-                html += `<ul>`;
+                html += `<details open><summary>Historique des infrastructures</summary><div class="family-history"><ul>`;
                 cityHistoryEvents.forEach(event => {
                     html += `<li><strong>Année ${event.year}:</strong> ${event.message}</li>`;
                 });
                 html += `</ul></div></details>`;
             }
-            
             html += `<h3>Bâtiments et Emplois à ${cityData.name}</h3>`;
-            
             const jobStatus = getCityJobStatus(cityData);
-            
             jobStatus.buildings.forEach(building => {
-                html += `<div class="evolution-section">
-                            <h5>${building.name}</h5>
-                            <ul>`;
+                html += `<div class="evolution-section"><h5>${building.name}</h5><ul>`;
                 building.jobs.forEach(job => {
                     html += `<li><span class="job-name">${job.role}</span> <span class="job-count">${job.filled} / ${job.required}</span></li>`;
                 });
-                html += `   </ul>
-                         </div>`;
+                html += `</ul></div>`;
             });
-            
             if (jobStatus.guilds.length > 0) {
                  html += `<h3>Guildes</h3>`;
                  jobStatus.guilds.forEach(guild => {
-                     html += `<div class="evolution-section">
-                                <h5>${guild.name}</h5>
-                                <ul>`;
+                     html += `<div class="evolution-section"><h5>${guild.name}</h5><ul>`;
                     guild.jobs.forEach(job => {
                         html += `<li><span class="job-name">${job.role}</span> <span class="job-count">${job.filled} / ${job.required}</span></li>`;
                     });
-                    html += `   </ul>
-                             </div>`;
+                    html += `</ul></div>`;
                  });
             }
-
-
-            html += `<div class="evolution-section">
-                        <h5>Métiers Autonomes</h5>
-                        <ul>`;
+            html += `<div class="evolution-section"><h5>Métiers Autonomes</h5><ul>`;
             jobStatus.autonomous.forEach(job => {
                  html += `<li><span class="job-name">${job.role}</span> <span class="job-count">${job.filled}</span></li>`;
             });
-            html += `   </ul>
-                     </div>`;
-            
+            html += `</ul></div>`;
             return html;
         }
 
         function generateCityPopulationHtml(cityData) {
-             let cityHtml = '';
+            let cityHtml = '';
             const familiesInCity = Object.values(simulation.families).filter(family => {
                 const familyId = Object.keys(simulation.families).find(id => simulation.families[id] === family);
                 return simulation.population.some(p => p.isAlive && p.cityId === cityData.id && p.familyId === familyId);
             });
-            
             familiesInCity.sort((a,b) => a.originalName.localeCompare(b.originalName)).forEach(familyGroup => {
                 const familyId = Object.keys(simulation.families).find(id => simulation.families[id] === familyGroup);
                 const familyName = familyGroup.originalName;
                 const familyMembersInCity = simulation.population.filter(p => p.familyId === familyId && p.cityId === cityData.id);
                 const hasLivingMembers = familyMembersInCity.some(p => p.isAlive);
-                
                 const familyHistory = simulation.eventLog.filter(e => e.familyId === familyId);
                 const validEvents = familyHistory.slice().reverse().filter(e => e.message.replace(/<\/?h3>/g, '').trim());
-
                 if (hasLivingMembers) {
                     cityHtml += `<details open><summary>${familyName} ${familyGroup.isExtinct ? '(Lignée éteinte)' : ''}</summary>`;
-
                     if (validEvents.length > 0) {
                         const previewHtml = validEvents.slice(0, 3).map(event => {
                             const message = event.message.replace(/<\/?h3>/g, '').trim();
                             return `<li><strong>Année ${event.year}:</strong> ${message}</li>`;
                         }).join('');
-
-                        const openModalButton = validEvents.length > 3
-                            ? `<button class="open-history-modal-btn" data-family-id="${familyId}" data-family-name="${familyName}">Afficher tout l'historique (${validEvents.length} événements)</button>`
-                            : '';
-
-                        cityHtml += `<div class="family-history">
-                                        <h5>Historique (récent)</h5>
-                                        <div><ul>${previewHtml}</ul></div>
-                                        ${openModalButton}
-                                     </div>`;
+                        const openModalButton = validEvents.length > 3 ? `<button class="open-history-modal-btn" data-family-id="${familyId}" data-family-name="${familyName}">Afficher tout l'historique (${validEvents.length} événements)</button>` : '';
+                        cityHtml += `<div class="family-history"><h5>Historique (récent)</h5><div><ul>${previewHtml}</ul></div>${openModalButton}</div>`;
                     }
-
                     const membersMap = new Map(familyMembersInCity.map(p => [p.id, p]));
                     const roots = familyMembersInCity.filter(p => p.isAlive && (!p.parents || p.parents.length === 0 || !p.parents.some(parentId => membersMap.has(parentId))));
                     const renderedIds = new Set();
-                    
                     cityHtml += `<div class="family-tree"><ul>`;
                     roots.sort((a, b) => b.age - a.age).forEach(root => {
                          if (!renderedIds.has(root.id)) {
                             cityHtml += renderFamilyTree(root, membersMap, renderedIds);
                          }
                     });
-                    cityHtml += `</ul></div>`;
-                    cityHtml += `</details>`;
+                    cityHtml += `</ul></div></details>`;
                 }
             });
-
             const movedAwayFamilies = [];
             for (const familyId in simulation.families) {
                 const family = simulation.families[familyId];
@@ -1946,44 +1644,27 @@
                     }
                 }
             }
-            
             movedAwayFamilies.sort((a,b) => a.originalName.localeCompare(b.originalName)).forEach(family => {
-                cityHtml += `<details><summary>${family.originalName} (Parti)</summary>
-                                <div class="family-history family-history-moved">
-                                    <p>La famille ${family.originalName} ne réside plus à ${cityData.name}.<br>
-                                       Elle se trouve actuellement à : <strong>${family.location}</strong>.</p>
-                                </div>
-                             </details>`;
+                cityHtml += `<details><summary>${family.originalName} (Parti)</summary><div class="family-history family-history-moved"><p>La famille ${family.originalName} ne réside plus à ${cityData.name}.<br>Elle se trouve actuellement à : <strong>${family.location}</strong>.</p></div></details>`;
             });
-
             return cityHtml;
         }
 
         function renderFamilyTree(person, membersMap, renderedIds) {
             if (!person || renderedIds.has(person.id) || !person.isAlive) return '';
-
             renderedIds.add(person.id);
-            
             let html = '<li>';
             const spouse = person.spouseId ? simulation.population.find(p => p.id === person.spouseId) : null;
-            
             html += formatPerson(person);
-            
             if (spouse && spouse.isAlive && spouse.cityId === person.cityId) {
                 renderedIds.add(spouse.id);
                 html += ' & ' + formatPerson(spouse);
             }
-            
             const childrenIds = new Set(person.children);
             if(spouse) {
                 spouse.children.forEach(id => childrenIds.add(id));
             }
-
-            const children = Array.from(childrenIds)
-                .map(id => membersMap.get(id))
-                .filter(Boolean)
-                .sort((a,b) => b.age - a.age);
-
+            const children = Array.from(childrenIds).map(id => membersMap.get(id)).filter(Boolean).sort((a,b) => b.age - a.age);
             if (children.length > 0) {
                 html += '<ul>';
                 children.forEach(child => {
@@ -1991,7 +1672,6 @@
                 });
                 html += '</ul>';
             }
-
             html += '</li>';
             return html;
         }
@@ -2001,18 +1681,14 @@
             let nameDisplay = `<span ${deadClass}><b>${person.firstName} ${person.lastName}</b>`;
             if(person.maidenName) nameDisplay += ` <span class="maiden-name">(née ${person.maidenName})</span>`;
             nameDisplay += '</span>';
-
             let originInfo = '';
             if (person.originCityId && person.originCityId !== person.cityId) {
                 originInfo = ` <span class="origin-info">(originaire de ${person.originCityName})</span>`;
             }
-
             const jobInfo = person.job ? ` - <span class="person-job">${person.job.role}</span>` : ' - Sans emploi';
-
             return `${nameDisplay} (${person.gender}, ${person.age} ans, ${person.race})${originInfo}${jobInfo}`;
         }
-
-        // On lance l'initialisation de la page.
+        
         initializePage();
     });
     </script>

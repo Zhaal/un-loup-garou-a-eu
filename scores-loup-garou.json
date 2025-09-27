@@ -1,1 +1,1 @@
-{"test":{"status":"Terminé","score":null,"data":null,"details":null},"eze":{"status":"En cours","score":null,"data":null,"details":null}}
+{"test":{"status":"Terminé","score":64,"data":{"capitaineUsed":true,"voyanteCards":6,"reflexionEarly":false,"treasureTime":270,"ritualErrors":0,"voleurCorrected":false},"details":["Score de base : 50 pts","Bonus auto : +2 (Total : 52)","Capitaine : -5 (Total : 47)","Voyante x6 : -6 (Total : 41)","Temps 270s : -9 (Total : 32)","Final doublé : 64/100"]},"eze":{"status":"En cours","score":null,"data":null,"details":null}}

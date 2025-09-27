@@ -1,1 +1,1 @@
-{"Test":{"status":"Terminé","score":null,"data":null,"details":null}}
+{"Test":{"status":"Terminé","score":76,"data":{"capitaineUsed":true,"voyanteCards":4,"reflexionEarly":true,"treasureTime":150,"ritualErrors":1,"voleurCorrected":true},"details":["Score de base : 50 pts","Bonus auto : +2 (Total : 52)","Capitaine : -5 (Total : 47)","Voyante x4 : -4 (Total : 43)","Réflexion : +10 (Total : 53)","Temps 150s : -5 (Total : 48)","Erreur rituel : -10 (Total : 38)","Final doublé : 76/100"]}}

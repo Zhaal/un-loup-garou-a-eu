@@ -39,32 +39,39 @@
       groupNameH1.textContent = `Groupe: ${groupName}`;
       welcomeGroupNameSpan.textContent = groupName;
 
-      const passwordInput = document.getElementById('password');
-      const submitButton = document.getElementById('submitPassword');
-      const errorP = document.getElementById('error');
+      // Vérifier si l'utilisateur est déjà authentifié via sessionStorage
+      if (sessionStorage.getItem(`auth_token_${groupName}`) === 'true') {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+      } else {
+        // Si non authentifié, afficher le formulaire de connexion
+        const passwordInput = document.getElementById('password');
+        const submitButton = document.getElementById('submitPassword');
+        const errorP = document.getElementById('error');
 
-      submitButton.addEventListener('click', async () => {
-        try {
-          const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
-          const response = await fetch(`${apiUrl}?ref=main`, {
-            headers: { 'Accept': 'application/vnd.github.v3.raw' },
-            cache: 'no-store'
-          });
-          if (!response.ok) throw new Error('Could not fetch group data.');
+        submitButton.addEventListener('click', async () => {
+          try {
+            const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
+            const response = await fetch(`${apiUrl}?ref=main`, {
+              headers: { 'Accept': 'application/vnd.github.v3.raw' },
+              cache: 'no-store'
+            });
+            if (!response.ok) throw new Error('Could not fetch group data.');
 
-          const groups = await response.json();
-          const groupData = groups[groupName];
+            const groups = await response.json();
+            const groupData = groups[groupName];
 
-          if (groupData && passwordInput.value === groupData.password) {
-            document.getElementById('login').style.display = 'none';
-            document.getElementById('content').style.display = 'block';
-          } else {
-            errorP.textContent = 'Mot de passe incorrect.';
+            if (groupData && passwordInput.value === groupData.password) {
+              document.getElementById('login').style.display = 'none';
+              document.getElementById('content').style.display = 'block';
+            } else {
+              errorP.textContent = 'Mot de passe incorrect.';
+            }
+          } catch (err) {
+            errorP.textContent = `Erreur: ${err.message}`;
           }
-        } catch (err) {
-          errorP.textContent = `Erreur: ${err.message}`;
-        }
-      });
+        });
+      }
     });
   </script>
 </body>

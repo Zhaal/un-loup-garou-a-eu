@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Accès Joueur</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 50px; background-color: #f8f9fa; }
+    #login-container { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #dee2e6; border-radius: 8px; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { color: #17a2b8; }
+    select, input[type="password"], button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: 1px solid #ced4da;
+      box-sizing: border-box; /* Important pour que le padding n'ajoute pas à la largeur */
+    }
+    button {
+      background-color: #17a2b8;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s;
+    }
+    button:hover { background-color: #138496; }
+    #error { color: #dc3545; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div id="login-container">
+    <h1>Accès Joueur</h1>
+    <form id="player-login-form">
+      <select id="group-select" required>
+        <option value="">Chargement des groupes...</option>
+      </select>
+      <input type="password" id="password" placeholder="Mot de passe à 4 chiffres" required>
+      <button type="submit">Accéder à la page du groupe</button>
+    </form>
+    <p id="error"></p>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const groupSelect = document.getElementById('group-select');
+      const loginForm = document.getElementById('player-login-form');
+      const passwordInput = document.getElementById('password');
+      const errorP = document.getElementById('error');
+      let groupsData = {};
+
+      // Charger les groupes depuis GitHub
+      async function loadGroups() {
+        try {
+          const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
+          const response = await fetch(`${apiUrl}?ref=main`, {
+            headers: { 'Accept': 'application/vnd.github.v3.raw' },
+            cache: 'no-store' // Pour toujours avoir les données fraîches
+          });
+          if (!response.ok) throw new Error('Impossible de charger les données des groupes.');
+
+          groupsData = await response.json();
+
+          // Remplir le sélecteur
+          groupSelect.innerHTML = '<option value="">-- Choisissez votre groupe --</option>'; // Option par défaut
+          for (const groupName in groupsData) {
+            const option = document.createElement('option');
+            option.value = groupName;
+            option.textContent = groupName;
+            groupSelect.appendChild(option);
+          }
+
+        } catch (err) {
+          errorP.textContent = `Erreur de chargement : ${err.message}`;
+          groupSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+        }
+      }
+
+      // Gérer la soumission du formulaire
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const selectedGroup = groupSelect.value;
+        const enteredPassword = passwordInput.value;
+
+        if (!selectedGroup) {
+          errorP.textContent = 'Veuillez sélectionner un groupe.';
+          return;
+        }
+
+        const groupData = groupsData[selectedGroup];
+
+        if (groupData && enteredPassword === groupData.password) {
+          // Stocker un jeton d'authentification dans sessionStorage
+          sessionStorage.setItem(`auth_token_${selectedGroup}`, 'true');
+          // Redirection vers la page du groupe si le mot de passe est correct
+          window.location.href = `groupe.html?name=${encodeURIComponent(selectedGroup)}`;
+        } else {
+          errorP.textContent = 'Mot de passe incorrect. Veuillez réessayer.';
+          passwordInput.value = ''; // Vider le champ du mot de passe
+        }
+      });
+
+      // Charger les groupes au chargement de la page
+      loadGroups();
+    });
+  </script>
+
+</body>
+</html>

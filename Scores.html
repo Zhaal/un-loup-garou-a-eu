@@ -327,8 +327,14 @@
       console.log('🦊 Sauvegarde GitHub OK');
     }
 
+    let isSaving = false;
+
     // Charge les données depuis GitHub avec bust de cache
     async function loadFromGitHub() {
+      if (isSaving) {
+        console.log('🔄 Action de sauvegarde en cours, chargement reporté.');
+        return;
+      }
       try {
         const apiUrl =
           'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
@@ -383,8 +389,8 @@
         password: generatePassword()
       };
       renderGroupList(); // Affiche direct
-      stopAutoLoad();
 
+      isSaving = true;
       try {
         await saveToGitHub(groups);
         return true;
@@ -395,7 +401,7 @@
         renderGroupList();
         return false;
       } finally {
-        startAutoLoad();
+        isSaving = false;
       }
     }
     async function deleteGroup(name) {
@@ -405,8 +411,8 @@
       delete groups[name];
       renderGroupList();
       renderScoreTable();
-      stopAutoLoad();
 
+      isSaving = true;
       try {
         await saveToGitHub(groups);
       } catch (err) {
@@ -416,7 +422,7 @@
         renderGroupList();
         renderScoreTable();
       } finally {
-        startAutoLoad();
+        isSaving = false;
       }
     }
     async function updateGroupStatus(name, newStatus) {
@@ -425,8 +431,8 @@
       const oldStatus = groups[name].status;
       groups[name].status = newStatus;
       renderGroupList(); // optimistic update
-      stopAutoLoad();
 
+      isSaving = true;
       try {
         await saveToGitHub(groups);
       } catch (err) {
@@ -435,13 +441,12 @@
         groups[name].status = oldStatus;
         renderGroupList();
       } finally {
-        startAutoLoad();
+        isSaving = false;
       }
     }
-    let isUpdatingScore = false;
     async function updateGroupScore(name, data) {
-      if (!groups[name] || isUpdatingScore) return;
-      isUpdatingScore = true;
+      if (!groups[name] || isSaving) return;
+      isSaving = true;
 
       const scoreForm = document.getElementById('scoreForm');
       const formElements = scoreForm.querySelectorAll('input, button, select');
@@ -456,7 +461,6 @@
       groups[name].details = details;
       renderGroupList();
       renderScoreTable();
-      stopAutoLoad();
 
       try {
         await saveToGitHub(groups);
@@ -467,8 +471,7 @@
         renderGroupList();
         renderScoreTable();
       } finally {
-        isUpdatingScore = false;
-        startAutoLoad();
+        isSaving = false;
         formElements.forEach(el => { el.disabled = false; });
       }
     }
@@ -594,13 +597,14 @@
               group.data.enigmaViewed[spiritId] = true;
               notification.classList.remove('blinking');
 
-              stopAutoLoad();
+              isSaving = true;
               try {
                 await saveToGitHub(groups);
               } catch (err) {
                 console.error("Failed to save 'enigma viewed' state:", err);
+                // No rollback needed, it's just a visual flag
               } finally {
-                startAutoLoad();
+                isSaving = false;
               }
             }
 
@@ -810,18 +814,6 @@
       });
     });
 
-    let autoLoadInterval = null;
-    function stopAutoLoad() {
-      if (autoLoadInterval) {
-        clearInterval(autoLoadInterval);
-        autoLoadInterval = null;
-      }
-    }
-    function startAutoLoad() {
-      stopAutoLoad(); // Évite les doublons
-      autoLoadInterval = setInterval(loadFromGitHub, 5000);
-    }
-
     // Bouton "Charger depuis GitHub"
     document.getElementById('loadFromGitHubBtn').addEventListener('click', loadFromGitHub);
 
@@ -831,7 +823,7 @@
       btn.disabled = true;
       const originalText = btn.innerHTML;
       btn.innerHTML = `📤 Sauvegarde...`;
-      stopAutoLoad();
+      isSaving = true;
 
       try {
         await saveToGitHub(groups);
@@ -840,16 +832,16 @@
         btn.innerHTML = `❌ Erreur`;
         alert(`Échec de la sauvegarde: ${err.message}`);
       } finally {
+        isSaving = false;
         setTimeout(() => {
           btn.disabled = false;
           btn.innerHTML = originalText;
         }, 2000);
-        startAutoLoad();
       }
     });
 
     // Lancement de l'actualisation
-    startAutoLoad();
+    setInterval(loadFromGitHub, 5000);
   </script>
 </body>
 </html>

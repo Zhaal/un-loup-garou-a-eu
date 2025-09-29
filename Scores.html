@@ -334,10 +334,26 @@
     const BASE_SCORE = 50, MAX_BASE = 50;
 
     // Ajout, suppression, mise à jour
+    function generatePassword() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let password = '';
+      for (let i = 0; i < 6; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return password;
+    }
+
     function addGroup(name) {
       if (!name || groups[name]) return false;
-      groups[name] = { status:'En cours', score:null, data:null, details:null };
-      renderGroupList(); saveToGitHub(groups);
+      groups[name] = {
+        status: 'En cours',
+        score: null,
+        data: null,
+        details: null,
+        password: generatePassword()
+      };
+      renderGroupList();
+      saveToGitHub(groups);
       return true;
     }
     function deleteGroup(name) {
@@ -373,10 +389,12 @@
         li.className = classes.join(' ');
         li.innerHTML = `
           <div style="display:flex;justify-content:space-between;">
-            <span>${name}</span>
+            <span>${name}
+              <small>(${g.password})</small>
+            </span>
             <span class="status-badge ${
-              g.status==='En cours'?'status-in-progress':
-              g.status==='Terminé'?'status-completed':'status-error'
+              g.status === 'En cours' ? 'status-in-progress' :
+              g.status === 'Terminé' ? 'status-completed' : 'status-error'
             }">${g.status}</span>
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:8px;">
@@ -387,6 +405,7 @@
             ${g.status==='Terminé'?`<button class="btn" data-group="${name}">Résultat</button>`:''}
           </div>
           <div class="group-actions">
+            <a href="groupe.html?name=${encodeURIComponent(name)}" target="_blank" class="btn">Page du Groupe</a>
             <button class="btn btn-danger" data-group="${name}" data-action="delete">Supprimer</button>
           </div>
         `;
@@ -404,7 +423,7 @@
           openModal(scoreModal);
         })
       );
-      document.querySelectorAll('.btn-danger').forEach(btn=>
+      document.querySelectorAll('.group-item .btn-danger').forEach(btn=>
         btn.addEventListener('click',e=>{
           window.groupToDelete = e.target.dataset.group;
           openModal(confirmDeleteModal);
@@ -513,12 +532,14 @@
       closeModal(scoreModal);
     });
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+    document.getElementById('confirmDeleteBtn').addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent any other listeners from firing
       if (window.groupToDelete) {
         deleteGroup(window.groupToDelete);
         window.groupToDelete = null; // Important de nettoyer
       }
-      closeModal(confirmDeleteModal); // Utilise la fonction standardisée
+      // Always close the modal after the action is complete
+      closeModal(confirmDeleteModal);
     });
 
     // Gestion des boutons de temps

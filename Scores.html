@@ -335,11 +335,12 @@
 
     // Ajout, suppression, mise à jour
     function generatePassword() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let password = '';
-      for (let i = 0; i < 6; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
+      let password;
+      const existingPasswords = Object.values(groups).map(g => g.password);
+      do {
+        // Génère un code à 4 chiffres entre 1000 et 9999
+        password = Math.floor(1000 + Math.random() * 9000).toString();
+      } while (existingPasswords.includes(password)); // Assure l'unicité
       return password;
     }
 

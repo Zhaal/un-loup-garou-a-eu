@@ -100,6 +100,10 @@
         const spiritId = params.get('id');
         const groupName = params.get('group');
 
+        if (spiritId && groupName) {
+            localStorage.setItem(`enigmaAcknowledged_${groupName}_${spiritId}`, 'true');
+        }
+
         if (!spiritId || !groupName) {
             document.getElementById('container').innerHTML = '<h1>Erreur: Esprit ou groupe non spécifié.</h1>';
             return;

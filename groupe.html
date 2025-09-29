@@ -9,6 +9,17 @@
     #content { display: none; }
     input { width: calc(100% - 20px); padding: 10px; margin-bottom: 10px; }
     button { padding: 10px 20px; cursor: pointer; }
+    .enigma-alert {
+        margin-left: 10px;
+        color: #ffc107;
+        font-weight: bold;
+        animation: blink-animation 1s infinite;
+    }
+    @keyframes blink-animation {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+        100% { opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -29,21 +40,25 @@
         <label for="codeA">- Esprit A</label>
         <input type="text" id="codeA" placeholder="entrer le code">
         <button type="submit">Rencontrer</button>
+        <span id="enigmaA" class="enigma-alert" style="display: none;">!! Enigme Esprit A a enregistrer !!</span>
       </form>
       <form class="spirit-form" id="formB">
         <label for="codeB">- Esprit B</label>
         <input type="text" id="codeB" placeholder="entrer le code">
         <button type="submit">Rencontrer</button>
+        <span id="enigmaB" class="enigma-alert" style="display: none;">!! Enigme Esprit B a enregistrer !!</span>
       </form>
       <form class="spirit-form" id="formC">
         <label for="codeC">- Esprit C</label>
         <input type="text" id="codeC" placeholder="entrer le code">
         <button type="submit">Rencontrer</button>
+        <span id="enigmaC" class="enigma-alert" style="display: none;">!! Enigme Esprit C a enregistrer !!</span>
       </form>
       <form class="spirit-form" id="formD">
         <label for="codeD">- Esprit D</label>
         <input type="text" id="codeD" placeholder="entrer le code">
         <button type="submit">Rencontrer</button>
+        <span id="enigmaD" class="enigma-alert" style="display: none;">!! Enigme Esprit D a enregistrer !!</span>
       </form>
     </div>
     <p id="spiritError" style="color:red;"></p>
@@ -64,38 +79,36 @@
       groupNameH1.textContent = `Groupe: ${groupName}`;
       welcomeGroupNameSpan.textContent = groupName;
 
-      // Vérifier si l'utilisateur est déjà authentifié via sessionStorage
-      if (sessionStorage.getItem(`auth_token_${groupName}`) === 'true') {
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('content').style.display = 'block';
-      } else {
-        // Si non authentifié, afficher le formulaire de connexion
-        const passwordInput = document.getElementById('password');
-        const submitButton = document.getElementById('submitPassword');
-        const errorP = document.getElementById('error');
-
-        submitButton.addEventListener('click', async () => {
-          try {
-            const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
-            const response = await fetch(`${apiUrl}?ref=main`, {
-              headers: { 'Accept': 'application/vnd.github.v3.raw' },
-              cache: 'no-store'
-            });
-            if (!response.ok) throw new Error('Could not fetch group data.');
-
-            const groups = await response.json();
-            const groupData = groups[groupName];
-
-            if (groupData && passwordInput.value === groupData.password) {
-              document.getElementById('login').style.display = 'none';
-              document.getElementById('content').style.display = 'block';
-            } else {
-              errorP.textContent = 'Mot de passe incorrect.';
-            }
-          } catch (err) {
-            errorP.textContent = `Erreur: ${err.message}`;
-          }
+      async function getGroupsData() {
+        const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
+        const response = await fetch(`${apiUrl}?ref=main`, {
+          headers: { 'Accept': 'application/vnd.github.v3.raw' },
+          cache: 'no-store'
         });
+        if (!response.ok) throw new Error('Could not fetch group data from GitHub.');
+        return await response.json();
+      }
+
+      async function checkEnigmas() {
+        try {
+          const allGroups = await getGroupsData();
+          const groupData = allGroups[groupName];
+
+          if (groupData && groupData.data && groupData.data.enigmaAnswers) {
+            for (const spiritId in spiritCodes) {
+              if (groupData.data.enigmaAnswers[spiritId]) {
+                const enigmaAlert = document.getElementById(`enigma${spiritId}`);
+                const isAcknowledged = localStorage.getItem(`enigmaAcknowledged_${groupName}_${spiritId}`);
+
+                if (enigmaAlert && !isAcknowledged) {
+                  enigmaAlert.style.display = 'inline';
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Erreur lors de la vérification des énigmes:", err);
+        }
       }
 
       const spiritCodes = {
@@ -104,6 +117,36 @@
         C: 'u65p',
         D: 's12v'
       };
+
+      function showContent() {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        checkEnigmas();
+      }
+
+      if (sessionStorage.getItem(`auth_token_${groupName}`) === 'true') {
+        showContent();
+      } else {
+        const passwordInput = document.getElementById('password');
+        const submitButton = document.getElementById('submitPassword');
+        const errorP = document.getElementById('error');
+
+        submitButton.addEventListener('click', async () => {
+          try {
+            const groups = await getGroupsData();
+            const groupData = groups[groupName];
+
+            if (groupData && passwordInput.value === groupData.password) {
+              sessionStorage.setItem(`auth_token_${groupName}`, 'true');
+              showContent();
+            } else {
+              errorP.textContent = 'Mot de passe incorrect.';
+            }
+          } catch (err) {
+            errorP.textContent = `Erreur: ${err.message}`;
+          }
+        });
+      }
 
       document.getElementById('formA').addEventListener('submit', (e) => handleSpiritForm(e, 'A'));
       document.getElementById('formB').addEventListener('submit', (e) => handleSpiritForm(e, 'B'));

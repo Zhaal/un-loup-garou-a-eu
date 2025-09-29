@@ -130,6 +130,16 @@
     .ritual-buttons button.active {
       background: var(--primary); color: var(--header-text); border-color: var(--primary);
     }
+    .enigma-notification {
+      display: block;
+      margin-top: 5px;
+      padding: 5px;
+      background-color: var(--in-progress);
+      color: var(--text);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -282,6 +292,19 @@
     </div>
   </div>
 
+  <div class="modal" id="enigmaModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="enigmaModalTitle">Réponse à l'énigme</h2>
+        <button class="close-btn">×</button>
+      </div>
+      <div id="enigmaAnswerContent"></div>
+      <div class="form-actions">
+        <button type="button" class="btn close-btn">Fermer</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Envoie les données sur GitHub
     async function saveToGitHub(data) {
@@ -388,6 +411,16 @@
         ];
         if (g.score!==null) classes.push('scored');
         li.className = classes.join(' ');
+
+        let enigmaNotificationsHtml = '';
+        if (g.data && g.data.enigmaAnswers) {
+            for (const spiritId in g.data.enigmaAnswers) {
+                enigmaNotificationsHtml += `<div class="enigma-notification" data-group-name="${name}" data-spirit-id="${spiritId}">
+                    !! Enigme Esprit ${spiritId} a enregistrer !!
+                </div>`;
+            }
+        }
+
         li.innerHTML = `
           <div style="display:flex;justify-content:space-between;">
             <span>${name}
@@ -409,6 +442,7 @@
             <a href="groupe.html?name=${encodeURIComponent(name)}" target="_blank" class="btn">Page du Groupe</a>
             <button class="btn btn-danger" data-group="${name}" data-action="delete">Supprimer</button>
           </div>
+          ${enigmaNotificationsHtml}
         `;
         ul.appendChild(li);
       });
@@ -464,6 +498,20 @@
           openModal(confirmDeleteModal);
         })
       );
+
+      document.querySelectorAll('.enigma-notification').forEach(notification => {
+        notification.addEventListener('click', e => {
+          const groupName = e.target.dataset.groupName;
+          const spiritId = e.target.dataset.spiritId;
+          const answer = groups[groupName]?.data?.enigmaAnswers?.[spiritId];
+
+          if (answer) {
+            document.getElementById('enigmaModalTitle').textContent = `Réponse de ${groupName} - Esprit ${spiritId}`;
+            document.getElementById('enigmaAnswerContent').innerHTML = `<p><strong>Réponse:</strong></p><p>${answer}</p>`;
+            openModal(enigmaModal);
+          }
+        });
+      });
     }
 
     function renderScoreTable() {
@@ -532,6 +580,7 @@
     const addGroupModal = document.getElementById('addGroupModal');
     const scoreModal = document.getElementById('scoreModal');
     const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+    const enigmaModal = document.getElementById('enigmaModal');
     const addGroupBtn = document.getElementById('addGroupBtn');
     const closeBtns = document.querySelectorAll('.close-btn');
     
@@ -640,6 +689,9 @@
     document.getElementById('saveToGitHubBtn').addEventListener('click', () => {
       saveToGitHub(groups);
     });
+
+    // Actualisation passive toutes les 5 secondes
+    setInterval(loadFromGitHub, 5000);
   </script>
 </body>
 </html>

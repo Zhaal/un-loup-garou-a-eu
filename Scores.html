@@ -420,7 +420,41 @@
       );
       document.querySelectorAll('.group-item button:not(.btn-danger)').forEach(btn=>
         btn.addEventListener('click',e=>{
-          document.getElementById('groupName').value = e.target.dataset.group;
+          const groupName = e.target.dataset.group;
+          const groupData = groups[groupName]?.data;
+
+          document.getElementById('groupName').value = groupName;
+
+          // Populate the form with existing data
+          if (groupData) {
+            document.querySelector(`input[name="capitaineUsed"][value="${groupData.capitaineUsed || false}"]`).checked = true;
+            document.querySelector(`input[name="reflexionEarly"][value="${groupData.reflexionEarly || false}"]`).checked = true;
+            document.querySelector(`input[name="voleurCorrected"][value="${groupData.voleurCorrected || false}"]`).checked = true;
+
+            document.getElementById('voyanteCards').value = groupData.voyanteCards || 0;
+            document.querySelectorAll('.voyante-buttons button').forEach(b => {
+                b.classList.toggle('active', parseInt(b.dataset.voyante) === (groupData.voyanteCards || 0));
+            });
+
+            document.getElementById('treasureTime').value = groupData.treasureTime || 0;
+            document.querySelectorAll('.time-buttons button').forEach(b => {
+                b.classList.toggle('active', parseInt(b.dataset.time) === (groupData.treasureTime || 0));
+            });
+
+            document.getElementById('ritualErrors').value = groupData.ritualErrors || 0;
+            document.querySelectorAll('.ritual-buttons button').forEach(b => {
+                b.classList.toggle('active', parseInt(b.dataset.ritual) === (groupData.ritualErrors || 0));
+            });
+          } else {
+            // Reset form if no data
+            document.getElementById('scoreForm').reset();
+            document.querySelectorAll('.time-buttons button, .voyante-buttons button, .ritual-buttons button').forEach(b => b.classList.remove('active'));
+            // Set defaults
+             document.querySelector('input[name="capitaineUsed"][value="false"]').checked = true;
+             document.querySelector('input[name="reflexionEarly"][value="false"]').checked = true;
+             document.querySelector('input[name="voleurCorrected"][value="false"]').checked = true;
+          }
+
           openModal(scoreModal);
         })
       );
@@ -475,9 +509,22 @@
         const p = data.ritualErrors===1?(data.voleurCorrected?10:20):20;
         s-=p; details.push(`Erreur rituel : -${p} (Total : ${s})`);
       }
+      // Point deduction for audio replays
+      if (data.replays && data.replays > 0) {
+        s -= data.replays;
+        details.push(`Relectures audio x${data.replays}: -${data.replays} (Total: ${s})`);
+      }
       const finalS = Math.max(0,Math.min(MAX_BASE,s));
       if(finalS!==s) details.push(`Ajusté : ${finalS}`);
       details.push(`Final doublé : ${finalS*2}/100`);
+
+      // Add enigma answers to details
+      if (data.enigmaAnswers) {
+          details.push('--- Réponses aux Énigmes ---');
+          for (const [spiritId, answer] of Object.entries(data.enigmaAnswers)) {
+              details.push(`Esprit ${spiritId}: ${answer}`);
+          }
+      }
       return { base: finalS, details };
     }
 
@@ -506,7 +553,11 @@
       const name = document.getElementById('groupName').value;
       if (!name) return; // Ne rien faire si aucun groupe n'est chargé
 
+      // Preserve existing data like replays and enigma answers
+      const existingData = groups[name]?.data || {};
+
       const data = {
+        ...existingData, // Start with existing data
         capitaineUsed:   document.querySelector('input[name="capitaineUsed"]:checked').value === 'true',
         voyanteCards:    +document.getElementById('voyanteCards').value,
         reflexionEarly:  document.querySelector('input[name="reflexionEarly"]:checked').value === 'true',

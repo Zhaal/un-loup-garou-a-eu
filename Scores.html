@@ -140,6 +140,12 @@
       cursor: pointer;
       font-weight: bold;
     }
+    @keyframes blink {
+      50% { opacity: 0.5; }
+    }
+    .blinking {
+      animation: blink 1s infinite;
+    }
   </style>
 </head>
 <body>
@@ -483,11 +489,16 @@
 
         let enigmaNotificationsHtml = '';
         if (g.data && g.data.enigmaAnswers) {
-            for (const spiritId in g.data.enigmaAnswers) {
-                enigmaNotificationsHtml += `<div class="enigma-notification" data-group-name="${name}" data-spirit-id="${spiritId}">
-                    !! Enigme Esprit ${spiritId} a enregistrer !!
-                </div>`;
-            }
+          for (const spiritId in g.data.enigmaAnswers) {
+            const isViewed = g.data.enigmaViewed && g.data.enigmaViewed[spiritId];
+            const blinkingClass = isViewed ? '' : ' blinking';
+            const replayCount = (g.data.replays && g.data.replays[spiritId]) || 0;
+            const replayText = replayCount > 0 ? ` (${replayCount} écoutes)` : '';
+
+            enigmaNotificationsHtml += `<div class="enigma-notification${blinkingClass}" data-group-name="${name}" data-spirit-id="${spiritId}">
+              !! Enigme Esprit ${spiritId} a enregistrer !!${replayText}
+            </div>`;
+          }
         }
 
         li.innerHTML = `
@@ -521,8 +532,6 @@
           const select = e.target;
           select.disabled = true;
           await updateGroupStatus(select.dataset.group, select.value);
-          // The select might have been re-rendered, so we don't re-enable it here.
-          // The renderGroupList function will create a new enabled select.
         });
       });
       document.querySelectorAll('.group-item button:not(.btn-danger)').forEach(btn=>
@@ -532,7 +541,6 @@
 
           document.getElementById('groupName').value = groupName;
 
-          // Populate the form with existing data
           if (groupData) {
             document.querySelector(`input[name="capitaineUsed"][value="${groupData.capitaineUsed || false}"]`).checked = true;
             document.querySelector(`input[name="reflexionEarly"][value="${groupData.reflexionEarly || false}"]`).checked = true;
@@ -553,10 +561,8 @@
                 b.classList.toggle('active', parseInt(b.dataset.ritual) === (groupData.ritualErrors || 0));
             });
           } else {
-            // Reset form if no data
             document.getElementById('scoreForm').reset();
             document.querySelectorAll('.time-buttons button, .voyante-buttons button, .ritual-buttons button').forEach(b => b.classList.remove('active'));
-            // Set defaults
              document.querySelector('input[name="capitaineUsed"][value="false"]').checked = true;
              document.querySelector('input[name="reflexionEarly"][value="false"]').checked = true;
              document.querySelector('input[name="voleurCorrected"][value="false"]').checked = true;
@@ -573,12 +579,31 @@
       );
 
       document.querySelectorAll('.enigma-notification').forEach(notification => {
-        notification.addEventListener('click', e => {
+        notification.addEventListener('click', async (e) => {
           const groupName = e.target.dataset.groupName;
           const spiritId = e.target.dataset.spiritId;
-          const answer = groups[groupName]?.data?.enigmaAnswers?.[spiritId];
+          const group = groups[groupName];
+          const answer = group?.data?.enigmaAnswers?.[spiritId];
 
           if (answer) {
+            // Mark as viewed and save state
+            if (!group.data.enigmaViewed || !group.data.enigmaViewed[spiritId]) {
+              if (!group.data.enigmaViewed) {
+                group.data.enigmaViewed = {};
+              }
+              group.data.enigmaViewed[spiritId] = true;
+              notification.classList.remove('blinking');
+
+              stopAutoLoad();
+              try {
+                await saveToGitHub(groups);
+              } catch (err) {
+                console.error("Failed to save 'enigma viewed' state:", err);
+              } finally {
+                startAutoLoad();
+              }
+            }
+
             document.getElementById('enigmaModalTitle').textContent = `Réponse de ${groupName} - Esprit ${spiritId}`;
             document.getElementById('enigmaAnswerContent').innerHTML = `<p><strong>Réponse:</strong></p><p>${answer}</p>`;
             openModal(enigmaModal);
@@ -631,9 +656,12 @@
         s-=p; details.push(`Erreur rituel : -${p} (Total : ${s})`);
       }
       // Point deduction for audio replays
-      if (data.replays && data.replays > 0) {
-        s -= data.replays;
-        details.push(`Relectures audio x${data.replays}: -${data.replays} (Total: ${s})`);
+      if (data.replays) {
+        const totalReplays = Object.values(data.replays).reduce((sum, count) => sum + count, 0);
+        if (totalReplays > 0) {
+          s -= totalReplays;
+          details.push(`Relectures audio x${totalReplays}: -${totalReplays} (Total: ${s})`);
+        }
       }
       const finalS = Math.max(0,Math.min(MAX_BASE,s));
       if(finalS!==s) details.push(`Ajusté : ${finalS}`);

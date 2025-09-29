@@ -3,243 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expérience Audio Interactive</title>
+    <title>Rencontre avec l'Esprit</title>
     <style>
-        :root {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --accent-color: #bb86fc;
-            --section-bg: #1e1e1e;
-            --hover-color: #bb86fc;
-            --active-color: #3700b3;
-        }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--bg-color);
-            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            text-align: center;
             padding: 20px;
-            max-width: 1000px;
+        }
+        #container {
+            max-width: 600px;
             margin: 0 auto;
-        }
-        h1, h2 {
-            color: var(--accent-color);
-        }
-        h2 {
-            margin-top: 30px;
-            border-bottom: 2px solid var(--accent-color);
-            padding-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        section {
-            background-color: var(--section-bg);
+            background-color: #1e1e1e;
             padding: 20px;
             border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
-        .audio-line {
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 4px;
+        h1 {
+            color: #bb86fc;
+        }
+        #audio-controls button {
+            padding: 10px 15px;
+            margin: 5px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            padding-left: 20px;
-        }
-        .audio-line::before {
-            content: "▶";
-            position: absolute;
-            left: 5px;
-            color: var(--accent-color);
-            font-size: 0.8em;
-        }
-        .audio-line:hover {
-            background-color: rgba(187, 134, 252, 0.1);
-            transform: translateX(5px);
-        }
-        .audio-line.playing {
-            background-color: rgba(187, 134, 252, 0.15);
-            border-left: 3px solid var(--accent-color);
+            border: none;
+            border-radius: 5px;
+            background-color: #bb86fc;
+            color: #121212;
             font-weight: bold;
         }
-        #stopButton {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 24px;
+        #audio-controls button:hover {
+            background-color: #3700b3;
+            color: #fff;
+        }
+        #enigma-form textarea {
+            width: 95%;
+            height: 100px;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #enigma-form button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #03dac6;
+            color: #121212;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #back-button {
+            margin-top: 20px;
+            padding: 10px 20px;
             background-color: #cf6679;
             color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-        #stopButton:hover {
-            background-color: #b00020;
-            transform: translateY(-2px);
-        }
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            section {
-                padding: 15px;
-            }
-            h2 {
-                font-size: 1.2em;
-            }
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
         }
     </style>
 </head>
 <body>
-    <h1>Expérience Audio Interactive</h1>
-    
-    <!-- Introduction -->
-    <section id="intro-audio">
-        <h2>🧙‍♂️ Introduction -nouvelle voix avec son en arrière plan-</h2>
-        <div class="audio-line" data-audio="audio/intro.mp3">
-            « Ah voilà donc les médiums. Vous m’avez réveillé… et j’ai faim d’histoires, de secrets, de choix… et peut-être même de chair ? Mais restons civilisés, voulez-vous ? J’ai un jeu à vous proposer. Une énigme... Un sortilège… presque oublié. Le Comte du château a été mordu. Une morsure sombre, tissée d’ombre et de crocs. Depuis, la bête gronde en lui. Elle gratte. Elle griffe. Elle attend. Et si vous ne l’arrêtez pas… elle sortira. Heureusement pour vous — ou pour lui — un rituel peut le sauver. Mais il vous faudra les bons objets, ceux que seuls les morts osent encore évoquer. »
+    <div id="container">
+        <h1 id="spirit-title"></h1>
+
+        <div id="audio-player">
+            <p>Écoutez attentivement le message de l'esprit.</p>
+            <div id="audio-controls">
+                <button id="playBtn">▶️ Lecture</button>
+                <button id="pauseBtn">⏸️ Pause</button>
+                <button id="stopBtn">⏹️ Stop</button>
+                <button id="replayBtn">🔄 Recommencer</button>
+            </div>
         </div>
-    </section>
 
-    <!-- Retour à la salle principale -->
-    <section id="rules-audio">
-        <h2>📜 Retour à la salle principale -nouvelle voix avec son en arrière plan-</h2>
-        <div class="audio-line" data-audio="audio/rules.mp3">
-            « Ah ! Vous voilà revenus, mes chers médiums…
-            Vos poches tassées de ces pierres étranges.
-            Posez-les là, devant mon autel, une à une.
-            Chaque pierre va ainsi s’éveiller… et se transformer en vision.
-            Pour chaque pierre rendue, vous obtiendrez une carte représentant les rêves.
-
-            Pour acquérir d’autres visions, la Voyante peut user de sa magie… mais elle devra accepter un tribut —
-            un point sera déduit à chaque usage.
-
-            Quant à vous, vaillant Capitaine, un pouvoir étrange vous lie :
-            si vous le déclenchez, trois objets suffiront pour achever le rituel.
-            Si vous en faites usage, 5 points vous seront déduits.
-            Et n’oubliez pas le pouvoir de la Petite Fille ! Une minute d’exploration furtive, seule, dans la salle au trésor…
-            Mais gare : elle ne dure qu’un souffle.
-
-            Activez vos pouvoirs ! »
+        <div id="enigma-section">
+            <h2>Énigme</h2>
+            <p id="enigma-text"></p>
+            <form id="enigma-form">
+                <textarea id="enigma-answer" placeholder="Votre réponse..."></textarea>
+                <button type="submit">Soumettre la réponse</button>
+            </form>
+            <p id="save-status" style="color: #03dac6;"></p>
         </div>
-    </section>
 
-    <!-- Fin de l’activation des pouvoirs -->
-    <section id="post-activation-audio">
-        <h2>⚡ Fin de l’activation des pouvoirs -nouvelle voix avec son en arrière plan-</h2>
-        <div class="audio-line" data-audio="audio/post_activation.mp3">
-            « Dévoilez vos cartes visions.
-            Vous avez cinq minutes pour débattre, interpréter, vous chamailler,
-            et dresser une liste sacrée d’objets potentiels inspirés de vos visions.
-            Tic… tac… tic… tac…
-            Le sablier est en marche, et chaque seconde qui vous file entre les doigts
-            creuse un peu plus votre propre tombe.
-            Allez : échangez, discutez, doutez —
-            et quand vos petites cervelles auront vomi la vérité, faites-moi signe. »
-        </div>
-    </section>
-
-    <!-- Réflexion des joueurs -->
-    <section id="reflection-audio">
-        <h2>🤔 Réflexion des joueurs -ancienne voix-</h2>
-        <div class="audio-line" data-audio="audio/reflexion1.mp3">« Quelqu’un parmi vous doute. Je le sens. Et ce doute a du flair, lui. »</div>
-        <div class="audio-line" data-audio="audio/reflexion2.mp3">« Oh, continuez donc à débattre. Plus vous parlez, plus la bête s’éveille… »</div>
-        <div class="audio-line" data-audio="audio/reflexion3.mp3">« Oh, vous vous fiez à vos visions ? Ces pauvres illusions… Si fragiles, si manipulables… »</div>
-        <div class="audio-line" data-audio="audio/reflexion4.mp3">« Vous croyez maîtriser l’invisible, mais l’invisible maîtrise vos peurs. »</div>
-        <div class="audio-line" data-audio="audio/reflexion5.mp3">« Écoutez le silence : c’est là que se cache la vérité… ou le mensonge. »</div>
-    </section>
-    
-    <!-- Exploration de la salle au trésor -->
-    <section id="exploration-audio">
-        <h2>🔎 Exploration de la salle au trésor -ancienne voix-</h2>
-        <div class="audio-line" data-audio="audio/exploration1.mp3">« Vos mains tremblent. Ce n’est pas la peur, c’est l’intuition… qui crie que vous vous trompez. »</div>
-        <div class="audio-line" data-audio="audio/exploration2.mp3">« Ah… pensez-vous vraiment que ces objets dont vous parlez soient les bons ? Ou simplement… les plus rassurants ? »</div>
-        <div class="audio-line" data-audio="audio/exploration3.mp3">« La pénombre vous chuchote des promesses, mais peut-être est-ce un piège. »</div>
-        <div class="audio-line" data-audio="audio/exploration4.mp3">« Chaque pas que vous faites creuse un peu plus votre propre tombe. »</div>
-        <div class="audio-line" data-audio="audio/exploration5.mp3">« Oserez-vous toucher ce que votre instinct vous interdit ? »</div>
-    </section>
-    
-    <!-- Pose des objets sur l’autel -->
-    <section id="placement-audio">
-        <h2>🛐 Pose des objets sur l’autel -ancienne voix-</h2>
-        <div class="audio-line" data-audio="audio/placement1.mp3">« Intéressant… Vous avez choisi ceci ? Et vous laisserez cela de côté ? Fascinant… »</div>
-        <div class="audio-line" data-audio="audio/placement2.mp3">« Oh… un choix audacieux. Et si c’était précisément ce que j’attendais ? »</div>
-        <div class="audio-line" data-audio="audio/placement3.mp3">« Ces choix sont comme des ombres projetées : flous, imprévisibles. »</div>
-        <div class="audio-line" data-audio="audio/placement4.mp3">« Je savoure cette hésitation… elle est délicieuse. »</div>
-        <div class="audio-line" data-audio="audio/placement5.mp3">« Chaque objet éveille un souvenir, une sensation… и parfois un regret. »</div>
-    </section>
-    
-    <!-- Changement par le Voleur -->
-    <section id="thief-audio">
-        <h2>🃏 Intervention du Voleur -ancienne voix-</h2>
-        <div class="audio-line" data-audio="audio/thief1.mp3">« Vous entendez ? Ce n’est pas le vent… c’est l’objet rejeté qui pleure d’être oublié… »</div>
-        <div class="audio-line" data-audio="audio/thief2.mp3">« Alors, vous placez vos visions au même rang que ces pierres anciennes que les héros vous ont confiées, prêtes à les abandonner sans remords ? »</div>
-        <div class="audio-line" data-audio="audio/thief3.mp3">« Le temps presse, et chaque seconde vous éloigne un peu plus de la lumière. »</div>
-        <div class="audio-line" data-audio="audio/thief4.mp3">« Sentez-vous ce gémissement sourd ? C’est votre destin qui se fissure. »</div>
-        <div class="audio-line" data-audio="audio/thief5.mp3">« Adieu espoir, adieu sérénité… et bienvenue au tourment. »</div>
-    </section>
-    
-    <!-- Verdict final -->
-    <section id="verdict-audio">
-        <h2>🎯 Verdict du rituel -ancienne voix-</h2>
-        <div class="audio-line" data-audio="audio/success.mp3">✅ Réussite : « Quelle… surprise. Vous avez percé les ombres. Les objets sont justes. Le rituel est accompli. Vous pouvez aller chercher la solution au mal qui touche le comte… Un remède prêt à être cueilli se trouve aux fontaines. »</div>
-        <div class="audio-line" data-audio="audio/fail1a.mp3">⚠️ Échec partiel : « Presque touchant, vraiment… Mais un leurre s’est glissé parmi vos certitudes. À un cheveu près, vous y étiez. Alors, brave Voleur, relèverez-vous le défi ? Vous avez le droit d’ôter un seul objet de l’autel, de regagner la salle au trésor pour en rapporter un autre… et de retenter le rituel… une dernière fois. »</div>
-        <div class="audio-line" data-audio="audio/fail1b.mp3">❌ Échec après pouvoir du voleur : « Trop tard. Trop faux. Trop faible. Le comte n’est plus qu’une bête. Et vous, des témoins du désastre. »</div>
-        <div class="audio-line" data-audio="audio/fail2.mp3">☠️ Échec total : « Non, non, non… Ce n’est pas un rituel. C’est une offrande. Une offrande à la bête qui sommeille… et qui maintenant s’éveille. Ce soir le comte sera le ventre… »</div>
-    </section>
-
-    <button id="stopButton">⏹️ Arrêter le son</button>
+        <a id="back-button" href="#">Retour au groupe</a>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const lines = document.querySelectorAll('.audio-line');
-            const stopBtn = document.getElementById('stopButton');
-            let currentAudio = null;
-            let currentElem = null;
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const spiritId = params.get('id');
+        const groupName = params.get('group');
 
-            const stopAudio = () => {
-                if (currentAudio) {
-                    currentAudio.pause();
-                    currentAudio.currentTime = 0;
-                    currentAudio = null;
-                }
-                if (currentElem) {
-                    currentElem.classList.remove('playing');
-                    currentElem = null;
-                }
-            };
+        if (!spiritId || !groupName) {
+            document.getElementById('container').innerHTML = '<h1>Erreur: Esprit ou groupe non spécifié.</h1>';
+            return;
+        }
 
-            lines.forEach(el => {
-                el.addEventListener('click', () => {
-                    const src = el.dataset.audio;
-                    if (currentElem === el && currentAudio && !currentAudio.paused) {
-                        return stopAudio();
-                    }
-                    stopAudio();
-                    currentAudio = new Audio(src);
-                    currentAudio.play().catch(err => console.error(err));
-                    currentElem = el;
-                    el.classList.add('playing');
-                    currentAudio.onended = stopAudio;
-                    currentAudio.onerror = () => {
-                        alert('Erreur de chargement du fichier audio : ' + src);
-                        stopAudio();
-                    };
-                });
-                el.addEventListener('mouseenter', () => el.classList.add('active'));
-                el.addEventListener('mouseleave', () => el.classList.remove('active'));
-            });
-            stopBtn.addEventListener('click', stopAudio);
-            document.addEventListener('keydown', e => { if (e.key === 'Escape') stopAudio(); });
+        const spiritData = {
+            A: { title: 'Esprit A', audio: 'audio/exploration1.mp3', enigma: 'Je parle toutes les langues et je n\'ai pas de bouche. Qui suis-je ?' },
+            B: { title: 'Esprit B', audio: 'audio/exploration2.mp3', enigma: 'Plus on en prend, plus on en laisse derrière. Qui suis-je ?' },
+            C: { title: 'Esprit C', audio: 'audio/exploration3.mp3', enigma: 'Qu\'est-ce qui est plein de trous mais peut quand même retenir l\'eau ?' },
+            D: { title: 'Esprit D', audio: 'audio/exploration4.mp3', enigma: 'Je n\'ai pas de poumons, mais j\'ai besoin d\'air. Qui suis-je ?' }
+        };
+
+        const currentSpirit = spiritData[spiritId];
+        if (!currentSpirit) {
+            document.getElementById('container').innerHTML = '<h1>Erreur: Esprit inconnu.</h1>';
+            return;
+        }
+
+        // Populate page content
+        document.getElementById('spirit-title').textContent = `Rencontre avec l'${currentSpirit.title}`;
+        document.getElementById('enigma-text').textContent = currentSpirit.enigma;
+        document.getElementById('back-button').href = `groupe.html?name=${encodeURIComponent(groupName)}`;
+
+        // Audio player logic
+        const audio = new Audio(currentSpirit.audio);
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const replayBtn = document.getElementById('replayBtn');
+        let hasPlayed = false;
+
+        playBtn.addEventListener('click', () => {
+            audio.play();
+            hasPlayed = true;
         });
+        pauseBtn.addEventListener('click', () => audio.pause());
+        stopBtn.addEventListener('click', () => {
+            audio.pause();
+            audio.currentTime = 0;
+        });
+        replayBtn.addEventListener('click', async () => {
+            if (hasPlayed) {
+                await recordReplay();
+            }
+            audio.currentTime = 0;
+            audio.play();
+        });
+
+        // Enigma form submission
+        const enigmaForm = document.getElementById('enigma-form');
+        const enigmaAnswer = document.getElementById('enigma-answer');
+        const saveStatus = document.getElementById('save-status');
+
+        enigmaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const answer = enigmaAnswer.value.trim();
+            if (!answer) {
+                saveStatus.textContent = 'Veuillez entrer une réponse.';
+                return;
+            }
+            saveStatus.textContent = 'Sauvegarde en cours...';
+            try {
+                await saveEnigmaAnswer(answer);
+                saveStatus.textContent = 'Réponse sauvegardée !';
+                enigmaAnswer.disabled = true;
+                e.target.querySelector('button').disabled = true;
+            } catch (err) {
+                saveStatus.textContent = `Erreur de sauvegarde: ${err.message}`;
+            }
+        });
+
+        // --- Data persistence functions ---
+
+        async function getGroupsData() {
+            const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
+            const response = await fetch(`${apiUrl}?ref=main`, {
+                headers: { 'Accept': 'application/vnd.github.v3.raw' },
+                cache: 'no-store'
+            });
+            if (!response.ok) throw new Error('Could not fetch group data from GitHub.');
+            return await response.json();
+        }
+
+        async function saveGroupsData(data) {
+            const res = await fetch('/.netlify/functions/saveScores', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+            if (!res.ok) throw new Error(await res.text());
+            console.log('Data saved successfully to GitHub.');
+        }
+
+        async function recordReplay() {
+            saveStatus.textContent = 'Enregistrement de la relecture...';
+            try {
+                const allGroups = await getGroupsData();
+                const group = allGroups[groupName];
+                if (!group) throw new Error('Groupe non trouvé.');
+
+                if (!group.data) group.data = {};
+                if (!group.data.replays) group.data.replays = 0;
+
+                group.data.replays++;
+
+                await saveGroupsData(allGroups);
+                alert('Relecture enregistrée. Les points seront déduits dans le tableau des scores.');
+                saveStatus.textContent = 'Relecture enregistrée.';
+            } catch (err) {
+                alert(`Erreur lors de l\'enregistrement de la relecture: ${err.message}`);
+                console.error(err);
+                saveStatus.textContent = `Erreur.`;
+            }
+        }
+
+        async function saveEnigmaAnswer(answer) {
+            const allGroups = await getGroupsData();
+            const group = allGroups[groupName];
+            if (!group) throw new Error('Groupe non trouvé.');
+
+            if (!group.data) group.data = {};
+            if (!group.data.enigmaAnswers) group.data.enigmaAnswers = {};
+
+            group.data.enigmaAnswers[spiritId] = answer;
+
+            await saveGroupsData(allGroups);
+        }
+    });
     </script>
 </body>
 </html>

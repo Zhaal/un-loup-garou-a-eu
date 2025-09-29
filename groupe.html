@@ -21,7 +21,32 @@
 
   <div id="content">
     <h2>Bienvenue, <span id="welcomeGroupName"></span>!</h2>
-    <p>Cette page est en construction.</p>
+    <p>Sauvez le compte, rencontrer les esprits (mettez du son, les esprits vous parleront) :</p>
+    <p style="color: #ffc107; font-weight: bold;">!! Attention, chaque relecture audio vous déduira des points dans le tableau des scores !!</p>
+
+    <div id="spirits-container">
+      <form class="spirit-form" id="formA">
+        <label for="codeA">- Esprit A</label>
+        <input type="text" id="codeA" placeholder="entrer le code">
+        <button type="submit">Rencontrer</button>
+      </form>
+      <form class="spirit-form" id="formB">
+        <label for="codeB">- Esprit B</label>
+        <input type="text" id="codeB" placeholder="entrer le code">
+        <button type="submit">Rencontrer</button>
+      </form>
+      <form class="spirit-form" id="formC">
+        <label for="codeC">- Esprit C</label>
+        <input type="text" id="codeC" placeholder="entrer le code">
+        <button type="submit">Rencontrer</button>
+      </form>
+      <form class="spirit-form" id="formD">
+        <label for="codeD">- Esprit D</label>
+        <input type="text" id="codeD" placeholder="entrer le code">
+        <button type="submit">Rencontrer</button>
+      </form>
+    </div>
+    <p id="spiritError" style="color:red;"></p>
   </div>
 
   <script>
@@ -71,6 +96,30 @@
             errorP.textContent = `Erreur: ${err.message}`;
           }
         });
+      }
+
+      const spiritCodes = {
+        A: 'a17b',
+        B: 'c22t',
+        C: 'u65p',
+        D: 's12v'
+      };
+
+      document.getElementById('formA').addEventListener('submit', (e) => handleSpiritForm(e, 'A'));
+      document.getElementById('formB').addEventListener('submit', (e) => handleSpiritForm(e, 'B'));
+      document.getElementById('formC').addEventListener('submit', (e) => handleSpiritForm(e, 'C'));
+      document.getElementById('formD').addEventListener('submit', (e) => handleSpiritForm(e, 'D'));
+
+      function handleSpiritForm(event, spiritId) {
+        event.preventDefault();
+        const input = document.getElementById(`code${spiritId}`);
+        const errorEl = document.getElementById('spiritError');
+        if (input.value.toLowerCase().trim() === spiritCodes[spiritId]) {
+          window.location.href = `Esprit.html?id=${spiritId}&group=${encodeURIComponent(groupName)}`;
+        } else {
+          errorEl.textContent = 'Code incorrect.';
+          input.focus();
+        }
       }
     });
   </script>

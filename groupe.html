@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Page du Groupe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 50px; }
+    #login, #content { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+    #content { display: none; }
+    input { width: calc(100% - 20px); padding: 10px; margin-bottom: 10px; }
+    button { padding: 10px 20px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="login">
+    <h1 id="groupName"></h1>
+    <input type="password" id="password" placeholder="Mot de passe">
+    <button id="submitPassword">Entrer</button>
+    <p id="error" style="color:red;"></p>
+  </div>
+
+  <div id="content">
+    <h2>Bienvenue, <span id="welcomeGroupName"></span>!</h2>
+    <p>Cette page est en construction.</p>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const groupName = params.get('name');
+      const groupNameH1 = document.getElementById('groupName');
+      const welcomeGroupNameSpan = document.getElementById('welcomeGroupName');
+
+      if (!groupName) {
+        document.body.innerHTML = '<h1>Aucun groupe spécifié.</h1>';
+        return;
+      }
+
+      groupNameH1.textContent = `Groupe: ${groupName}`;
+      welcomeGroupNameSpan.textContent = groupName;
+
+      const passwordInput = document.getElementById('password');
+      const submitButton = document.getElementById('submitPassword');
+      const errorP = document.getElementById('error');
+
+      submitButton.addEventListener('click', async () => {
+        try {
+          const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
+          const response = await fetch(`${apiUrl}?ref=main`, {
+            headers: { 'Accept': 'application/vnd.github.v3.raw' },
+            cache: 'no-store'
+          });
+          if (!response.ok) throw new Error('Could not fetch group data.');
+
+          const groups = await response.json();
+          const groupData = groups[groupName];
+
+          if (groupData && passwordInput.value === groupData.password) {
+            document.getElementById('login').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+          } else {
+            errorP.textContent = 'Mot de passe incorrect.';
+          }
+        } catch (err) {
+          errorP.textContent = `Erreur: ${err.message}`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

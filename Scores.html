@@ -308,19 +308,17 @@
   <script>
     // Envoie les données sur GitHub
     async function saveToGitHub(data) {
-      try {
-        const res = await fetch('/.netlify/functions/saveScores', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(await res.text());
-       // alert('✅ Données sauvegardées avec succès sur GitHub');
-        console.log('🦊 Sauvegarde GitHub OK');
-      } catch (err) {
-        console.error('Erreur sauvegarde GitHub :', err);
-       // alert('❌ Erreur lors de la sauvegarde sur GitHub: ' + err.message);
+      const res = await fetch('/.netlify/functions/saveScores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Erreur sauvegarde GitHub :', errorText);
+        throw new Error(`La sauvegarde sur GitHub a échoué: ${errorText}`);
       }
+      console.log('🦊 Sauvegarde GitHub OK');
     }
 
     // Charge les données depuis GitHub avec bust de cache
@@ -367,35 +365,106 @@
       return password;
     }
 
-    function addGroup(name) {
-      if (!name || groups[name]) return false;
+    async function addGroup(name) {
+      if (!name || groups[name]) {
+        alert(name ? 'Ce nom de groupe existe déjà.' : 'Veuillez entrer un nom pour le groupe.');
+        return false;
+      }
+
+      // Ajout optimiste
       groups[name] = {
-        status: 'En cours',
-        score: null,
-        data: null,
-        details: null,
+        status: 'En cours', score: null, data: null, details: null,
         password: generatePassword()
       };
-      renderGroupList();
-      saveToGitHub(groups);
-      return true;
-    }
-    function deleteGroup(name) {
-      if (groups[name]) {
+      renderGroupList(); // Affiche direct
+      stopAutoLoad();
+
+      try {
+        await saveToGitHub(groups);
+        return true;
+      } catch (err) {
+        alert(`❌ Échec de la création du groupe: ${err.message}`);
+        // Rollback
         delete groups[name];
-        renderGroupList(); renderScoreTable(); saveToGitHub(groups);
+        renderGroupList();
+        return false;
+      } finally {
+        startAutoLoad();
       }
     }
-    function updateGroupStatus(name,status) {
-      groups[name].status = status;
-      renderGroupList(); saveToGitHub(groups);
+    async function deleteGroup(name) {
+      if (!groups[name]) return;
+
+      const backup = { ...groups[name] };
+      delete groups[name];
+      renderGroupList();
+      renderScoreTable();
+      stopAutoLoad();
+
+      try {
+        await saveToGitHub(groups);
+      } catch (err) {
+        alert(`❌ Échec de la suppression du groupe: ${err.message}`);
+        // Rollback
+        groups[name] = backup;
+        renderGroupList();
+        renderScoreTable();
+      } finally {
+        startAutoLoad();
+      }
     }
-    function updateGroupScore(name,data) {
+    async function updateGroupStatus(name, newStatus) {
+      if (!groups[name] || groups[name].status === newStatus) return;
+
+      const oldStatus = groups[name].status;
+      groups[name].status = newStatus;
+      renderGroupList(); // optimistic update
+      stopAutoLoad();
+
+      try {
+        await saveToGitHub(groups);
+      } catch (err) {
+        alert(`❌ Échec de la mise à jour du statut: ${err.message}`);
+        // Rollback
+        groups[name].status = oldStatus;
+        renderGroupList();
+      } finally {
+        startAutoLoad();
+      }
+    }
+    let isUpdatingScore = false;
+    async function updateGroupScore(name, data) {
+      if (!groups[name] || isUpdatingScore) return;
+      isUpdatingScore = true;
+
+      const scoreForm = document.getElementById('scoreForm');
+      const formElements = scoreForm.querySelectorAll('input, button, select');
+      formElements.forEach(el => { el.disabled = true; });
+
+      const oldGroupData = { ...groups[name] };
       const { base, details } = calcBase(data);
-      groups[name].score   = Math.min(100, base*2);
+
+      // Optimistic update
+      groups[name].score   = Math.min(100, base * 2);
       groups[name].data    = data;
       groups[name].details = details;
-      renderGroupList(); renderScoreTable(); saveToGitHub(groups);
+      renderGroupList();
+      renderScoreTable();
+      stopAutoLoad();
+
+      try {
+        await saveToGitHub(groups);
+      } catch (err) {
+        alert(`❌ Échec de la sauvegarde du score: ${err.message}`);
+        // Rollback
+        groups[name] = oldGroupData;
+        renderGroupList();
+        renderScoreTable();
+      } finally {
+        isUpdatingScore = false;
+        startAutoLoad();
+        formElements.forEach(el => { el.disabled = false; });
+      }
     }
 
     // Rendu liste + tableau (idemp)
@@ -447,11 +516,15 @@
         ul.appendChild(li);
       });
       // listeners
-      document.querySelectorAll('.group-item select').forEach(sel=>
-        sel.addEventListener('change',e=>
-          updateGroupStatus(e.target.dataset.group,e.target.value)
-        )
-      );
+      document.querySelectorAll('.group-item select').forEach(sel => {
+        sel.addEventListener('change', async e => {
+          const select = e.target;
+          select.disabled = true;
+          await updateGroupStatus(select.dataset.group, select.value);
+          // The select might have been re-rendered, so we don't re-enable it here.
+          // The renderGroupList function will create a new enabled select.
+        });
+      });
       document.querySelectorAll('.group-item button:not(.btn-danger)').forEach(btn=>
         btn.addEventListener('click',e=>{
           const groupName = e.target.dataset.group;
@@ -590,15 +663,28 @@
     function openModal(m){m.classList.add('active');}
     function closeModal(m){m.classList.remove('active');}
 
-    document.getElementById('addGroupForm').addEventListener('submit',e=>{
+    document.getElementById('addGroupForm').addEventListener('submit', async e => {
       e.preventDefault();
-      const name = document.getElementById('newGroupName').value.trim();
-      if(addGroup(name)){e.target.reset(); closeModal(addGroupModal);}
-      else alert(name?'Ce nom existe déjà':'Entre un nom, hein !');
+      const form = e.target;
+      const nameInput = document.getElementById('newGroupName');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const name = nameInput.value.trim();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Création...';
+
+      const success = await addGroup(name);
+      if (success) {
+        form.reset();
+        closeModal(addGroupModal);
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Créer';
     });
 
     // Lit les valeurs du formulaire de score et sauvegarde
-    function saveScoreFromForm() {
+    async function saveScoreFromForm() {
       const name = document.getElementById('groupName').value;
       if (!name) return; // Ne rien faire si aucun groupe n'est chargé
 
@@ -614,32 +700,46 @@
         ritualErrors:    +document.getElementById('ritualErrors').value,
         voleurCorrected: document.querySelector('input[name="voleurCorrected"]:checked').value === 'true'
       };
-      updateGroupScore(name, data);
+      await updateGroupScore(name, data);
     }
 
-    // Le formulaire sauvegarde à chaque changement
-    document.getElementById('scoreForm').addEventListener('change', saveScoreFromForm);
+    // Le formulaire sauvegarde à chaque changement pour une UX réactive
+    document.getElementById('scoreForm').addEventListener('change', () => saveScoreFromForm());
 
-    document.getElementById('scoreForm').addEventListener('submit',e=>{
+    document.getElementById('scoreForm').addEventListener('submit', async e => {
       e.preventDefault();
-      saveScoreFromForm(); // Sauvegarde finale avant de fermer
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enregistrement...';
+
+      await saveScoreFromForm(); // Assure que la dernière sauvegarde est terminée
+
+      // Reset et fermeture après la sauvegarde
       e.target.reset();
-      // Nettoyage des boutons actifs et valeurs cachées
       document.querySelectorAll('.time-buttons button, .voyante-buttons button, .ritual-buttons button')
         .forEach(b => b.classList.remove('active'));
       document.getElementById('treasureTime').value = 0;
       document.getElementById('voyanteCards').value = 0;
       document.getElementById('ritualErrors').value = 0;
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Enregistrer';
       closeModal(scoreModal);
     });
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent any other listeners from firing
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const btn = e.target;
       if (window.groupToDelete) {
-        deleteGroup(window.groupToDelete);
-        window.groupToDelete = null; // Important de nettoyer
+        btn.disabled = true;
+        btn.textContent = 'Suppression...';
+
+        await deleteGroup(window.groupToDelete);
+        window.groupToDelete = null;
+
+        btn.disabled = false;
+        btn.textContent = 'Supprimer';
       }
-      // Always close the modal after the action is complete
       closeModal(confirmDeleteModal);
     });
 
@@ -682,16 +782,46 @@
       });
     });
 
+    let autoLoadInterval = null;
+    function stopAutoLoad() {
+      if (autoLoadInterval) {
+        clearInterval(autoLoadInterval);
+        autoLoadInterval = null;
+      }
+    }
+    function startAutoLoad() {
+      stopAutoLoad(); // Évite les doublons
+      autoLoadInterval = setInterval(loadFromGitHub, 5000);
+    }
+
     // Bouton "Charger depuis GitHub"
     document.getElementById('loadFromGitHubBtn').addEventListener('click', loadFromGitHub);
 
     // Bouton "Sauvegarder vers GitHub"
-    document.getElementById('saveToGitHubBtn').addEventListener('click', () => {
-      saveToGitHub(groups);
+    document.getElementById('saveToGitHubBtn').addEventListener('click', async (e) => {
+      const btn = e.target;
+      btn.disabled = true;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `📤 Sauvegarde...`;
+      stopAutoLoad();
+
+      try {
+        await saveToGitHub(groups);
+        btn.innerHTML = `✅ Fait!`;
+      } catch (err) {
+        btn.innerHTML = `❌ Erreur`;
+        alert(`Échec de la sauvegarde: ${err.message}`);
+      } finally {
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }, 2000);
+        startAutoLoad();
+      }
     });
 
-    // Actualisation passive toutes les 5 secondes
-    setInterval(loadFromGitHub, 5000);
+    // Lancement de l'actualisation
+    startAutoLoad();
   </script>
 </body>
 </html>

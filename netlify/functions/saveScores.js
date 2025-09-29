@@ -1,43 +1,61 @@
-// netlify/functions/saveScores.js
-const { Octokit } = require('@octokit/rest');
+const { Octokit } = require("@octokit/rest");
+const {
+  createOrUpdateTextFile,
+} = require("@octokit/plugin-create-or-update-text-file");
 
-// On lit la clé depuis les variables d'env (à configurer sur Netlify)
-const octo = new Octokit({ auth: process.env.GITHUB_TOKEN });
+const MyOctokit = Octokit.plugin(createOrUpdateTextFile);
 
 exports.handler = async (event) => {
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ message: "Method Not Allowed" }),
+    };
+  }
+
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+  if (!GITHUB_TOKEN) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: "GitHub token is not configured." }),
+    };
+  }
+
+  const octokit = new MyOctokit({ auth: GITHUB_TOKEN });
+  const owner = "Zhaal";
+  const repo = "un-loup-garou-a-eu";
+  const path = "scores-loup-garou.json";
+
   try {
-    const owner = 'Zhaal';              // ton user GitHub
-    const repo  = 'un-loup-garou-a-eu'; // ton dépôt
-    const path  = 'scores-loup-garou.json';
-
-    // Encodage du JSON envoyé depuis la page
-    const content = Buffer.from(event.body).toString('base64');
-    let sha;
-
-    // Si le fichier existe déjà, on récupère son SHA
-    try {
-      const { data } = await octo.repos.getContent({ owner, repo, path });
-      sha = data.sha;
-    } catch (e) {
-      // fichier absent => sha reste undefined
-    }
-
-    // Création ou mise à jour du fichier
-    await octo.repos.createOrUpdateFileContents({
-      owner, repo, path,
-      message: 'Mise à jour des scores via Netlify Function',
-      content, sha,
+    const {
+      data: { updated },
+    } = await octokit.createOrUpdateTextFile({
+      owner,
+      repo,
+      path,
+      content: event.body,
+      message: `Mise à jour des scores ${new Date().toISOString()}`,
     });
+
+    if (updated) {
+      console.log(`Fichier ${path} mis à jour avec succès.`);
+    } else {
+      console.log(`Fichier ${path} créé avec succès.`);
+    }
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ ok: true })
+      body: JSON.stringify({ ok: true, updated }),
     };
   } catch (err) {
-    console.error(err);
+    console.error("Erreur lors de la mise à jour du fichier sur GitHub:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ ok: false, error: err.message })
+      body: JSON.stringify({
+        ok: false,
+        error: "Erreur interne du serveur.",
+        details: err.message,
+      }),
     };
   }
 };

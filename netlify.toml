@@ -5,3 +5,7 @@
 
 [dev]
   functions = "netlify/functions"     # active les functions en local si tu utilises netlify-cli
+
+[context.production.environment]
+  GITHUB_OWNER = "Zhaal"
+  GITHUB_REPO = "un-loup-garou-a-eu"

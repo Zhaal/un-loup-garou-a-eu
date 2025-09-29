@@ -6,8 +6,8 @@ const octo = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
 exports.handler = async (event) => {
   try {
-    const owner = 'Zhaal';              // ton user GitHub
-    const repo  = 'un-loup-garou-a-eu'; // ton dépôt
+    const owner = process.env.GITHUB_OWNER || 'Zhaal';
+    const repo  = process.env.GITHUB_REPO || 'un-loup-garou-a-eu';
     const path  = 'scores-loup-garou.json';
     const branch = 'main'; // On s'assure de bosser sur la branche principale
 

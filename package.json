@@ -2,6 +2,7 @@
   "name": "un-loup-garou-a-eu",
   "version": "1.0.0",
   "dependencies": {
+    "@octokit/plugin-create-or-update-text-file": "^1.0.9",
     "@octokit/rest": "^19.0.7"
   }
 }

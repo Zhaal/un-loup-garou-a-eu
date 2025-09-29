@@ -9,6 +9,7 @@ exports.handler = async (event) => {
     const owner = 'Zhaal';              // ton user GitHub
     const repo  = 'un-loup-garou-a-eu'; // ton dépôt
     const path  = 'scores-loup-garou.json';
+    const branch = 'main'; // On s'assure de bosser sur la branche principale
 
     // Encodage du JSON envoyé depuis la page
     const content = Buffer.from(event.body).toString('base64');
@@ -16,7 +17,7 @@ exports.handler = async (event) => {
 
     // Si le fichier existe déjà, on récupère son SHA
     try {
-      const { data } = await octo.repos.getContent({ owner, repo, path });
+      const { data } = await octo.repos.getContent({ owner, repo, path, branch });
       sha = data.sha;
     } catch (e) {
       // fichier absent => sha reste undefined
@@ -24,7 +25,7 @@ exports.handler = async (event) => {
 
     // Création ou mise à jour du fichier
     await octo.repos.createOrUpdateFileContents({
-      owner, repo, path,
+      owner, repo, path, branch,
       message: 'Mise à jour des scores via Netlify Function',
       content, sha,
     });

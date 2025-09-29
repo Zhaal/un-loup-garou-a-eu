@@ -740,11 +740,22 @@
       await updateGroupScore(name, data);
     }
 
+    // --- DEBOUNCE ---
+    // On met en place un délai pour éviter de spammer l'API à chaque micro-changement
+    let debounceTimer;
+
     // Le formulaire sauvegarde à chaque changement pour une UX réactive
-    document.getElementById('scoreForm').addEventListener('change', () => saveScoreFromForm());
+    document.getElementById('scoreForm').addEventListener('change', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => saveScoreFromForm(), 1500); // Sauvegarde après 1.5s d'inactivité
+    });
 
     document.getElementById('scoreForm').addEventListener('submit', async e => {
       e.preventDefault();
+
+      // On annule toute sauvegarde automatique en attente, car on force la sauvegarde manuelle
+      clearTimeout(debounceTimer);
+
       const submitBtn = e.target.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Enregistrement...';
@@ -784,12 +795,14 @@
     document.querySelectorAll('.time-buttons button').forEach(button => {
       button.addEventListener('click', () => {
         const time = parseInt(button.dataset.time);
-        document.getElementById('treasureTime').value = time;
+        const treasureTimeInput = document.getElementById('treasureTime');
+        treasureTimeInput.value = time;
         document.querySelectorAll('.time-buttons button').forEach(b => 
           b.classList.remove('active')
         );
         button.classList.add('active');
-        saveScoreFromForm(); // Sauvegarde réactive
+        // On notifie le formulaire qu'une valeur a changé pour déclencher la sauvegarde décalée
+        treasureTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
       });
     });
 
@@ -797,12 +810,13 @@
     document.querySelectorAll('.voyante-buttons button').forEach(button => {
       button.addEventListener('click', () => {
         const cards = parseInt(button.dataset.voyante);
-        document.getElementById('voyanteCards').value = cards;
+        const voyanteCardsInput = document.getElementById('voyanteCards');
+        voyanteCardsInput.value = cards;
         document.querySelectorAll('.voyante-buttons button').forEach(b => 
           b.classList.remove('active')
         );
         button.classList.add('active');
-        saveScoreFromForm(); // Sauvegarde réactive
+        voyanteCardsInput.dispatchEvent(new Event('change', { bubbles: true }));
       });
     });
 
@@ -810,12 +824,13 @@
     document.querySelectorAll('.ritual-buttons button').forEach(button => {
       button.addEventListener('click', () => {
         const errors = parseInt(button.dataset.ritual);
-        document.getElementById('ritualErrors').value = errors;
+        const ritualErrorsInput = document.getElementById('ritualErrors');
+        ritualErrorsInput.value = errors;
         document.querySelectorAll('.ritual-buttons button').forEach(b => 
           b.classList.remove('active')
         );
         button.classList.add('active');
-        saveScoreFromForm(); // Sauvegarde réactive
+        ritualErrorsInput.dispatchEvent(new Event('change', { bubbles: true }));
       });
     });
 

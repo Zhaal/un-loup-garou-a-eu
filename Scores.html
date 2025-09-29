@@ -481,9 +481,11 @@
       else alert(name?'Ce nom existe déjà':'Entre un nom, hein !');
     });
 
-    document.getElementById('scoreForm').addEventListener('submit',e=>{
-      e.preventDefault();
+    // Lit les valeurs du formulaire de score et sauvegarde
+    function saveScoreFromForm() {
       const name = document.getElementById('groupName').value;
+      if (!name) return; // Ne rien faire si aucun groupe n'est chargé
+
       const data = {
         capitaineUsed:   document.querySelector('input[name="capitaineUsed"]:checked').value === 'true',
         voyanteCards:    +document.getElementById('voyanteCards').value,
@@ -492,24 +494,31 @@
         ritualErrors:    +document.getElementById('ritualErrors').value,
         voleurCorrected: document.querySelector('input[name="voleurCorrected"]:checked').value === 'true'
       };
-      updateGroupScore(name,data);
+      updateGroupScore(name, data);
+    }
+
+    // Le formulaire sauvegarde à chaque changement
+    document.getElementById('scoreForm').addEventListener('change', saveScoreFromForm);
+
+    document.getElementById('scoreForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      saveScoreFromForm(); // Sauvegarde finale avant de fermer
       e.target.reset();
-      document.querySelectorAll('.time-buttons button').forEach(b=>b.classList.remove('active'));
+      // Nettoyage des boutons actifs et valeurs cachées
+      document.querySelectorAll('.time-buttons button, .voyante-buttons button, .ritual-buttons button')
+        .forEach(b => b.classList.remove('active'));
       document.getElementById('treasureTime').value = 0;
+      document.getElementById('voyanteCards').value = 0;
+      document.getElementById('ritualErrors').value = 0;
       closeModal(scoreModal);
     });
 
     document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
       if (window.groupToDelete) {
         deleteGroup(window.groupToDelete);
-        window.groupToDelete = null;
+        window.groupToDelete = null; // Important de nettoyer
       }
-
-      // Fermeture manuelle de la modale
-      const modal = document.getElementById('confirmDeleteModal');
-      modal.classList.remove('active');
-      modal.style.opacity = 0;
-      modal.style.pointerEvents = 'none';
+      closeModal(confirmDeleteModal); // Utilise la fonction standardisée
     });
 
     // Gestion des boutons de temps
@@ -521,6 +530,7 @@
           b.classList.remove('active')
         );
         button.classList.add('active');
+        saveScoreFromForm(); // Sauvegarde réactive
       });
     });
 
@@ -533,6 +543,7 @@
           b.classList.remove('active')
         );
         button.classList.add('active');
+        saveScoreFromForm(); // Sauvegarde réactive
       });
     });
 
@@ -545,6 +556,7 @@
           b.classList.remove('active')
         );
         button.classList.add('active');
+        saveScoreFromForm(); // Sauvegarde réactive
       });
     });
 

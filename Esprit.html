@@ -198,22 +198,15 @@
         }
 
         async function recordReplay() {
-            saveStatus.textContent = 'Enregistrement de la relecture...';
             try {
-                const allGroups = await getGroupsData();
-                const group = allGroups[groupName];
-                if (!group) throw new Error('Groupe non trouvé.');
+                const replayKey = `replay_${groupName}_${spiritId}`;
+                const currentReplays = parseInt(sessionStorage.getItem(replayKey) || '0', 10);
+                sessionStorage.setItem(replayKey, currentReplays + 1);
 
-                if (!group.data) group.data = {};
-                if (!group.data.replays) group.data.replays = 0;
-
-                group.data.replays++;
-
-                await saveGroupsData(allGroups);
-                alert('Relecture enregistrée. Les points seront déduits dans le tableau des scores.');
-                saveStatus.textContent = 'Relecture enregistrée.';
+                alert('Relecture enregistrée. Elle sera comptabilisée lors de la soumission de la réponse.');
+                saveStatus.textContent = 'Relecture notée.';
             } catch (err) {
-                alert(`Erreur lors de l\'enregistrement de la relecture: ${err.message}`);
+                alert(`Erreur lors de l'enregistrement local de la relecture: ${err.message}`);
                 console.error(err);
                 saveStatus.textContent = `Erreur.`;
             }
@@ -226,10 +219,29 @@
 
             if (!group.data) group.data = {};
             if (!group.data.enigmaAnswers) group.data.enigmaAnswers = {};
+            if (!group.data.replays) group.data.replays = {};
 
+            // Mettre à jour la réponse à l'énigme
             group.data.enigmaAnswers[spiritId] = answer;
 
+            // Collecter les relectures pour ce groupe depuis sessionStorage
+            const spiritIds = ['A', 'B', 'C', 'D'];
+            spiritIds.forEach(sId => {
+                const replayKey = `replay_${groupName}_${sId}`;
+                const replayCount = parseInt(sessionStorage.getItem(replayKey) || '0', 10);
+                if (replayCount > 0) {
+                    group.data.replays[sId] = (group.data.replays[sId] || 0) + replayCount;
+                    // On supprime la clé pour ne pas la recompter plus tard
+                    sessionStorage.removeItem(replayKey);
+                }
+            });
+
             await saveGroupsData(allGroups);
+
+            // Notifier la page des scores pour qu'elle se rafraîchisse
+            const updateChannel = new BroadcastChannel('scores_update');
+            updateChannel.postMessage('refresh');
+            updateChannel.close();
         }
     });
     </script>

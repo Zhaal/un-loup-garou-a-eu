@@ -740,22 +740,13 @@
       await updateGroupScore(name, data);
     }
 
-    // --- DEBOUNCE ---
-    // On met en place un délai pour éviter de spammer l'API à chaque micro-changement
-    let debounceTimer;
-
     // Le formulaire sauvegarde à chaque changement pour une UX réactive
-    document.getElementById('scoreForm').addEventListener('change', () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => saveScoreFromForm(), 1500); // Sauvegarde après 1.5s d'inactivité
-    });
+    document.getElementById('scoreForm').addEventListener('change', saveScoreFromForm);
 
     document.getElementById('scoreForm').addEventListener('submit', async e => {
       e.preventDefault();
 
       // On annule toute sauvegarde automatique en attente, car on force la sauvegarde manuelle
-      clearTimeout(debounceTimer);
-
       const submitBtn = e.target.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Enregistrement...';

@@ -52,12 +52,7 @@
       // Charger les groupes depuis GitHub
       async function loadGroups() {
         try {
-          // On récupère dynamiquement les infos du dépôt
-          const repoInfoRes = await fetch('/.netlify/functions/getRepoInfo');
-          if (!repoInfoRes.ok) throw new Error('Impossible de charger la configuration du dépôt.');
-          const { owner, repo } = await repoInfoRes.json();
-
-          const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/scores-loup-garou.json`;
+          const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
           const response = await fetch(`${apiUrl}?ref=main`, {
             headers: { 'Accept': 'application/vnd.github.v3.raw' },
             cache: 'no-store' // Pour toujours avoir les données fraîches

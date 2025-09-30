@@ -95,13 +95,18 @@
           const groupData = allGroups[groupName];
 
           if (groupData && groupData.data && groupData.data.enigmaAnswers) {
-            for (const spiritId in spiritCodes) {
-              if (groupData.data.enigmaAnswers[spiritId]) {
+            for (const spiritId in groupData.data.enigmaAnswers) {
+              const answer = groupData.data.enigmaAnswers[spiritId];
+              if (answer) {
+                const form = document.getElementById(`form${spiritId}`);
+                const input = document.getElementById(`code${spiritId}`);
+                const button = form.querySelector('button');
                 const enigmaAlert = document.getElementById(`enigma${spiritId}`);
-                const isAcknowledged = localStorage.getItem(`enigmaAcknowledged_${groupName}_${spiritId}`);
 
-                if (enigmaAlert && !isAcknowledged) {
-                  enigmaAlert.style.display = 'inline';
+                input.value = answer;
+                button.disabled = true;
+                if (enigmaAlert) {
+                  enigmaAlert.style.display = 'none';
                 }
               }
             }

@@ -129,6 +129,10 @@
         checkEnigmas();
       }
 
+      if (params.get('from') === 'scores') {
+        sessionStorage.setItem(`auth_token_${groupName}`, 'true');
+      }
+
       if (sessionStorage.getItem(`auth_token_${groupName}`) === 'true') {
         showContent();
       } else {

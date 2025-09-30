@@ -530,7 +530,7 @@
             ${g.status==='Terminé'?`<button class="btn" data-group="${name}">Résultat</button>`:''}
           </div>
           <div class="group-actions">
-            <a href="groupe.html?name=${encodeURIComponent(name)}" target="_blank" class="btn">Page du Groupe</a>
+            <a href="groupe.html?name=${encodeURIComponent(name)}&from=scores" target="_blank" class="btn">Page du Groupe</a>
             <button class="btn btn-danger" data-group="${name}" data-action="delete">Supprimer</button>
           </div>
           ${enigmaNotificationsHtml}

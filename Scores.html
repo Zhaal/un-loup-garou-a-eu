@@ -437,16 +437,19 @@
       groups[name].status = newStatus;
       renderGroupList(); // optimistic update
 
-      isSaving = true;
-      try {
-        await saveToGitHub(groups);
-      } catch (err) {
-        alert(`❌ Échec de la mise à jour du statut: ${err.message}`);
-        // Rollback
-        groups[name].status = oldStatus;
-        renderGroupList();
-      } finally {
-        isSaving = false;
+      // Sauvegarde uniquement si le statut passe à "Terminé"
+      if (newStatus === 'Terminé') {
+        isSaving = true;
+        try {
+          await saveToGitHub(groups);
+        } catch (err) {
+          alert(`❌ Échec de la mise à jour du statut: ${err.message}`);
+          // Rollback
+          groups[name].status = oldStatus;
+          renderGroupList();
+        } finally {
+          isSaving = false;
+        }
       }
     }
     async function updateGroupScore(name, data) {
@@ -740,9 +743,6 @@
       await updateGroupScore(name, data);
     }
 
-    // Le formulaire sauvegarde à chaque changement pour une UX réactive
-    document.getElementById('scoreForm').addEventListener('change', saveScoreFromForm);
-
     document.getElementById('scoreForm').addEventListener('submit', async e => {
       e.preventDefault();
 
@@ -852,7 +852,16 @@
     });
 
     // Lancement de l'actualisation
-    setInterval(loadFromGitHub, 5000);
+    // setInterval(loadFromGitHub, 5000);
+
+    // Écoute des mises à jour depuis d'autres pages
+    const updateChannel = new BroadcastChannel('scores_update');
+    updateChannel.onmessage = (event) => {
+      if (event.data === 'refresh') {
+        console.log('🔄 Mise à jour reçue, chargement des données...');
+        loadFromGitHub();
+      }
+    };
   </script>
 </body>
 </html>

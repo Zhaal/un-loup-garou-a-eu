@@ -110,7 +110,6 @@
     </div>
     <p id="spiritError" class="error-message"></p>
     <a href="joueur.html" style="margin-top: 30px; display: inline-block;">Changer de groupe</a>
-    <div id="timer" style="text-align: center; margin-top: 20px; font-size: 1.5em; color: white; background-color: red; padding: 10px;"></div>
   </div>
 
   <script>
@@ -166,23 +165,6 @@
         loginContainer.classList.add('hidden');
         contentContainer.classList.remove('hidden');
         checkEnigmas();
-
-        // Start the 15-second countdown timer
-        let timeLeft = 15;
-        const timerElement = document.getElementById('timer');
-        const updateChannel = new BroadcastChannel('scores_update');
-
-        const timerInterval = setInterval(() => {
-          if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            timerElement.textContent = 'Redirection...';
-            updateChannel.postMessage('reload'); // Notify other pages to reload
-            window.location.href = 'joueur.html'; // Redirect to the player page
-          } else {
-            timerElement.textContent = `Redirection vers la page joueur dans ${timeLeft} secondes.`;
-            timeLeft--;
-          }
-        }, 1000);
       }
 
       async function checkEnigmas() {

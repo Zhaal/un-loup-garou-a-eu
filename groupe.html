@@ -218,11 +218,11 @@
       const updateChannel = new BroadcastChannel('scores_update');
       updateChannel.onmessage = (event) => {
         if (event.data === 'refresh') {
-          console.log('Refresh message received, updating UI in 10 seconds.');
+          console.log('Refresh message received, updating UI in 5 seconds.');
           setTimeout(() => {
-            console.log('Updating UI now after 10-second delay.');
+            console.log('Updating UI now after 5-second delay.');
             checkEnigmas(); // Refresh the data and UI
-          }, 10000);
+          }, 5000);
         }
       };
 

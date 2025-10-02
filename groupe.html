@@ -152,7 +152,7 @@
         const button = document.getElementById(`form${spiritId}`).querySelector('button');
         const card = document.getElementById(`card${spiritId}`);
 
-        input.value = 'Rencontré';
+        input.value = `Rencontré (${answer})`;
         input.disabled = true;
         button.disabled = true;
         button.textContent = 'Terminé';
@@ -213,6 +213,18 @@
       if (params.get('from') === 'scores') {
         sessionStorage.setItem(`auth_token_${groupName}`, 'true');
       }
+
+      // Listen for updates from other tabs/pages
+      const updateChannel = new BroadcastChannel('scores_update');
+      updateChannel.onmessage = (event) => {
+        if (event.data === 'refresh') {
+          console.log('Refresh message received, updating UI in 5 seconds.');
+          setTimeout(() => {
+            console.log('Updating UI now after 5-second delay.');
+            checkEnigmas(); // Refresh the data and UI
+          }, 5000);
+        }
+      };
 
       if (sessionStorage.getItem(`auth_token_${groupName}`) === 'true') {
         showContent();

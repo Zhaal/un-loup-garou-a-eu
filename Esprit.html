@@ -4,78 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rencontre avec l'Esprit</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            text-align: center;
-            padding: 20px;
-        }
-        #container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-        h1 {
-            color: #bb86fc;
-        }
-        #audio-controls button {
-            padding: 10px 15px;
-            margin: 5px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            background-color: #bb86fc;
-            color: #121212;
+        .warning-text {
+            color: #e43f5a;
             font-weight: bold;
+            background-color: rgba(228, 63, 90, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e43f5a;
         }
-        #audio-controls button:hover {
-            background-color: #3700b3;
-            color: #fff;
+        #audio-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
         }
-        #audio-controls button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
+        #enigma-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #1f4068;
         }
-        #enigma-form textarea {
-            width: 95%;
-            height: 100px;
+        #save-status {
             margin-top: 15px;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        #enigma-form button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background-color: #03dac6;
-            color: #121212;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #back-button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #cf6679;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            display: inline-block;
-        }
-        .replay-warning {
-            color: #ffc107;
             font-weight: bold;
         }
         .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #bb86fc;
+            border: 4px solid rgba(224, 224, 224, 0.3);
+            border-top: 4px solid #e43f5a;
             border-radius: 50%;
             width: 20px;
             height: 20px;
@@ -91,12 +48,12 @@
     </style>
 </head>
 <body>
-    <div id="container">
-        <h1 id="spirit-title"></h1>
+    <div id="container" class="container">
+        <h1 id="spirit-title">Rencontre avec un Esprit</h1>
 
         <div id="audio-player">
             <p>Écoutez attentivement le message de l'esprit.</p>
-            <p class="replay-warning">!! Attention, chaque relecture audio vous déduira des points dans le tableau des scores !!</p>
+            <p class="warning-text">Attention, chaque relecture audio vous déduira des points !</p>
             <div id="audio-controls">
                 <button id="playBtn">▶️ Lecture</button>
                 <button id="pauseBtn">⏸️ Pause</button>
@@ -106,16 +63,16 @@
         </div>
 
         <div id="enigma-section">
-            <h2>Énigme</h2>
+            <h2>Énigme de l'Esprit</h2>
             <p id="enigma-text"></p>
             <form id="enigma-form">
-                <textarea id="enigma-answer" placeholder="Votre réponse..."></textarea>
+                <textarea id="enigma-answer" placeholder="Votre réponse..." rows="4"></textarea>
                 <button type="submit">Soumettre la réponse</button>
             </form>
-            <p id="save-status" style="color: #03dac6;"></p>
+            <p id="save-status"></p>
         </div>
 
-        <a id="back-button" href="#">Retour au groupe</a>
+        <a id="back-button" href="#" class="btn" style="margin-top: 20px; background-color: #1f8a70;">Retour au groupe</a>
     </div>
 
     <script>
@@ -124,12 +81,8 @@
         const spiritId = params.get('id');
         const groupName = params.get('group');
 
-        if (spiritId && groupName) {
-            localStorage.setItem(`enigmaAcknowledged_${groupName}_${spiritId}`, 'true');
-        }
-
         if (!spiritId || !groupName) {
-            document.getElementById('container').innerHTML = '<h1>Erreur: Esprit ou groupe non spécifié.</h1>';
+            document.getElementById('container').innerHTML = '<h1>Erreur: Esprit ou groupe non spécifié.</h1><a href="joueur.html" class="btn">Retour</a>';
             return;
         }
 
@@ -142,7 +95,7 @@
 
         const currentSpirit = spiritData[spiritId];
         if (!currentSpirit) {
-            document.getElementById('container').innerHTML = '<h1>Erreur: Esprit inconnu.</h1>';
+            document.getElementById('container').innerHTML = '<h1>Erreur: Esprit inconnu.</h1><a href="joueur.html" class="btn">Retour</a>';
             return;
         }
 
@@ -189,18 +142,19 @@
 
             if (!answer) {
                 saveStatus.textContent = 'Veuillez entrer une réponse.';
+                saveStatus.style.color = '#e43f5a';
                 return;
             }
 
-            // Disable form and show loader
             enigmaAnswer.disabled = true;
             submitButton.disabled = true;
             saveStatus.innerHTML = '<span class="loader"></span>Sauvegarde en cours...';
+            saveStatus.style.color = '#e0e0e0';
 
             try {
                 await saveEnigmaAnswer(answer);
-
-                saveStatus.innerHTML = '<span class="loader"></span>Réponse sauvegardée ! Redirection dans 5 secondes...';
+                saveStatus.innerHTML = 'Réponse sauvegardée ! Redirection dans 5 secondes...';
+                saveStatus.style.color = '#1f8a70';
 
                 setTimeout(() => {
                     window.location.href = `groupe.html?name=${encodeURIComponent(groupName)}`;
@@ -208,13 +162,11 @@
 
             } catch (err) {
                 saveStatus.textContent = `Erreur de sauvegarde: ${err.message}`;
-                // Re-enable form on error
+                saveStatus.style.color = '#e43f5a';
                 enigmaAnswer.disabled = false;
                 submitButton.disabled = false;
             }
         });
-
-        // --- Data persistence functions ---
 
         async function getGroupsData() {
             const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
@@ -222,7 +174,7 @@
                 headers: { 'Accept': 'application/vnd.github.v3.raw' },
                 cache: 'no-store'
             });
-            if (!response.ok) throw new Error('Could not fetch group data from GitHub.');
+            if (!response.ok) throw new Error('Impossible de récupérer les données des groupes.');
             return await response.json();
         }
 
@@ -233,19 +185,31 @@
               body: JSON.stringify(data)
             });
             if (!res.ok) throw new Error(await res.text());
-            console.log('Data saved successfully to GitHub.');
         }
 
         async function recordReplay() {
             try {
-                const replayKey = `replay_${groupName}_${spiritId}`;
-                const currentReplays = parseInt(sessionStorage.getItem(replayKey) || '0', 10);
-                sessionStorage.setItem(replayKey, currentReplays + 1);
+                const allGroups = await getGroupsData();
+                const group = allGroups[groupName];
+                if (!group) throw new Error('Groupe non trouvé pour enregistrer la relecture.');
 
-                saveStatus.textContent = 'Relecture notée.';
+                if (!group.data) group.data = {};
+                if (!group.data.replays) group.data.replays = {};
+
+                group.data.replays[spiritId] = (group.data.replays[spiritId] || 0) + 1;
+
+                await saveGroupsData(allGroups);
+                saveStatus.textContent = 'Relecture enregistrée. (-1 point)';
+                saveStatus.style.color = '#e43f5a';
+
+                const updateChannel = new BroadcastChannel('scores_update');
+                updateChannel.postMessage('refresh');
+                updateChannel.close();
+
             } catch (err) {
                 console.error(err);
-                saveStatus.textContent = `Erreur.`;
+                saveStatus.textContent = `Erreur lors de l'enregistrement de la relecture.`;
+                saveStatus.style.color = '#e43f5a';
             }
         }
 
@@ -256,26 +220,11 @@
 
             if (!group.data) group.data = {};
             if (!group.data.enigmaAnswers) group.data.enigmaAnswers = {};
-            if (!group.data.replays) group.data.replays = {};
 
-            // Mettre à jour la réponse à l'énigme
             group.data.enigmaAnswers[spiritId] = answer;
-
-            // Collecter les relectures pour ce groupe depuis sessionStorage
-            const spiritIds = ['A', 'B', 'C', 'D'];
-            spiritIds.forEach(sId => {
-                const replayKey = `replay_${groupName}_${sId}`;
-                const replayCount = parseInt(sessionStorage.getItem(replayKey) || '0', 10);
-                if (replayCount > 0) {
-                    group.data.replays[sId] = (group.data.replays[sId] || 0) + replayCount;
-                    // On supprime la clé pour ne pas la recompter plus tard
-                    sessionStorage.removeItem(replayKey);
-                }
-            });
 
             await saveGroupsData(allGroups);
 
-            // Notifier la page des scores pour qu'elle se rafraîchisse
             const updateChannel = new BroadcastChannel('scores_update');
             updateChannel.postMessage('refresh');
             updateChannel.close();

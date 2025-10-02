@@ -1,0 +1,127 @@
+/* General Body Styles */
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    background-color: #1a1a2e; /* Dark navy blue */
+    color: #e0e0e0; /* Light grey text */
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Container for main content */
+.container {
+    width: 90%;
+    max-width: 800px;
+    margin: 20px auto;
+    background-color: #162447; /* Slightly lighter navy */
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    border: 1px solid #1f4068;
+}
+
+/* Headings */
+h1, h2, h3 {
+    color: #e43f5a; /* Striking red for titles */
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-shadow: 0 0 10px rgba(228, 63, 90, 0.5);
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+/* Buttons */
+button, .btn {
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #e43f5a; /* Red */
+    color: #ffffff;
+    transition: background-color 0.3s, transform 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+button:hover, .btn:hover {
+    background-color: #b8324f; /* Darker red on hover */
+    transform: translateY(-2px);
+}
+
+button:disabled, .btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Forms */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+input[type="text"],
+input[type="password"],
+select,
+textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #1f4068;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #e43f5a;
+    box-shadow: 0 0 8px rgba(228, 63, 90, 0.5);
+}
+
+/* Links */
+a {
+    color: #1f8a70; /* Teal for links */
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #1abc9c; /* Lighter teal on hover */
+}
+
+/* Error Messages */
+.error-message {
+    color: #e43f5a;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+}

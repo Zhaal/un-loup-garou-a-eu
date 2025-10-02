@@ -2,133 +2,214 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Page du Groupe</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 50px; }
-    #login, #content { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-    #content { display: none; }
-    input { width: calc(100% - 20px); padding: 10px; margin-bottom: 10px; }
-    button { padding: 10px 20px; cursor: pointer; }
-    .enigma-alert {
-        margin-left: 10px;
-        color: #ffc107;
+    #content.hidden, #login.hidden {
+      display: none;
+    }
+    .warning-text {
+        color: #e43f5a;
         font-weight: bold;
-        animation: blink-animation 1s infinite;
+        background-color: rgba(228, 63, 90, 0.1);
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #e43f5a;
+    }
+    #spirits-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .spirit-card {
+        flex-basis: 250px; /* Set a base width for flex items */
+    }
+    .spirit-card {
+      background-color: #1a1a2e;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #1f4068;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .spirit-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 15px rgba(228, 63, 90, 0.5);
+    }
+    .spirit-card h3 {
+        margin-top: 0;
+        color: #1f8a70;
+    }
+    .spirit-form {
+        margin-top: 15px;
+    }
+    .enigma-alert {
+        margin-top: 10px;
+        color: #e43f5a;
+        font-weight: bold;
+        animation: blink-animation 1.5s infinite;
     }
     @keyframes blink-animation {
-        0% { opacity: 1; }
-        50% { opacity: 0; }
-        100% { opacity: 1; }
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
     }
   </style>
 </head>
 <body>
-  <div id="login">
+  <div id="login" class="container">
     <h1 id="groupName"></h1>
-    <input type="password" id="password" placeholder="Mot de passe">
-    <button id="submitPassword">Entrer</button>
-    <p id="error" style="color:red;"></p>
+    <p>Veuillez entrer le mot de passe pour continuer.</p>
+    <form id="login-form">
+      <input type="password" id="password" placeholder="Mot de passe du groupe">
+      <button id="submitPassword" type="button">Entrer</button>
+    </form>
+    <p id="error" class="error-message"></p>
   </div>
 
-  <div id="content">
+  <div id="content" class="container hidden">
     <h2>Bienvenue, <span id="welcomeGroupName"></span>!</h2>
-    <p>Sauvez le compte, rencontrer les esprits (mettez du son, les esprits vous parleront) :</p>
-    <p style="color: #ffc107; font-weight: bold;">!! Attention, chaque relecture audio vous déduira des points dans le tableau des scores !!</p>
+    <p>Les esprits attendent. Entrez leurs codes pour les rencontrer. Mettez du son, ils vous parleront.</p>
+    <p class="warning-text">Attention, chaque relecture audio vous coûtera des points!</p>
 
     <div id="spirits-container">
-      <form class="spirit-form" id="formA">
-        <label for="codeA">- Esprit A</label>
-        <input type="text" id="codeA" placeholder="entrer le code">
-        <button type="submit">Rencontrer</button>
-        <span id="enigmaA" class="enigma-alert" style="display: none;">!! Enigme Esprit A a enregistrer !!</span>
-      </form>
-      <form class="spirit-form" id="formB">
-        <label for="codeB">- Esprit B</label>
-        <input type="text" id="codeB" placeholder="entrer le code">
-        <button type="submit">Rencontrer</button>
-        <span id="enigmaB" class="enigma-alert" style="display: none;">!! Enigme Esprit B a enregistrer !!</span>
-      </form>
-      <form class="spirit-form" id="formC">
-        <label for="codeC">- Esprit C</label>
-        <input type="text" id="codeC" placeholder="entrer le code">
-        <button type="submit">Rencontrer</button>
-        <span id="enigmaC" class="enigma-alert" style="display: none;">!! Enigme Esprit C a enregistrer !!</span>
-      </form>
-      <form class="spirit-form" id="formD">
-        <label for="codeD">- Esprit D</label>
-        <input type="text" id="codeD" placeholder="entrer le code">
-        <button type="submit">Rencontrer</button>
-        <span id="enigmaD" class="enigma-alert" style="display: none;">!! Enigme Esprit D a enregistrer !!</span>
-      </form>
+      <!-- Spirit cards will be dynamically generated or can be hardcoded -->
+      <div class="spirit-card" id="cardA">
+        <h3>Esprit A</h3>
+        <form class="spirit-form" id="formA">
+          <input type="text" id="codeA" placeholder="Code de l'esprit">
+          <button type="submit">Rencontrer</button>
+          <span id="enigmaA" class="enigma-alert hidden">Énigme reçue !</span>
+        </form>
+      </div>
+      <div class="spirit-card" id="cardB">
+        <h3>Esprit B</h3>
+        <form class="spirit-form" id="formB">
+          <input type="text" id="codeB" placeholder="Code de l'esprit">
+          <button type="submit">Rencontrer</button>
+          <span id="enigmaB" class="enigma-alert hidden">Énigme reçue !</span>
+        </form>
+      </div>
+      <div class="spirit-card" id="cardC">
+        <h3>Esprit C</h3>
+        <form class="spirit-form" id="formC">
+          <input type="text" id="codeC" placeholder="Code de l'esprit">
+          <button type="submit">Rencontrer</button>
+          <span id="enigmaC" class="enigma-alert hidden">Énigme reçue !</span>
+        </form>
+      </div>
+      <div class="spirit-card" id="cardD">
+        <h3>Esprit D</h3>
+        <form class="spirit-form" id="formD">
+          <input type="text" id="codeD" placeholder="Code de l'esprit">
+          <button type="submit">Rencontrer</button>
+          <span id="enigmaD" class="enigma-alert hidden">Énigme reçue !</span>
+        </form>
+      </div>
     </div>
-    <p id="spiritError" style="color:red;"></p>
+    <p id="spiritError" class="error-message"></p>
+    <a href="joueur.html" style="margin-top: 30px; display: inline-block;">Changer de groupe</a>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const params = new URLSearchParams(window.location.search);
       const groupName = params.get('name');
-      const groupNameH1 = document.getElementById('groupName');
-      const welcomeGroupNameSpan = document.getElementById('welcomeGroupName');
 
       if (!groupName) {
-        document.body.innerHTML = '<h1>Aucun groupe spécifié.</h1>';
+        document.body.innerHTML = '<div class="container"><h1>Aucun groupe spécifié.</h1><a href="joueur.html">Retour</a></div>';
         return;
       }
 
-      groupNameH1.textContent = `Groupe: ${groupName}`;
-      welcomeGroupNameSpan.textContent = groupName;
+      // Setup page elements
+      document.getElementById('groupName').textContent = `Groupe: ${groupName}`;
+      document.getElementById('welcomeGroupName').textContent = groupName;
+      const loginContainer = document.getElementById('login');
+      const contentContainer = document.getElementById('content');
+      const errorP = document.getElementById('error');
+      const spiritErrorP = document.getElementById('spiritError');
 
+      // --- Data Fetching ---
       async function getGroupsData() {
-        const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
-        const response = await fetch(`${apiUrl}?ref=main`, {
-          headers: { 'Accept': 'application/vnd.github.v3.raw' },
-          cache: 'no-store'
-        });
-        if (!response.ok) throw new Error('Could not fetch group data from GitHub.');
-        return await response.json();
-      }
-
-      async function checkEnigmas() {
         try {
-          const allGroups = await getGroupsData();
-          const groupData = allGroups[groupName];
-
-          if (groupData && groupData.data && groupData.data.enigmaAnswers) {
-            for (const spiritId in groupData.data.enigmaAnswers) {
-              const answer = groupData.data.enigmaAnswers[spiritId];
-              if (answer) {
-                const form = document.getElementById(`form${spiritId}`);
-                const input = document.getElementById(`code${spiritId}`);
-                const button = form.querySelector('button');
-                const enigmaAlert = document.getElementById(`enigma${spiritId}`);
-
-                input.value = answer;
-                button.disabled = true;
-                if (enigmaAlert) {
-                  enigmaAlert.style.display = 'none';
-                }
-              }
-            }
-          }
+            const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
+            const response = await fetch(`${apiUrl}?ref=main`, {
+                headers: { 'Accept': 'application/vnd.github.v3.raw' },
+                cache: 'no-store'
+            });
+            if (!response.ok) throw new Error('Could not fetch group data from GitHub.');
+            return await response.json();
         } catch (err) {
-          console.error("Erreur lors de la vérification des énigmes:", err);
+            errorP.textContent = `Erreur critique: ${err.message}`;
+            return null;
         }
       }
 
-      const spiritCodes = {
-        A: 'a17b',
-        B: 'c22t',
-        C: 'u65p',
-        D: 's12v'
-      };
+      // --- UI Update Functions ---
+      function updateUIAfterEncounter(spiritId, answer) {
+        const input = document.getElementById(`code${spiritId}`);
+        const button = document.getElementById(`form${spiritId}`).querySelector('button');
+        const card = document.getElementById(`card${spiritId}`);
+
+        input.value = 'Rencontré';
+        input.disabled = true;
+        button.disabled = true;
+        button.textContent = 'Terminé';
+        card.style.borderColor = '#1f8a70'; // Teal border for completed
+      }
+
+      const spiritCodes = { A: 'a17b', B: 'c22t', C: 'u65p', D: 's12v' };
 
       function showContent() {
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('content').style.display = 'block';
+        loginContainer.classList.add('hidden');
+        contentContainer.classList.remove('hidden');
         checkEnigmas();
       }
 
+      async function checkEnigmas() {
+          const allGroups = await getGroupsData();
+          if (!allGroups) return;
+          const groupData = allGroups[groupName];
+
+          if (groupData?.data?.enigmaAnswers) {
+              for (const spiritId in groupData.data.enigmaAnswers) {
+                  const answer = groupData.data.enigmaAnswers[spiritId];
+                  if (answer) {
+                      updateUIAfterEncounter(spiritId, answer);
+                  }
+              }
+          }
+      }
+
+      // --- Event Handlers ---
+      function handleSpiritForm(event, spiritId) {
+        event.preventDefault();
+        const input = document.getElementById(`code${spiritId}`);
+        spiritErrorP.textContent = '';
+        if (input.value.toLowerCase().trim() === spiritCodes[spiritId]) {
+          window.location.href = `Esprit.html?id=${spiritId}&group=${encodeURIComponent(groupName)}`;
+        } else {
+          spiritErrorP.textContent = 'Code incorrect pour l\'Esprit ' + spiritId + '.';
+          input.focus();
+        }
+      }
+
+      async function handleLogin() {
+          const passwordInput = document.getElementById('password');
+          const groups = await getGroupsData();
+          if (!groups) return;
+
+          const groupData = groups[groupName];
+          if (groupData && passwordInput.value === groupData.password) {
+              sessionStorage.setItem(`auth_token_${groupName}`, 'true');
+              showContent();
+          } else {
+              errorP.textContent = 'Mot de passe incorrect.';
+          }
+      }
+
+      // --- Initialization ---
       if (params.get('from') === 'scores') {
         sessionStorage.setItem(`auth_token_${groupName}`, 'true');
       }
@@ -136,43 +217,19 @@
       if (sessionStorage.getItem(`auth_token_${groupName}`) === 'true') {
         showContent();
       } else {
-        const passwordInput = document.getElementById('password');
-        const submitButton = document.getElementById('submitPassword');
-        const errorP = document.getElementById('error');
-
-        submitButton.addEventListener('click', async () => {
-          try {
-            const groups = await getGroupsData();
-            const groupData = groups[groupName];
-
-            if (groupData && passwordInput.value === groupData.password) {
-              sessionStorage.setItem(`auth_token_${groupName}`, 'true');
-              showContent();
-            } else {
-              errorP.textContent = 'Mot de passe incorrect.';
-            }
-          } catch (err) {
-            errorP.textContent = `Erreur: ${err.message}`;
-          }
+        loginContainer.classList.remove('hidden');
+        document.getElementById('submitPassword').addEventListener('click', handleLogin);
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleLogin();
         });
       }
 
+      // Attach form listeners
       document.getElementById('formA').addEventListener('submit', (e) => handleSpiritForm(e, 'A'));
       document.getElementById('formB').addEventListener('submit', (e) => handleSpiritForm(e, 'B'));
       document.getElementById('formC').addEventListener('submit', (e) => handleSpiritForm(e, 'C'));
       document.getElementById('formD').addEventListener('submit', (e) => handleSpiritForm(e, 'D'));
-
-      function handleSpiritForm(event, spiritId) {
-        event.preventDefault();
-        const input = document.getElementById(`code${spiritId}`);
-        const errorEl = document.getElementById('spiritError');
-        if (input.value.toLowerCase().trim() === spiritCodes[spiritId]) {
-          window.location.href = `Esprit.html?id=${spiritId}&group=${encodeURIComponent(groupName)}`;
-        } else {
-          errorEl.textContent = 'Code incorrect.';
-          input.focus();
-        }
-      }
     });
   </script>
 </body>

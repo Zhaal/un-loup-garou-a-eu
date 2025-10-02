@@ -2,57 +2,31 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Accueil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portail du Loup-Garou</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding-top: 50px;
-    }
-    .buttons {
-      display: inline-flex;
-      gap: 15px;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 1rem;
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-      background-color: #4CAF50;
-      color: white;
-      transition: background-color 0.3s;
-    }
-    button:hover {
-      background-color: #45a049;
+    .portal-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
-  <h1>Portail</h1>
-  <div class="buttons">
-    <button onclick="window.location.href='Esprit.html'">
-      Voix Esprit
-    </button>
-    <button onclick="window.location.href='Scores.html'">
-      Scoreboard
-    </button>
-    <button onclick="window.location.href='joueur.html'">
-      Accès Joueur
-    </button>
-    <button onclick="window.location.href='index.html'">
-      Revenir ici
-    </button>
-    <button onclick="window.location.href='index.html'">
-      Revenir ici
-    </button>
-    <button onclick="window.location.href='index.html'">
-      Revenir ici
-    </button>
-    <button onclick="window.location.href='index.html'">
-      Revenir ici
-    </button>
+  <div class="container">
+    <h1>Le Crépuscule des Loups</h1>
+    <p>La nuit tombe sur le village. Les secrets attendent d'être découverts.</p>
+
+    <div class="portal-buttons">
+      <button onclick="window.location.href='joueur.html'">
+        Accès Joueur
+      </button>
+      <button onclick="window.location.href='Scores.html'">
+        Tableau des Scores (Maître du Jeu)
+      </button>
+    </div>
   </div>
 </body>
 </html>
-

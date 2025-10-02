@@ -658,9 +658,9 @@
 
     const updateChannel = new BroadcastChannel('scores_update');
     updateChannel.onmessage = (event) => {
-      if (event.data === 'refresh') {
-        console.log('🔄 Mise à jour reçue, chargement des données...');
-        loadFromGitHub();
+      if (event.data === 'refresh' || event.data === 'reload') {
+        console.log('🔄 Mise à jour reçue, rechargement de la page...');
+        location.reload();
       }
     };
   </script>

@@ -159,7 +159,7 @@
         card.style.borderColor = '#1f8a70'; // Teal border for completed
       }
 
-      const spiritCodes = { A: 'a17b', B: 'c22t', C: 'u65p', D: 's12v' };
+      const spiritCodes = { A: '117b', B: '222t', C: '365p', D: '412v' };
 
       function showContent() {
         loginContainer.classList.add('hidden');
@@ -218,11 +218,11 @@
       const updateChannel = new BroadcastChannel('scores_update');
       updateChannel.onmessage = (event) => {
         if (event.data === 'refresh') {
-          console.log('Refresh message received, updating UI in 5 seconds.');
+          console.log('Refresh message received, updating UI in 10 seconds.');
           setTimeout(() => {
-            console.log('Updating UI now after 5-second delay.');
+            console.log('Updating UI now after 10-second delay.');
             checkEnigmas(); // Refresh the data and UI
-          }, 5000);
+          }, 10000);
         }
       };
 

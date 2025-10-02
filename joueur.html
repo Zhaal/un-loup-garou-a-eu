@@ -2,43 +2,23 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Accès Joueur</title>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 50px; background-color: #f8f9fa; }
-    #login-container { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #dee2e6; border-radius: 8px; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    h1 { color: #17a2b8; }
-    select, input[type="password"], button {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border-radius: 6px;
-      border: 1px solid #ced4da;
-      box-sizing: border-box; /* Important pour que le padding n'ajoute pas à la largeur */
-    }
-    button {
-      background-color: #17a2b8;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.3s;
-    }
-    button:hover { background-color: #138496; }
-    #error { color: #dc3545; font-weight: bold; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div id="login-container">
+  <div class="container">
     <h1>Accès Joueur</h1>
     <form id="player-login-form">
       <select id="group-select" required>
         <option value="">Chargement des groupes...</option>
       </select>
       <input type="password" id="password" placeholder="Mot de passe à 4 chiffres" required>
-      <button type="submit">Accéder à la page du groupe</button>
+      <button type="submit">Entrer dans la Nuit</button>
     </form>
-    <p id="error"></p>
+    <p id="error" class="error-message"></p>
+    <a href="index.html" style="margin-top: 20px; display: inline-block;">Retour au portail</a>
   </div>
 
   <script>

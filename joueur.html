@@ -81,6 +81,15 @@
 
       // Charger les groupes au chargement de la page
       loadGroups();
+
+      // Listen for reload messages from other pages
+      const updateChannel = new BroadcastChannel('scores_update');
+      updateChannel.onmessage = (event) => {
+        if (event.data === 'reload') {
+          console.log('Reload message received, refreshing the page.');
+          location.reload();
+        }
+      };
     });
   </script>
 

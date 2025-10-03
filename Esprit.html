@@ -45,6 +45,9 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -62,7 +65,7 @@
             </div>
         </div>
 
-        <div id="enigma-section">
+        <div id="enigma-section" class="hidden">
             <h2>Énigme de l'Esprit</h2>
             <p id="enigma-text"></p>
             <form id="enigma-form">
@@ -87,10 +90,10 @@
         }
 
         const spiritData = {
-            A: { title: 'Esprit A', audio: 'audio/exploration1.mp3', enigma: 'Je parle toutes les langues et je n\'ai pas de bouche. Qui suis-je ?' },
-            B: { title: 'Esprit B', audio: 'audio/exploration2.mp3', enigma: 'Plus on en prend, plus on en laisse derrière. Qui suis-je ?' },
-            C: { title: 'Esprit C', audio: 'audio/exploration3.mp3', enigma: 'Qu\'est-ce qui est plein de trous mais peut quand même retenir l\'eau ?' },
-            D: { title: 'Esprit D', audio: 'audio/exploration4.mp3', enigma: 'Je n\'ai pas de poumons, mais j\'ai besoin d\'air. Qui suis-je ?' }
+            A: { title: 'Esprit A', audio: 'audio/exploration1.mp3', enigmas: ['Je parle toutes les langues et je n\'ai pas de bouche. Qui suis-je ?', 'Je suis une clé sans serrure, mais je peux ouvrir les esprits. Qui suis-je ?', 'On me trouve dans les livres, mais je ne suis pas une page. Qui suis-je ?'] },
+            B: { title: 'Esprit B', audio: 'audio/exploration2.mp3', enigmas: ['Plus on en prend, plus on en laisse derrière. Qui suis-je ?', 'Je suis toujours devant toi, mais tu ne peux jamais me voir. Qui suis-je ?', 'Je suis un chemin que l\'on ne peut pas emprunter. Qui suis-je ?'] },
+            C: { title: 'Esprit C', audio: 'audio/exploration3.mp3', enigmas: ['Qu\'est-ce qui est plein de trous mais peut quand même retenir l\'eau ?', 'Je suis légère comme une plume, mais personne ne peut me tenir longtemps. Qui suis-je ?', 'Je peux être brisée sans être touchée. Qui suis-je ?'] },
+            D: { title: 'Esprit D', audio: 'audio/exploration4.mp3', enigmas: ['Je n\'ai pas de poumons, mais j\'ai besoin d\'air. Qui suis-je ?', 'Je danse quand je suis chaud et je pleure quand je suis froid. Qui suis-je ?', 'Je peux voyager dans le monde entier en restant dans un coin. Qui suis-je ?'] }
         };
 
         const currentSpirit = spiritData[spiritId];
@@ -99,41 +102,77 @@
             return;
         }
 
-        // Populate page content
-        document.getElementById('spirit-title').textContent = `Rencontre avec l'${currentSpirit.title}`;
-        document.getElementById('enigma-text').textContent = currentSpirit.enigma;
-        document.getElementById('back-button').href = `groupe.html?name=${encodeURIComponent(groupName)}`;
-
-        // Audio player logic
         const audio = new Audio(currentSpirit.audio);
         const playBtn = document.getElementById('playBtn');
         const pauseBtn = document.getElementById('pauseBtn');
         const stopBtn = document.getElementById('stopBtn');
         const replayBtn = document.getElementById('replayBtn');
+        const enigmaSection = document.getElementById('enigma-section');
+        const enigmaText = document.getElementById('enigma-text');
+        const enigmaForm = document.getElementById('enigma-form');
+        const enigmaAnswer = document.getElementById('enigma-answer');
+        const saveStatus = document.getElementById('save-status');
         let hasPlayed = false;
+
+        async function initializePage() {
+            document.getElementById('spirit-title').textContent = `Rencontre avec l'${currentSpirit.title}`;
+            document.getElementById('back-button').href = `groupe.html?name=${encodeURIComponent(groupName)}`;
+
+            const allGroups = await getGroupsData();
+            const replayCount = allGroups?.[groupName]?.data?.replays?.[spiritId] || 0;
+
+            enigmaText.textContent = currentSpirit.enigmas[replayCount];
+
+            if (replayCount >= 2) {
+                replayBtn.disabled = true;
+                replayBtn.textContent = 'Plus de relectures';
+            }
+        }
+
+        audio.addEventListener('ended', () => {
+            if (enigmaSection.classList.contains('hidden')) {
+                enigmaSection.classList.remove('hidden');
+            }
+        });
 
         playBtn.addEventListener('click', () => {
             audio.play();
             hasPlayed = true;
             playBtn.disabled = true;
         });
+
         pauseBtn.addEventListener('click', () => audio.pause());
+
         stopBtn.addEventListener('click', () => {
             audio.pause();
             audio.currentTime = 0;
         });
-        replayBtn.addEventListener('click', async () => {
-            if (hasPlayed) {
-                await recordReplay();
-            }
-            audio.currentTime = 0;
-            audio.play();
-        });
 
-        // Enigma form submission
-        const enigmaForm = document.getElementById('enigma-form');
-        const enigmaAnswer = document.getElementById('enigma-answer');
-        const saveStatus = document.getElementById('save-status');
+        replayBtn.addEventListener('click', async () => {
+            const allGroups = await getGroupsData();
+            const replayCount = allGroups?.[groupName]?.data?.replays?.[spiritId] || 0;
+
+            if (replayCount >= 2) {
+                alert("Vous avez utilisé toutes vos tentatives de relecture pour cet esprit.");
+                replayBtn.disabled = true;
+                replayBtn.textContent = 'Plus de relectures';
+                return;
+            }
+
+            const confirmed = confirm("Attention ! L'énigme va changer si vous recommencez, et cela vous coûtera des points. Voulez-vous continuer ?");
+            if (confirmed) {
+                await recordReplay();
+                const newReplayCount = replayCount + 1;
+                enigmaText.textContent = currentSpirit.enigmas[newReplayCount];
+                audio.currentTime = 0;
+                audio.play();
+
+                if (newReplayCount >= 2) {
+                    replayBtn.disabled = true;
+                    replayBtn.textContent = 'Plus de relectures';
+                }
+            }
+        });
 
         enigmaForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -229,6 +268,11 @@
             updateChannel.postMessage('refresh');
             updateChannel.close();
         }
+
+        initializePage().catch(err => {
+            console.error("Initialization failed:", err);
+            document.getElementById('container').innerHTML = `<h1>Erreur au chargement: ${err.message}</h1><a href="joueur.html" class="btn">Retour</a>`;
+        });
     });
     </script>
 </body>

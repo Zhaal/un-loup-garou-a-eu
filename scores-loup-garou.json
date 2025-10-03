@@ -1,1 +1,1 @@
-{"Test A":{"status":"En cours","score":null,"data":{"replays":{"A":2}},"details":null,"password":"5659"},"Test B":{"status":"En cours","score":null,"data":null,"details":null,"password":"4337"}}
+{"Test A":{"status":"En cours","score":null,"data":{"replays":{"A":1},"enigmaAnswers":{"A":"test"}},"details":null,"password":"5659"},"Test B":{"status":"En cours","score":null,"data":null,"details":null,"password":"4337"}}

@@ -49,6 +49,7 @@
             display: none;
         }
     </style>
+    <script src="network.js"></script>
 </head>
 <body>
     <div id="container" class="container">
@@ -207,44 +208,20 @@
             }
         });
 
+        // Utiliser le NetworkManager
         async function getGroupsData() {
-            const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
-            const response = await fetch(`${apiUrl}?ref=main`, {
-                headers: { 'Accept': 'application/vnd.github.v3.raw' },
-                cache: 'no-store'
-            });
-            if (!response.ok) throw new Error('Impossible de récupérer les données des groupes.');
-            return await response.json();
+            return await networkManager.getGroupsData();
         }
 
         async function saveGroupsData(data) {
-            const res = await fetch('/.netlify/functions/saveScores', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data)
-            });
-            if (!res.ok) throw new Error(await res.text());
+            await networkManager.saveGroupsData(data);
         }
 
         async function recordReplay() {
             try {
-                const allGroups = await getGroupsData();
-                const group = allGroups[groupName];
-                if (!group) throw new Error('Groupe non trouvé pour enregistrer la relecture.');
-
-                if (!group.data) group.data = {};
-                if (!group.data.replays) group.data.replays = {};
-
-                group.data.replays[spiritId] = (group.data.replays[spiritId] || 0) + 1;
-
-                await saveGroupsData(allGroups);
+                await networkManager.recordReplay(groupName, spiritId);
                 saveStatus.textContent = 'Relecture enregistrée. (-1 point)';
                 saveStatus.style.color = '#e43f5a';
-
-                const updateChannel = new BroadcastChannel('scores_update');
-                updateChannel.postMessage('refresh');
-                updateChannel.close();
-
             } catch (err) {
                 console.error(err);
                 saveStatus.textContent = `Erreur lors de l'enregistrement de la relecture.`;
@@ -253,20 +230,7 @@
         }
 
         async function saveEnigmaAnswer(answer) {
-            const allGroups = await getGroupsData();
-            const group = allGroups[groupName];
-            if (!group) throw new Error('Groupe non trouvé.');
-
-            if (!group.data) group.data = {};
-            if (!group.data.enigmaAnswers) group.data.enigmaAnswers = {};
-
-            group.data.enigmaAnswers[spiritId] = answer;
-
-            await saveGroupsData(allGroups);
-
-            const updateChannel = new BroadcastChannel('scores_update');
-            updateChannel.postMessage('refresh');
-            updateChannel.close();
+            await networkManager.saveEnigmaAnswer(groupName, spiritId, answer);
         }
 
         initializePage().catch(err => {

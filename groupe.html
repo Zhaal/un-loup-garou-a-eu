@@ -56,6 +56,7 @@
         50% { opacity: 0.3; }
     }
   </style>
+  <script src="network.js"></script>
 </head>
 <body>
   <div id="login" class="container">
@@ -133,13 +134,7 @@
       // --- Data Fetching ---
       async function getGroupsData() {
         try {
-            const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
-            const response = await fetch(`${apiUrl}?ref=main`, {
-                headers: { 'Accept': 'application/vnd.github.v3.raw' },
-                cache: 'no-store'
-            });
-            if (!response.ok) throw new Error('Could not fetch group data from GitHub.');
-            return await response.json();
+            return await networkManager.getGroupsData();
         } catch (err) {
             errorP.textContent = `Erreur critique: ${err.message}`;
             return null;
@@ -214,17 +209,11 @@
         sessionStorage.setItem(`auth_token_${groupName}`, 'true');
       }
 
-      // Listen for updates from other tabs/pages
-      const updateChannel = new BroadcastChannel('scores_update');
-      updateChannel.onmessage = (event) => {
-        if (event.data === 'refresh') {
-          console.log('Refresh message received, updating UI in 5 seconds.');
-          setTimeout(() => {
-            console.log('Updating UI now after 5-second delay.');
-            checkEnigmas(); // Refresh the data and UI
-          }, 5000);
-        }
-      };
+      // Configurer le callback de rafraîchissement automatique
+      networkManager.onRefresh(() => {
+        console.log('Refresh message received, updating UI...');
+        checkEnigmas(); // Refresh the data and UI
+      });
 
       if (sessionStorage.getItem(`auth_token_${groupName}`) === 'true') {
         showContent();

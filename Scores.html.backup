@@ -283,8 +283,17 @@
     // but a review shows that IDs are primarily used, so the script should remain compatible.
 
     async function saveToGitHub(data) {
-      await networkManager.saveGroupsData(data);
-      console.log('🦊 Sauvegarde OK');
+      const res = await fetch('/.netlify/functions/saveScores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Erreur sauvegarde GitHub :', errorText);
+        throw new Error(`La sauvegarde sur GitHub a échoué: ${errorText}`);
+      }
+      console.log('🦊 Sauvegarde GitHub OK');
     }
 
     let isSaving = false;
@@ -295,25 +304,30 @@
         return;
       }
       try {
-        const data = await networkManager.getGroupsData(true);
+        const repoInfoRes = await fetch('/.netlify/functions/getRepoInfo');
+        if (!repoInfoRes.ok) throw new Error('Impossible de charger la configuration du dépôt.');
+        const { owner, repo } = await repoInfoRes.json();
+
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/scores-loup-garou.json`;
+        const response = await fetch(`${apiUrl}?ref=main`, {
+          headers: { 'Accept': 'application/vnd.github.v3.raw' },
+          cache: 'no-store'
+        });
+        if (!response.ok) throw new Error('Échec du chargement via API GitHub');
+        const data = await response.json();
+
         Object.keys(groups).forEach(k => delete groups[k]);
         Object.assign(groups, data);
+
         renderGroupList();
         renderScoreTable();
       } catch (err) {
-        console.error('⚠️ Erreur chargement :'  , err);
-        alert('❌ Erreur lors du chargement: ' + err.message);
+        console.error('⚠️ Erreur API GitHub :', err);
+        alert('❌ Erreur lors du chargement via l’API GitHub: ' + err.message);
       }
     }
 
     const groups = {};
-
-    // Configurer le callback de rafraîchissement automatique
-    networkManager.onRefresh(() => {
-      console.log('🔄 Mise à jour reçue, chargement des données...');
-      loadFromGitHub();
-    });
-
     document.addEventListener('DOMContentLoaded', loadFromGitHub);
 
     const BASE_SCORE = 50, MAX_BASE = 50;
@@ -642,6 +656,14 @@
         }, 2000);
       }
     });
+
+    const updateChannel = new BroadcastChannel('scores_update');
+    updateChannel.onmessage = (event) => {
+      if (event.data === 'refresh') {
+        console.log('🔄 Mise à jour reçue, chargement des données...');
+        loadFromGitHub();
+      }
+    };
   </script>
 </body>
 </html>

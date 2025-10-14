@@ -1,1 +1,1 @@
-{"Test A":{"status":"En cours","score":null,"data":{"enigmaAnswers":{"A":"Pourquoi","B":"Alerte"},"enigmaViewed":{"A":true}},"details":null,"password":"7372"},"test B":{"status":"En cours","score":null,"data":null,"details":null,"password":"8228"}}
+{"Test A":{"status":"En cours","score":null,"data":{"enigmaAnswers":{"A":"Pourquoi","B":"Alerte"},"enigmaViewed":{"A":true,"B":true}},"details":null,"password":"7372"},"test B":{"status":"En cours","score":null,"data":null,"details":null,"password":"8228"}}

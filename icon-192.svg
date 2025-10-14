@@ -1,0 +1,35 @@
+<svg width="192" height="192" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond sombre -->
+  <rect width="192" height="192" fill="#0f1419" rx="32"/>
+
+  <!-- Cercle de fond avec couleur thème -->
+  <circle cx="96" cy="96" r="70" fill="#1f8a70" opacity="0.2"/>
+
+  <!-- Lune en arrière-plan -->
+  <circle cx="130" cy="50" r="25" fill="#e8e8e8" opacity="0.3"/>
+
+  <!-- Silhouette de loup stylisée -->
+  <g transform="translate(96, 96)">
+    <!-- Oreille gauche -->
+    <path d="M -25,-35 L -15,-55 L -10,-35 Z" fill="#1f8a70"/>
+    <!-- Oreille droite -->
+    <path d="M 10,-35 L 15,-55 L 25,-35 Z" fill="#1f8a70"/>
+    <!-- Tête -->
+    <ellipse cx="0" cy="-25" rx="30" ry="35" fill="#1f8a70"/>
+    <!-- Museau -->
+    <ellipse cx="0" cy="-15" rx="20" ry="15" fill="#166d5a"/>
+    <!-- Yeux -->
+    <circle cx="-10" cy="-30" r="4" fill="#e43f5a"/>
+    <circle cx="10" cy="-30" r="4" fill="#e43f5a"/>
+    <!-- Nez -->
+    <circle cx="0" cy="-15" r="3" fill="#0f1419"/>
+    <!-- Corps -->
+    <ellipse cx="0" cy="15" rx="35" ry="40" fill="#1f8a70"/>
+    <!-- Pattes -->
+    <rect x="-25" y="40" width="15" height="25" rx="7" fill="#166d5a"/>
+    <rect x="10" y="40" width="15" height="25" rx="7" fill="#166d5a"/>
+  </g>
+
+  <!-- Texte -->
+  <text x="96" y="175" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1f8a70" text-anchor="middle">LOUP-GAROU</text>
+</svg>

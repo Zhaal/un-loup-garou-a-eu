@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Générateur d'Icônes PWA</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #0f1419;
+      color: #ffffff;
+    }
+    h1 {
+      color: #1f8a70;
+    }
+    .icon-preview {
+      display: flex;
+      gap: 30px;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+    .icon-box {
+      text-align: center;
+    }
+    canvas {
+      border: 2px solid #1f8a70;
+      border-radius: 15px;
+      margin: 10px 0;
+    }
+    button {
+      background: #1f8a70;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+    }
+    button:hover {
+      background: #166d5a;
+    }
+    .info {
+      background: rgba(31, 138, 112, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #1f8a70;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Générateur d'Icônes PWA - Loup-Garou</h1>
+
+  <div class="info">
+    <p><strong>Instructions :</strong></p>
+    <ol>
+      <li>Les icônes s'affichent ci-dessous</li>
+      <li>Cliquez sur les boutons "Télécharger" pour sauvegarder chaque icône</li>
+      <li>Placez les fichiers <code>icon-192.png</code> et <code>icon-512.png</code> à la racine de votre projet</li>
+      <li>Votre PWA sera prête à être installée !</li>
+    </ol>
+  </div>
+
+  <div class="icon-preview">
+    <div class="icon-box">
+      <h3>Icône 192x192</h3>
+      <canvas id="canvas192" width="192" height="192"></canvas>
+      <br>
+      <button onclick="downloadIcon('canvas192', 'icon-192.png')">Télécharger icon-192.png</button>
+    </div>
+
+    <div class="icon-box">
+      <h3>Icône 512x512</h3>
+      <canvas id="canvas512" width="512" height="512"></canvas>
+      <br>
+      <button onclick="downloadIcon('canvas512', 'icon-512.png')">Télécharger icon-512.png</button>
+    </div>
+  </div>
+
+  <script>
+    // Fonction pour dessiner l'icône
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      const scale = size / 192;
+
+      // Fond sombre
+      ctx.fillStyle = '#0f1419';
+      ctx.fillRect(0, 0, size, size);
+
+      // Cercle de fond
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = '#1f8a70';
+      ctx.beginPath();
+      ctx.arc(size/2, size/2, 70*scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Lune
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#e8e8e8';
+      ctx.beginPath();
+      ctx.arc(130*scale, 50*scale, 25*scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Position centrale
+      const cx = size / 2;
+      const cy = size / 2;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      // Oreille gauche
+      ctx.fillStyle = '#1f8a70';
+      ctx.beginPath();
+      ctx.moveTo(-25*scale, -35*scale);
+      ctx.lineTo(-15*scale, -55*scale);
+      ctx.lineTo(-10*scale, -35*scale);
+      ctx.closePath();
+      ctx.fill();
+
+      // Oreille droite
+      ctx.beginPath();
+      ctx.moveTo(10*scale, -35*scale);
+      ctx.lineTo(15*scale, -55*scale);
+      ctx.lineTo(25*scale, -35*scale);
+      ctx.closePath();
+      ctx.fill();
+
+      // Tête
+      ctx.beginPath();
+      ctx.ellipse(0, -25*scale, 30*scale, 35*scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Museau
+      ctx.fillStyle = '#166d5a';
+      ctx.beginPath();
+      ctx.ellipse(0, -15*scale, 20*scale, 15*scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Yeux
+      ctx.fillStyle = '#e43f5a';
+      ctx.beginPath();
+      ctx.arc(-10*scale, -30*scale, 4*scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(10*scale, -30*scale, 4*scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Nez
+      ctx.fillStyle = '#0f1419';
+      ctx.beginPath();
+      ctx.arc(0, -15*scale, 3*scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Corps
+      ctx.fillStyle = '#1f8a70';
+      ctx.beginPath();
+      ctx.ellipse(0, 15*scale, 35*scale, 40*scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pattes
+      ctx.fillStyle = '#166d5a';
+      ctx.beginPath();
+      ctx.roundRect(-25*scale, 40*scale, 15*scale, 25*scale, 7*scale);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.roundRect(10*scale, 40*scale, 15*scale, 25*scale, 7*scale);
+      ctx.fill();
+
+      ctx.restore();
+
+      // Texte
+      ctx.fillStyle = '#1f8a70';
+      ctx.font = `bold ${18*scale}px Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('LOUP-GAROU', cx, 175*scale);
+    }
+
+    // Fonction de téléchargement
+    function downloadIcon(canvasId, filename) {
+      const canvas = document.getElementById(canvasId);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Dessiner les icônes au chargement
+    window.onload = function() {
+      drawIcon(document.getElementById('canvas192'), 192);
+      drawIcon(document.getElementById('canvas512'), 512);
+    };
+  </script>
+</body>
+</html>

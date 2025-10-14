@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Page du Groupe</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <style>
     #content.hidden, #login.hidden {
       display: none;
@@ -55,6 +57,50 @@
         0%, 100% { opacity: 1; }
         50% { opacity: 0.3; }
     }
+    #map-container {
+        margin: 30px 0;
+        background-color: #1a1a2e;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #1f4068;
+    }
+    #map {
+        width: 100%;
+        height: 500px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    #navigation-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+    .nav-button {
+        background-color: #1f8a70;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+    .nav-button:hover {
+        background-color: #166d5a;
+        transform: scale(1.05);
+    }
+    .nav-button:disabled {
+        background-color: #555;
+        cursor: not-allowed;
+        transform: scale(1);
+    }
+    #location-status {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: rgba(31, 138, 112, 0.1);
+        border-radius: 5px;
+        text-align: center;
+    }
   </style>
   <script src="network.js"></script>
 </head>
@@ -73,6 +119,20 @@
     <h2>Bienvenue, <span id="welcomeGroupName"></span>!</h2>
     <p>Les esprits attendent. Entrez leurs codes pour les rencontrer. Mettez du son, ils vous parleront.</p>
     <p class="warning-text">Attention, chaque relecture audio vous coûtera des points!</p>
+
+    <!-- Google Maps Navigation Section -->
+    <div id="map-container">
+      <h3>Carte de Navigation</h3>
+      <div id="map"></div>
+      <div id="navigation-controls">
+        <button class="nav-button" onclick="navigateToPoint('espritA')">Aller à l'Esprit A</button>
+        <button class="nav-button" onclick="navigateToPoint('espritB')">Aller à l'Esprit B</button>
+        <button class="nav-button" onclick="navigateToPoint('espritC')">Aller à l'Esprit C</button>
+        <button class="nav-button" onclick="navigateToPoint('espritD')">Aller à l'Esprit D</button>
+        <button class="nav-button" onclick="navigateToPoint('local')">Retour au Local</button>
+      </div>
+      <div id="location-status">Cliquez sur un bouton pour obtenir les directions</div>
+    </div>
 
     <div id="spirits-container">
       <!-- Spirit cards will be dynamically generated or can be hardcoded -->
@@ -232,6 +292,151 @@
       document.getElementById('formC').addEventListener('submit', (e) => handleSpiritForm(e, 'C'));
       document.getElementById('formD').addEventListener('submit', (e) => handleSpiritForm(e, 'D'));
     });
+  </script>
+
+  <!-- Leaflet.js pour les cartes (100% gratuit, sans clé API) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script>
+    // Points d'intérêt avec leurs coordonnées
+    const pointsOfInterest = {
+      espritA: { lat: 50.049915164743055, lng: 1.418272345174004, name: "Esprit A", color: "red" },
+      espritB: { lat: 50.04999601139354, lng: 1.4143768286465412, name: "Esprit B", color: "red" },
+      espritC: { lat: 50.048870431476594, lng: 1.4180009496088808, name: "Esprit C", color: "red" },
+      espritD: { lat: 50.049277302076064, lng: 1.4198630265038947, name: "Esprit D", color: "red" },
+      local: { lat: 50.049722268440206, lng: 1.4188271764072187, name: "Local de Départ", color: "green" }
+    };
+
+    let map;
+    let markers = {};
+    let userMarker = null;
+    let userPosition = null;
+
+    // Initialiser la carte Leaflet
+    function initMap() {
+      // Centre de la carte (Local de départ)
+      const centerPosition = [50.049722268440206, 1.4188271764072187];
+
+      // Créer la carte avec OpenStreetMap
+      map = L.map('map').setView(centerPosition, 16);
+
+      // Ajouter les tuiles OpenStreetMap (gratuit, pas de clé API)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Créer des icônes personnalisées
+      const redIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
+
+      const greenIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
+
+      const blueIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
+
+      // Ajouter des marqueurs pour chaque point d'intérêt
+      Object.keys(pointsOfInterest).forEach(key => {
+        const point = pointsOfInterest[key];
+        const icon = point.color === 'green' ? greenIcon : redIcon;
+
+        const marker = L.marker([point.lat, point.lng], { icon: icon })
+          .addTo(map)
+          .bindPopup(`<b>${point.name}</b><br>Cliquez sur le bouton pour naviguer`);
+
+        markers[key] = marker;
+      });
+
+      // Essayer d'obtenir la position de l'utilisateur
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+          (position) => {
+            userPosition = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+
+            // Ajouter ou mettre à jour le marqueur de l'utilisateur
+            if (userMarker) {
+              userMarker.setLatLng([userPosition.lat, userPosition.lng]);
+            } else {
+              userMarker = L.marker([userPosition.lat, userPosition.lng], { icon: blueIcon })
+                .addTo(map)
+                .bindPopup('<b>Votre position</b>');
+            }
+
+            document.getElementById('location-status').textContent = 'Position détectée ! Cliquez sur un bouton pour naviguer.';
+          },
+          () => {
+            document.getElementById('location-status').textContent = 'Localisation désactivée. Activez-la pour une meilleure navigation.';
+          },
+          {
+            enableHighAccuracy: true,
+            maximumAge: 10000,
+            timeout: 5000
+          }
+        );
+      }
+    }
+
+    // Fonction pour naviguer vers un point
+    function navigateToPoint(pointKey) {
+      const destination = pointsOfInterest[pointKey];
+
+      if (!destination) {
+        alert('Point d\'intérêt non trouvé!');
+        return;
+      }
+
+      // Construire l'URL Google Maps avec directions (Google Maps reste le meilleur pour la navigation en temps réel)
+      let mapsUrl;
+
+      if (userPosition) {
+        // Si on a la position de l'utilisateur, créer un itinéraire
+        mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userPosition.lat},${userPosition.lng}&destination=${destination.lat},${destination.lng}&travelmode=walking`;
+      } else {
+        // Sinon, juste afficher le point sur la carte
+        mapsUrl = `https://www.google.com/maps/search/?api=1&query=${destination.lat},${destination.lng}`;
+      }
+
+      // Ouvrir Google Maps dans un nouvel onglet
+      window.open(mapsUrl, '_blank');
+
+      // Mettre à jour le statut
+      document.getElementById('location-status').innerHTML = `Navigation vers <strong>${destination.name}</strong> ouverte dans Google Maps!`;
+
+      // Centrer la carte sur le point sélectionné et ouvrir le popup
+      map.setView([destination.lat, destination.lng], 18);
+      markers[pointKey].openPopup();
+    }
+
+    // Initialiser la carte quand la page est chargée
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initMap, 100);
+      });
+    } else {
+      setTimeout(initMap, 100);
+    }
   </script>
 </body>
 </html>

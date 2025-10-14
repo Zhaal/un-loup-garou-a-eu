@@ -13,11 +13,49 @@
   <meta name="apple-mobile-web-app-title" content="Loup-Garou">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
+
+  <style>
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .refresh-btn {
+      background: transparent;
+      border: 2px solid #1f8a70;
+      color: #1f8a70;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .refresh-btn:hover {
+      background: #1f8a70;
+      color: white;
+      transform: rotate(180deg);
+    }
+    .refresh-btn.spinning {
+      animation: spin 1s linear;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>Accès Joueur</h1>
+    <div class="header-container">
+      <h1>Accès Joueur</h1>
+      <button id="refresh-btn" class="refresh-btn" title="Rafraîchir les groupes">↻</button>
+    </div>
     <form id="player-login-form">
       <select id="group-select" required>
         <option value="">Chargement des groupes...</option>
@@ -34,13 +72,16 @@
       const loginForm = document.getElementById('player-login-form');
       const passwordInput = document.getElementById('password');
       const errorP = document.getElementById('error');
+      const refreshBtn = document.getElementById('refresh-btn');
       let groupsData = {};
 
       // Charger les groupes depuis GitHub
       async function loadGroups() {
         try {
+          // Ajouter un timestamp pour éviter tout cache navigateur
+          const timestamp = new Date().getTime();
           const apiUrl = 'https://api.github.com/repos/Zhaal/un-loup-garou-a-eu/contents/scores-loup-garou.json';
-          const response = await fetch(`${apiUrl}?ref=main`, {
+          const response = await fetch(`${apiUrl}?ref=main&t=${timestamp}`, {
             headers: { 'Accept': 'application/vnd.github.v3.raw' },
             cache: 'no-store' // Pour toujours avoir les données fraîches
           });
@@ -57,11 +98,26 @@
             groupSelect.appendChild(option);
           }
 
+          errorP.textContent = ''; // Effacer les erreurs précédentes
+
         } catch (err) {
           errorP.textContent = `Erreur de chargement : ${err.message}`;
           groupSelect.innerHTML = '<option value="">Erreur de chargement</option>';
         }
       }
+
+      // Bouton de rafraîchissement
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.classList.add('spinning');
+        refreshBtn.disabled = true;
+
+        await loadGroups();
+
+        setTimeout(() => {
+          refreshBtn.classList.remove('spinning');
+          refreshBtn.disabled = false;
+        }, 1000);
+      });
 
       // Gérer la soumission du formulaire
       loginForm.addEventListener('submit', (e) => {

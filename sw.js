@@ -1,4 +1,4 @@
-const CACHE_NAME = 'loup-garou-v1';
+const CACHE_NAME = 'loup-garou-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,6 +42,27 @@ self.addEventListener('activate', (event) => {
 
 // Interception des requêtes
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Ne JAMAIS mettre en cache les requêtes API GitHub ou les données dynamiques
+  const skipCache =
+    url.hostname === 'api.github.com' ||
+    url.hostname === 'raw.githubusercontent.com' ||
+    url.pathname.includes('scores-loup-garou.json') ||
+    event.request.method !== 'GET';
+
+  if (skipCache) {
+    // Pour les API et données dynamiques, toujours aller sur le réseau
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        // En cas d'erreur réseau pour les données, retourner une erreur
+        return new Response('Network error', { status: 503 });
+      })
+    );
+    return;
+  }
+
+  // Pour les autres ressources (HTML, CSS, JS statiques), utiliser le cache
   event.respondWith(
     caches.match(event.request)
       .then((response) => {

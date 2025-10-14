@@ -56,12 +56,10 @@
         <h1 id="spirit-title">Rencontre avec un Esprit</h1>
 
         <div id="audio-player">
-            <p>Écoutez attentivement le message de l'esprit.</p>
+            <p>Écoutez attentivement le message de l'esprit. Une question vous sera posée après l'écoute.</p>
             <p class="warning-text">Attention, chaque relecture audio vous déduira des points !</p>
             <div id="audio-controls">
                 <button id="playBtn">▶️ Lecture</button>
-                <button id="pauseBtn">⏸️ Pause</button>
-                <button id="stopBtn">⏹️ Stop</button>
                 <button id="replayBtn">🔄 Recommencer</button>
             </div>
         </div>
@@ -105,8 +103,6 @@
 
         const audio = new Audio(currentSpirit.audio);
         const playBtn = document.getElementById('playBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const stopBtn = document.getElementById('stopBtn');
         const replayBtn = document.getElementById('replayBtn');
         const enigmaSection = document.getElementById('enigma-section');
         const enigmaText = document.getElementById('enigma-text');
@@ -140,13 +136,6 @@
             audio.play();
             hasPlayed = true;
             playBtn.disabled = true;
-        });
-
-        pauseBtn.addEventListener('click', () => audio.pause());
-
-        stopBtn.addEventListener('click', () => {
-            audio.pause();
-            audio.currentTime = 0;
         });
 
         replayBtn.addEventListener('click', async () => {

@@ -1,10 +1,11 @@
 const CACHE_NAME = 'loup-garou-v1';
 const urlsToCache = [
   '/',
+  '/index.html',
+  '/install.html',
   '/joueur.html',
   '/groupe.html',
   '/Esprit.html',
-  '/index.html',
   '/style.css',
   '/network.js'
 ];

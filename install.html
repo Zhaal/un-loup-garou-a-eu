@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Installer l'Application - Un Loup-Garou a Eu</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- PWA Meta tags -->
+  <meta name="theme-color" content="#1f8a70">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Loup-Garou">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+
+  <style>
+    .install-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .app-icon {
+      width: 120px;
+      height: 120px;
+      margin: 30px auto;
+      background: linear-gradient(135deg, #1f8a70, #166d5a);
+      border-radius: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 60px;
+      box-shadow: 0 10px 30px rgba(31, 138, 112, 0.3);
+    }
+
+    .app-title {
+      font-size: 28px;
+      color: #1f8a70;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+
+    .app-description {
+      font-size: 16px;
+      color: #c5c5c5;
+      margin: 20px 0;
+      line-height: 1.6;
+    }
+
+    .install-btn {
+      background: linear-gradient(135deg, #1f8a70, #166d5a);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin: 20px 10px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(31, 138, 112, 0.3);
+    }
+
+    .install-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(31, 138, 112, 0.4);
+    }
+
+    .install-btn:disabled {
+      background: #555;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .skip-btn {
+      background: transparent;
+      color: #1f8a70;
+      border: 2px solid #1f8a70;
+      padding: 12px 35px;
+      font-size: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin: 10px;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .skip-btn:hover {
+      background: #1f8a70;
+      color: white;
+    }
+
+    .features-list {
+      text-align: left;
+      margin: 30px auto;
+      max-width: 400px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin: 15px 0;
+      padding: 15px;
+      background: rgba(31, 138, 112, 0.1);
+      border-radius: 8px;
+      border: 1px solid rgba(31, 138, 112, 0.3);
+    }
+
+    .feature-icon {
+      font-size: 24px;
+      margin-right: 15px;
+      min-width: 30px;
+    }
+
+    .feature-text {
+      font-size: 14px;
+      color: #e0e0e0;
+    }
+
+    .status-message {
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+
+    .status-info {
+      background: rgba(31, 138, 112, 0.2);
+      color: #1f8a70;
+      border: 1px solid #1f8a70;
+    }
+
+    .status-success {
+      background: rgba(31, 138, 112, 0.2);
+      color: #1f8a70;
+      border: 1px solid #1f8a70;
+    }
+
+    .status-warning {
+      background: rgba(228, 63, 90, 0.2);
+      color: #e43f5a;
+      border: 1px solid #e43f5a;
+    }
+
+    .ios-instructions {
+      margin: 30px 0;
+      padding: 20px;
+      background: rgba(31, 138, 112, 0.1);
+      border-radius: 8px;
+      border: 1px solid rgba(31, 138, 112, 0.3);
+    }
+
+    .ios-instructions h3 {
+      color: #1f8a70;
+      margin-bottom: 15px;
+    }
+
+    .ios-instructions ol {
+      text-align: left;
+      margin: 0 auto;
+      max-width: 400px;
+      line-height: 1.8;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container install-container">
+    <div class="app-icon">🐺</div>
+
+    <h1 class="app-title">Un Loup-Garou a Eu</h1>
+
+    <p class="app-description">
+      Installez l'application sur votre téléphone pour une meilleure expérience de jeu !
+      Accédez rapidement à vos missions et naviguez facilement vers les points d'intérêt.
+    </p>
+
+    <!-- Message de statut -->
+    <div id="statusMessage" class="status-message hidden"></div>
+
+    <!-- Bouton d'installation (Android/Chrome) -->
+    <div id="installSection">
+      <button id="installBtn" class="install-btn">
+        📱 Installer l'Application
+      </button>
+      <br>
+      <a href="joueur.html" class="skip-btn">Continuer sans installer</a>
+    </div>
+
+    <!-- Instructions iOS -->
+    <div id="iosInstructions" class="ios-instructions hidden">
+      <h3>📱 Installation sur iPhone/iPad</h3>
+      <ol>
+        <li>Appuyez sur le bouton <strong>Partage</strong> ⬆️</li>
+        <li>Faites défiler et sélectionnez <strong>"Sur l'écran d'accueil"</strong></li>
+        <li>Appuyez sur <strong>"Ajouter"</strong></li>
+      </ol>
+      <br>
+      <a href="joueur.html" class="skip-btn">Continuer sans installer</a>
+    </div>
+
+    <!-- Fonctionnalités -->
+    <div class="features-list">
+      <div class="feature-item">
+        <div class="feature-icon">🗺️</div>
+        <div class="feature-text">Navigation GPS vers les points d'intérêt</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📱</div>
+        <div class="feature-text">Accès rapide depuis votre écran d'accueil</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-text">Chargement plus rapide</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📴</div>
+        <div class="feature-text">Fonctionne même hors ligne</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🎮</div>
+        <div class="feature-text">Expérience plein écran immersive</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+    const installSection = document.getElementById('installSection');
+    const iosInstructions = document.getElementById('iosInstructions');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // Fonction pour afficher un message de statut
+    function showStatus(message, type = 'info') {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message status-${type}`;
+      statusMessage.classList.remove('hidden');
+    }
+
+    // Détecter iOS
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+
+    // Détecter si l'app est déjà installée
+    function isAppInstalled() {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             window.navigator.standalone === true;
+    }
+
+    // Vérifier le type d'appareil et afficher les instructions appropriées
+    if (isAppInstalled()) {
+      // L'app est déjà installée
+      showStatus('✅ Application déjà installée ! Redirection...', 'success');
+      setTimeout(() => {
+        window.location.href = 'joueur.html';
+      }, 2000);
+    } else if (isIOS()) {
+      // Afficher les instructions iOS
+      installSection.classList.add('hidden');
+      iosInstructions.classList.remove('hidden');
+      showStatus('ℹ️ Sur iOS, suivez les instructions ci-dessous', 'info');
+    }
+
+    // Capturer l'événement beforeinstallprompt (Android/Chrome)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Empêcher le mini-infobar par défaut
+      e.preventDefault();
+      // Sauvegarder l'événement pour l'utiliser plus tard
+      deferredPrompt = e;
+
+      // Afficher le bouton d'installation
+      installBtn.disabled = false;
+      showStatus('✨ L\'application est prête à être installée !', 'success');
+    });
+
+    // Gérer le clic sur le bouton d'installation
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) {
+        showStatus('⚠️ Installation non disponible sur cet appareil', 'warning');
+        return;
+      }
+
+      // Afficher le prompt d'installation
+      deferredPrompt.prompt();
+
+      // Attendre que l'utilisateur réponde au prompt
+      const { outcome } = await deferredPrompt.userChoice;
+
+      if (outcome === 'accepted') {
+        showStatus('✅ Installation en cours...', 'success');
+        // Rediriger après l'installation
+        setTimeout(() => {
+          window.location.href = 'joueur.html';
+        }, 1500);
+      } else {
+        showStatus('ℹ️ Installation annulée', 'info');
+      }
+
+      // Réinitialiser deferredPrompt
+      deferredPrompt = null;
+    });
+
+    // Détecter si l'app a été installée avec succès
+    window.addEventListener('appinstalled', () => {
+      showStatus('✅ Application installée avec succès !', 'success');
+      setTimeout(() => {
+        window.location.href = 'joueur.html';
+      }, 2000);
+    });
+
+    // Si le prompt n'est pas disponible après 2 secondes
+    setTimeout(() => {
+      if (!deferredPrompt && !isIOS() && !isAppInstalled()) {
+        showStatus('ℹ️ Installation automatique non disponible. Utilisez le menu de votre navigateur.', 'info');
+      }
+    }, 2000);
+
+    // Enregistrer le Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('Service Worker enregistré:', registration.scope);
+          })
+          .catch((error) => {
+            console.log('Erreur Service Worker:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -425,7 +425,7 @@
             const isViewed = g.data.enigmaViewed && g.data.enigmaViewed[spiritId];
             const blinkingClass = isViewed ? '' : ' blinking';
             const replayCount = (g.data.replays && g.data.replays[spiritId]) || 0;
-            const replayText = replayCount > 0 ? ` (${replayCount} écoutes)` : '';
+            const replayText = replayCount > 0 ? ` (${replayCount} ré-écoutes)` : '';
             enigmaNotificationsHtml += `<div class="enigma-notification${blinkingClass}" data-group-name="${name}" data-spirit-id="${spiritId}">
               ! Réponse Esprit ${spiritId} reçue !${replayText}
             </div>`;
